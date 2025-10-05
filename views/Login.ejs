@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="form-box">
+      <h2>Login Portal</h2>
+
+      <input
+        id="idInput"
+        class="input"
+        placeholder="Enter ID"
+        type="text"
+      />
+
+      <input
+        id="passwordInput"
+        class="input"
+        placeholder="Enter Password"
+        type="password"
+      />
+
+      <button class="btn" onclick="handleLogin()">Login</button>
+    </div>
+  </div>
+
+  <script>
+    async function handleLogin() {
+      const id = document.getElementById('idInput').value;
+      const password = document.getElementById('passwordInput').value;
+
+      if (!id || !password) {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.msg || "Login failed");
+          return;
+        }
+
+        alert(data.msg);
+
+        // Redirect based on user type
+        if (data.userType === "student") {
+          window.location.href = "/student/dashboard";
+        } else if (data.userType === "professor") {
+          window.location.href = "/professor/dashboard";
+        } else if (data.userType === "admin") {
+          window.location.href = "/admin/dashboard";
+        }
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred during login");
+      }
+    }
+  </script>
+</body>
+</html>
