@@ -1,12 +1,14 @@
-import mongoose from "mongoose"
+// C:\Users\Acer\P3Finals\P3\models\Student.js
+
+import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
-  studentID: { type: String, required: true, unique: true },
+  studentID: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   course: { type: String, required: true },
   yearLevel: { type: String, required: true }
-}, { timestamps: true })
+}, { timestamps: true });
 
-export default mongoose.model("Student", studentSchema)
+export default mongoose.model("Student", studentSchema);
