@@ -1,17 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>P3Finals Landing Page</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8" />
+  <title>Welcome | Enrollment Portal</title>
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
-  <div class="container landing-container">
-    <h1>Welcome to P3Finals Portal</h1>
+<body class="landing-body">
+  <div class="landing-container">
+    <h1>Welcome to the Enrollment System</h1>
+    <p>
+      Please select your role to proceed with registration or login to your account.
+    </p>
+
     <div class="button-group">
+      <button class="btn" onclick="location.href='/register/student'">Register as Student</button>
+      <button class="btn" onclick="location.href='/register/professor'">Register as Professor</button>
+      <button class="btn" onclick="location.href='/register/admin'">Register as Admin</button>
       <button class="btn" onclick="location.href='/login'">Login</button>
-      <button class="btn" onclick="location.href='/register'">Register</button>
     </div>
   </div>
+
+  <footer>© 2025 Enrollment System. All rights reserved.</footer>
 </body>
 </html>
