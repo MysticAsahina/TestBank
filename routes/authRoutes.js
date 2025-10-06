@@ -13,7 +13,7 @@ router.post("/login", async (req, res) => {
     let userType, user;
 
     if (id.startsWith("01-")) {
-      user = await Student.findOne({ studentID: id });
+      user = await Student.findOne({ studentId: id });
       userType = "student";
     } else if (id.startsWith("P-")) {
       user = await Professor.findOne({ professorID: id });
