@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Test Bank System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar.navbar-expand-lg.navbar-dark {
+            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+        }
+        .test-card {
+            transition: transform 0.2s;
+            border-left: 4px solid #0d6efd;
+        }
+        .test-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.75em;
+        }
+        .question-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+        .file-preview {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 5px;
+            border-radius: 4px;
+        }
+        .choice-item {
+            margin-bottom: 8px;
+        }
+        .enumeration-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    Welcome, <%= user.fullName %> (Dean)
+                </span>
+                <form action="/auth/logout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dean/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dean/manage-accounts">
+                                <i class="fas fa-users-cog me-2"></i>Manage Accounts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/dean/tests">
+                                <i class="fas fa-file-alt me-2"></i>Test Management
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dean/student-performance">
+                                <i class="fas fa-chart-line me-2"></i>Student Performance
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dean/reports">
+                                <i class="fas fa-chart-bar me-2"></i>Reports & Analytics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dean/account">
+                                <i class="fas fa-user-cog me-2"></i>My Account
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-file-alt me-2"></i><%= title %></h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTestModal">
+                            <i class="fas fa-plus me-2"></i>Create Test
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tests Overview -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-white bg-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>48</h4>
+                                        <p>Total Tests</p>
+                                    </div>
+                                    <i class="fas fa-file-alt fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>32</h4>
+                                        <p>Active Tests</p>
+                                    </div>
+                                    <i class="fas fa-play-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>12</h4>
+                                        <p>Draft Tests</p>
+                                    </div>
+                                    <i class="fas fa-edit fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>4</h4>
+                                        <p>Completed</p>
+                                    </div>
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tests Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">All Tests</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Subject Code</th>
+                                        <th>Access</th>
+                                        <th>Description</th>
+                                        <th>Created By</th>
+                                        <th>Created/Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Midterm Examination</td>
+                                        <td>CS101</td>
+                                        <td><span class="badge bg-success">Public</span></td>
+                                        <td>Midterm exam for Computer Science 101</td>
+                                        <td>Dr. Maria Santos</td>
+                                        <td>
+                                            <small>Created: 2024-01-15</small><br>
+                                            <small>Updated: 2024-01-20</small>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Final Project</td>
+                                        <td>MATH202</td>
+                                        <td><span class="badge bg-warning">Private</span></td>
+                                        <td>Final project for Advanced Mathematics</td>
+                                        <td>Prof. Juan Cruz</td>
+                                        <td>
+                                            <small>Created: 2024-01-10</small><br>
+                                            <small>Updated: 2024-01-18</small>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Quiz 1 - Basics</td>
+                                        <td>PHY101</td>
+                                        <td><span class="badge bg-success">Public</span></td>
+                                        <td>First quiz for Physics 101</td>
+                                        <td><%= user.fullName %></td>
+                                        <td>
+                                            <small>Created: 2024-01-05</small><br>
+                                            <small>Updated: 2024-01-12</small>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create Test Modal -->
+    <div class="modal fade" id="createTestModal" tabindex="-1" aria-labelledby="createTestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createTestModalLabel">Create New Test</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="testForm">
+                        <!-- Basic Test Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <h6>Test Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Title *</label>
+                                        <input type="text" class="form-control" name="title" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Subject Code *</label>
+                                        <input type="text" class="form-control" name="subjectCode" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" name="description" rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Time Limit (minutes)</label>
+                                        <input type="number" class="form-control" name="timeLimit" min="1">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Deadline</label>
+                                        <input type="datetime-local" class="form-control" name="deadline">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Access *</label>
+                                        <select class="form-select" name="access" required>
+                                            <option value="Public">Public</option>
+                                            <option value="Private" selected>Private</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Test Summary</h6>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <strong>Total Questions:</strong>
+                                            <span id="totalQuestions">0</span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Total Points:</strong>
+                                            <span id="totalPoints">0</span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Question Types:</strong>
+                                            <div id="questionTypesSummary"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Questions Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Questions</h6>
+                                <button type="button" class="btn btn-success btn-sm" onclick="addQuestion()">
+                                    <i class="fas fa-plus me-1"></i>Add Question
+                                </button>
+                            </div>
+                            <div id="questionsContainer">
+                                <!-- Questions will be added here dynamically -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTest()">Save Test</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let questionCount = 0;
+
+        // Question template
+        function getQuestionTemplate() {
+            questionCount++;
+            return `
+                <div class="question-item" id="question-${questionCount}">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Question ${questionCount}</h6>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeQuestion(${questionCount})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Question *</label>
+                        <textarea class="form-control question-text" rows="2" required></textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Type of Question *</label>
+                            <select class="form-select question-type" onchange="changeQuestionType(${questionCount})" required>
+                                <option value="">Select Type</option>
+                                <option value="identification">Identification</option>
+                                <option value="multiple">Multiple Choice</option>
+                                <option value="enumeration">Enumeration</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Points *</label>
+                            <input type="number" class="form-control question-points" min="1" value="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Files</label>
+                            <input type="file" class="form-control question-files" multiple accept="image/*,video/*">
+                        </div>
+                    </div>
+
+                    <!-- Answer Section - Dynamic based on question type -->
+                    <div class="question-answer-section" id="answer-section-${questionCount}">
+                        <!-- Answer fields will be populated here based on question type -->
+                    </div>
+
+                    <!-- File Preview Section -->
+                    <div class="file-preview-section mt-3" id="file-preview-${questionCount}"></div>
+                </div>
+            `;
+        }
+
+        // Add new question
+        function addQuestion() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML += getQuestionTemplate();
+            updateTestSummary();
+        }
+
+        // Remove question
+        function removeQuestion(questionId) {
+            const questionElement = document.getElementById(`question-${questionId}`);
+            questionElement.remove();
+            updateQuestionNumbers();
+            updateTestSummary();
+        }
+
+        // Update question numbers after removal
+        function updateQuestionNumbers() {
+            const questions = document.querySelectorAll('.question-item');
+            questions.forEach((question, index) => {
+                const questionNumber = index + 1;
+                question.id = `question-${questionNumber}`;
+                const header = question.querySelector('h6');
+                header.textContent = `Question ${questionNumber}`;
+                
+                // Update event handlers
+                const typeSelect = question.querySelector('.question-type');
+                typeSelect.setAttribute('onchange', `changeQuestionType(${questionNumber})`);
+                
+                const removeBtn = question.querySelector('.btn-danger');
+                removeBtn.setAttribute('onclick', `removeQuestion(${questionNumber})`);
+            });
+            questionCount = questions.length;
+        }
+
+        // Change question type and show appropriate answer fields
+        function changeQuestionType(questionId) {
+            const questionElement = document.getElementById(`question-${questionId}`);
+            const typeSelect = questionElement.querySelector('.question-type');
+            const answerSection = document.getElementById(`answer-section-${questionId}`);
+            const questionType = typeSelect.value;
+
+            let answerHTML = '';
+
+            switch(questionType) {
+                case 'identification':
+                    answerHTML = `
+                        <label class="form-label">Correct Answer *</label>
+                        <input type="text" class="form-control identification-answer" required>
+                    `;
+                    break;
+
+                case 'multiple':
+                    answerHTML = `
+                        <label class="form-label">Choices *</label>
+                        <div class="choices-container">
+                            <div class="choice-item">
+                                <div class="input-group">
+                                    <span class="input-group-text">A</span>
+                                    <input type="text" class="form-control choice-text" placeholder="Choice A" required>
+                                    <div class="input-group-text">
+                                        <input class="form-check-input correct-choice" type="radio" name="correct-${questionId}" value="A" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="choice-item">
+                                <div class="input-group">
+                                    <span class="input-group-text">B</span>
+                                    <input type="text" class="form-control choice-text" placeholder="Choice B" required>
+                                    <div class="input-group-text">
+                                        <input class="form-check-input correct-choice" type="radio" name="correct-${questionId}" value="B">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="choice-item">
+                                <div class="input-group">
+                                    <span class="input-group-text">C</span>
+                                    <input type="text" class="form-control choice-text" placeholder="Choice C" required>
+                                    <div class="input-group-text">
+                                        <input class="form-check-input correct-choice" type="radio" name="correct-${questionId}" value="C">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="choice-item">
+                                <div class="input-group">
+                                    <span class="input-group-text">D</span>
+                                    <input type="text" class="form-control choice-text" placeholder="Choice D" required>
+                                    <div class="input-group-text">
+                                        <input class="form-check-input correct-choice" type="radio" name="correct-${questionId}" value="D">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addChoice(${questionId})">
+                            <i class="fas fa-plus me-1"></i>Add Choice
+                        </button>
+                    `;
+                    break;
+
+                case 'enumeration':
+                    answerHTML = `
+                        <label class="form-label">Accepted Answers *</label>
+                        <div class="enumeration-container">
+                            <div class="enumeration-item">
+                                <input type="text" class="form-control enumeration-answer" placeholder="Answer 1" required>
+                            </div>
+                            <div class="enumeration-item">
+                                <input type="text" class="form-control enumeration-answer" placeholder="Answer 2" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addEnumerationAnswer(${questionId})">
+                            <i class="fas fa-plus me-1"></i>Add Answer
+                        </button>
+                    `;
+                    break;
+            }
+
+            answerSection.innerHTML = answerHTML;
+        }
+
+        // Add choice for multiple choice questions
+        function addChoice(questionId) {
+            const choicesContainer = document.querySelector(`#question-${questionId} .choices-container`);
+            const choiceCount = choicesContainer.children.length;
+            const nextLetter = String.fromCharCode(65 + choiceCount); // A, B, C, etc.
+
+            const choiceHTML = `
+                <div class="choice-item">
+                    <div class="input-group">
+                        <span class="input-group-text">${nextLetter}</span>
+                        <input type="text" class="form-control choice-text" placeholder="Choice ${nextLetter}" required>
+                        <div class="input-group-text">
+                            <input class="form-check-input correct-choice" type="radio" name="correct-${questionId}" value="${nextLetter}">
+                        </div>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            choicesContainer.innerHTML += choiceHTML;
+        }
+
+        // Add enumeration answer
+        function addEnumerationAnswer(questionId) {
+            const enumerationContainer = document.querySelector(`#question-${questionId} .enumeration-container`);
+            const answerCount = enumerationContainer.children.length + 1;
+
+            const answerHTML = `
+                <div class="enumeration-item">
+                    <div class="input-group">
+                        <input type="text" class="form-control enumeration-answer" placeholder="Answer ${answerCount}" required>
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            enumerationContainer.innerHTML += answerHTML;
+        }
+
+        // Update test summary
+        function updateTestSummary() {
+            const totalQuestions = document.querySelectorAll('.question-item').length;
+            const totalPoints = Array.from(document.querySelectorAll('.question-points'))
+                .reduce((sum, input) => sum + parseInt(input.value || 0), 0);
+            
+            // Count question types
+            const typeCounts = {};
+            document.querySelectorAll('.question-type').forEach(select => {
+                const type = select.value;
+                typeCounts[type] = (typeCounts[type] || 0) + 1;
+            });
+
+            document.getElementById('totalQuestions').textContent = totalQuestions;
+            document.getElementById('totalPoints').textContent = totalPoints;
+            
+            const typesSummary = document.getElementById('questionTypesSummary');
+            typesSummary.innerHTML = Object.entries(typeCounts)
+                .map(([type, count]) => `${type}: ${count}`)
+                .join('<br>') || 'No questions added';
+        }
+
+        // Save test
+        function saveTest() {
+            const form = document.getElementById('testForm');
+            if (form.checkValidity()) {
+                // Here you would typically send the data to your backend
+                alert('Test saved successfully!');
+                // Close modal and reset form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createTestModal'));
+                modal.hide();
+                form.reset();
+                document.getElementById('questionsContainer').innerHTML = '';
+                questionCount = 0;
+                updateTestSummary();
+            } else {
+                form.reportValidity();
+            }
+        }
+
+        // File preview handling
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('question-files')) {
+                const questionId = e.target.closest('.question-item').id.split('-')[1];
+                const previewSection = document.getElementById(`file-preview-${questionId}`);
+                previewSection.innerHTML = '';
+
+                Array.from(e.target.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.createElement('img');
+                        preview.src = e.target.result;
+                        preview.className = 'file-preview';
+                        previewSection.appendChild(preview);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTestSummary();
+        });
+    </script>
+</body>
+</html>

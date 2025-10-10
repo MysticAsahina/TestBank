@@ -1,72 +1,153 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login Portal</title>
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: rgb(246, 248, 255);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .login-card {
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .login-header {
+            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .role-badge {
+            font-size: 0.8em;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="form-box">
-      <h2>Login Portal</h2>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="login-card">
+                    <div class="login-header">
+                       <h2>
+                        <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2" style="height: 1em; vertical-align: middle;">
+                            PHINMA EDUCATION
+                        </h2>
 
-      <input
-        id="idInput"
-        class="input"
-        placeholder="Enter ID"
-        type="text"
-      />
+                        <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <!-- Error Message -->
+                        <% if (typeof error !== 'undefined' && error) { %>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <%= error %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <% } %>
 
-      <input
-        id="passwordInput"
-        class="input"
-        placeholder="Enter Password"
-        type="password"
-      />
+                        <!-- Success Message -->
+                        <% if (typeof success !== 'undefined' && success) { %>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <%= success %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <% } %>
 
-      <button class="btn" onclick="handleLogin()">Login</button>
+                        <form id="loginForm" action="/auth/login" method="POST">
+                            <div class="mb-3">
+                                <label for="userID" class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>ID Number
+                                </label>
+                                <input type="text" class="form-control" id="userID" name="userID" 
+                                       placeholder="Enter your Student ID or Employee ID" required>
+                                <div class="form-text">
+                                    Enter your Student ID (e.g., 12-3456-789012) or Employee ID
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>Password
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Enter your password" required>
+                            </div>
+
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-login text-white">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                </button>
+                            </div>
+
+                            <div class="text-center mb-3">
+                                <a href="/forgot-password" class="text-decoration-none">
+                                    <i class="fas fa-key me-1"></i>Forgot Password?
+                                </a>
+                            </div>
+
+                            <div class="text-center">
+                                <p class="mb-0">Don't have an account? 
+                                    <a href="/register" class="text-decoration-none fw-bold">Register as Student</a>
+                                </p>
+                            </div>
+                        </form>
+
+                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    async function handleLogin() {
-      const id = document.getElementById('idInput').value;
-      const password = document.getElementById('passwordInput').value;
-
-      if (!id || !password) {
-        alert("Please fill in all fields");
-        return;
-      }
-
-      try {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, password })
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Logging in...';
+            submitBtn.disabled = true;
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          alert(data.msg || "Login failed");
-          return;
-        }
-
-        alert(data.msg);
-
-        // Redirect based on user type
-        if (data.userType === "student") {
-          window.location.href = "/student/dashboard";
-        } else if (data.userType === "professor") {
-          window.location.href = "/professor/dashboard";
-        } else if (data.userType === "admin") {
-          window.location.href = "/admin/dashboard";
-        }
-      } catch (err) {
-        console.error(err);
-        alert("An error occurred during login");
-      }
-    }
-  </script>
+        // Auto-detect ID type and show hint
+        document.getElementById('userID').addEventListener('input', function(e) {
+            const id = e.target.value;
+            const hint = document.getElementById('idHint');
+            
+            if (id.includes('-') && id.match(/\d{2}-\d{4}-\d{6}/)) {
+                this.style.borderColor = '#198754';
+            } else if (id.length > 0) {
+                this.style.borderColor = '#ffc107';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+    </script>
 </body>
 </html>

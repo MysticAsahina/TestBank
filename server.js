@@ -1,37 +1,64 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import bodyParser from "body-parser";
+import express from 'express';
+import mongoose from 'mongoose';
+import session from 'express-session';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-import studentRoutes from "./routes/studentRoutes.js";
-import professorRoutes from "./routes/professorRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
-
+// Load environment variables FIRST THING
 dotenv.config();
 
+console.log('🔧 Environment check:');
+console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
+console.log('EMAIL_PASS exists:', !!process.env.EMAIL_PASS);
+console.log('PORT:', process.env.PORT);
+console.log('SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import routes
+import routes from './routes/index.js';
+
 const app = express();
-app.use(cors());
+
+// Middleware
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB Connection Failed:", err));
+// View engine setup
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-// Routes
-app.use("/api/student", studentRoutes);
-app.use("/api/professor", professorRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/auth", authRoutes);
+// Session middleware - IMPORTANT: Configure this properly
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'p3finals-secret-key-2024',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: false, // set to true if using HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true
+    }
+}));
 
-// Default
-app.get("/", (req, res) => {
-  res.send("Welcome to P3Finals API Server");
+// Custom middleware to attach user to response locals
+app.use((req, res, next) => {
+    console.log('🔄 Session middleware - User:', req.session.user);
+    res.locals.user = req.session.user || null;
+    next();
 });
 
-// Start server
+// Routes
+app.use('/', routes);
+
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
+
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
