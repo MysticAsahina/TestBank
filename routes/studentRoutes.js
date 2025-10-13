@@ -1,64 +1,63 @@
 import express from "express";
-import bcrypt from "bcryptjs";
 import Student from "../models/Student.js";
+import nodemailer from "nodemailer";
 
 const router = express.Router();
+
+// Temporary OTP store
+const otpStore = {};
+
+// Email setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "your_email@gmail.com",
+    pass: "your_app_password",
+  },
+});
+
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000);
+
+const sendOTP = async (email, otp) => {
+  await transporter.sendMail({
+    from: '"P3Finals Verification" <your_email@gmail.com>',
+    to: email,
+    subject: "Account Verification OTP",
+    html: `<h3>Your OTP Code: <b>${otp}</b></h3>`,
+  });
+};
+
+// Register student
 router.post("/register", async (req, res) => {
   try {
     const { fullName, studentID, email, password, course, yearLevel } = req.body;
 
-    if (!fullName || !studentID || !email || !password || !course || !yearLevel) {
-      return res.status(400).json({ msg: "All fields are required." });
-    }
+    const exists = await Student.findOne({ $or: [{ email }, { studentID }] });
+    if (exists) return res.status(400).json({ msg: "Email or Student ID already exists." });
 
-    const studentIDPattern = /^01-\d{4}-\d{6}$/;
-    if (!studentIDPattern.test(studentID)) {
-      return res.status(400).json({ msg: "Student ID format is invalid. Use 01-2345-567891." });
-    }
+    const otp = generateOTP();
+    otpStore[email] = { otp, data: { fullName, studentID, email, password, course, yearLevel } };
 
-    const existingEmail = await Student.findOne({ email });
-    if (existingEmail && existingEmail.studentID !== studentID) {
-      return res.status(400).json({
-        msg: "Email is already used by another student.",
-        existingStudentID: existingEmail.studentID
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newStudent = {
-      fullName,
-      studentID,
-      email,
-      password: hashedPassword,
-      course,
-      yearLevel
-    };
-
-    const savedStudent = await Student.findOneAndUpdate(
-      { studentID },        
-      newStudent,           
-      { upsert: true, new: true, runValidators: true }
-    );
-
-    return res.status(201).json({
-      msg: "Student registered successfully.",
-      student: savedStudent
-    });
-
+    await sendOTP(email, otp);
+    res.json({ msg: "OTP sent to your email for verification." });
   } catch (err) {
-    console.error("❌ Registration error details:", err);
+    res.status(500).json({ msg: err.message });
+  }
+});
 
-    if (err.code === 11000) {
-      return res.status(400).json({ msg: "Duplicate field error", details: err.keyValue });
-    }
+// Verify student
+router.post("/verify", async (req, res) => {
+  const { email, otp } = req.body;
 
-    if (err.name === "ValidationError") {
-      return res.status(400).json({ msg: "Validation error", details: err.errors });
-    }
-
-    return res.status(500).json({ msg: "Server error while registering student", error: err.message });
+  if (!otpStore[email]) return res.status(400).json({ msg: "OTP not found or expired." });
+  if (otpStore[email].otp === parseInt(otp)) {
+    const data = otpStore[email].data;
+    const newStudent = new Student(data);
+    await newStudent.save();
+    delete otpStore[email];
+    res.json({ msg: "Student account verified and created successfully!" });
+  } else {
+    res.status(400).json({ msg: "Invalid OTP." });
   }
 });
 
