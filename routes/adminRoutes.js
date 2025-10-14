@@ -1,6 +1,7 @@
 import express from "express";
 import Admin from "../models/Admin.js";
 import nodemailer from "nodemailer";
+import Test from "../models/Test.js";
 
 const router = express.Router();
 const otpStore = {};
@@ -58,5 +59,13 @@ router.post("/verify", async (req, res) => {
     res.status(400).json({ msg: "Invalid OTP." });
   }
 });
-
+router.get("/dean/tests", async (req, res) => {
+  try {
+    const tests = await Test.find().sort({ createdAt: -1 });
+    res.render("dean-tests", { tests });
+  } catch (err) {
+    console.error("❌ Error loading test list:", err);
+    res.status(500).send("Failed to load tests.");
+  }
+});
 export default router;
