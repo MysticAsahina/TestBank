@@ -390,7 +390,9 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Files</label>
-                            <input type="file" class="form-control question-files" multiple accept="image/*,video/*">
+                            <input type="file" class="form-control question-file" accept="image/*,video/*">
+                            <input type="hidden" class="question-file-url">
+                            <img class="question-file-preview" style="max-width:200px; display:none;">
                         </div>
                     </div>
 
@@ -399,8 +401,6 @@
                         <!-- Answer fields will be populated here based on question type -->
                     </div>
 
-                    <!-- File Preview Section -->
-                    <div class="file-preview-section mt-3" id="file-preview-${questionCount}"></div>
                 </div>
             `;
         }
@@ -595,108 +595,142 @@
                 .join('<br>') || 'No questions added';
         }
 
+        async function uploadQuestionFile(inputElement) {
+        const file = inputElement.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+            const url = data.url;
+            const container = inputElement.closest(".question-item");
+
+            // Set hidden input
+            container.querySelector(".question-file-url").value = url;
+
+            // Show preview if image
+            if (file.type.startsWith("image/")) {
+                const img = container.querySelector(".question-file-preview");
+                img.src = url;
+                img.style.display = "block";
+            }
+
+            console.log("✅ File uploaded:", url);
+            } else {
+            alert("❌ Upload failed: " + data.message);
+            }
+        } catch (err) {
+            console.error("❌ Error uploading file:", err);
+            alert("Failed to upload file.");
+        }
+        }
+
+        // Bind change event to all question file inputs
+        document.addEventListener("change", (e) => {
+        if (e.target.classList.contains("question-file")) {
+            uploadQuestionFile(e.target);
+        }
+        });
+
         // Save test
         async function saveTest() {
-  const form = document.getElementById('testForm');
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
+        const form = document.getElementById('testForm');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
 
-  const testData = {
-    title: form.querySelector('[name="title"]').value.trim(),
-    subjectCode: form.querySelector('[name="subjectCode"]').value.trim(),
-    description: form.querySelector('[name="description"]').value.trim(),
-    timeLimit: parseInt(form.querySelector('[name="timeLimit"]').value || 0),
-    deadline: form.querySelector('[name="deadline"]').value || null,
-    access: form.querySelector('[name="access"]').value,
-    questions: []
-  };
+        const deadlineValue = form.querySelector('[name="deadline"]').value.trim();
+        const testData = {
+        title: form.querySelector('[name="title"]').value.trim(),
+        subjectCode: form.querySelector('[name="subjectCode"]').value.trim(),
+        description: form.querySelector('[name="description"]').value.trim(),
+        timeLimit: parseInt(form.querySelector('[name="timeLimit"]').value || 0),
+        access: form.querySelector('[name="access"]').value,
+        // Only send deadline if user picked a valid date
+        deadline: deadlineValue ? deadlineValue : undefined,
+        questions: []
+        };
 
-  // 🔹 Collect questions
-  document.querySelectorAll('.question-item').forEach(q => {
-    const type = q.querySelector('.question-type').value;
-    if (!type) return;
+        const questionItems = document.querySelectorAll('.question-item');
 
-    const question = {
-      text: q.querySelector('.question-text')?.value?.trim() || '',
-      type,
-      points: parseInt(q.querySelector('.question-points').value) || 1,
-      files: []
-    };
+        for (const q of questionItems) {
+        const type = q.querySelector('.question-type').value;
+        if (!type) continue;
 
-    if (type === 'identification') {
-      question.answer = q.querySelector('.identification-answer')?.value?.trim() || '';
-    }
+        const question = {
+            text: q.querySelector('.question-text')?.value?.trim() || '',
+            type,
+            points: parseInt(q.querySelector('.question-points').value) || 1,
+            files: []
+        };
 
-    if (type === 'multiple') {
-      const choices = Array.from(q.querySelectorAll('.choice-text')).map(c => c.value.trim());
-      const correctChoice = q.querySelector('.correct-choice:checked')?.value;
-      question.choices = choices;
-      question.correctAnswer = correctChoice;
-    }
-
-    if (type === 'enumeration') {
-      const answers = Array.from(q.querySelectorAll('.enumeration-answer')).map(a => a.value.trim());
-      question.answers = answers;
-    }
-
-    if (question.text.length > 0) {
-      testData.questions.push(question);
-    }
-  });
-
-  console.log('📤 Sending testData:', testData);
-
-  // 🧠 Detect if we are editing or creating
-  const isEdit = form.dataset.mode === 'edit';
-  const testId = form.dataset.id;
-
-  const endpoint = isEdit
-    ? `/dean/tests/${testId}`
-    : '/dean/tests/create';
-  const method = isEdit ? 'PUT' : 'POST';
-
-  try {
-    const res = await fetch(endpoint, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(testData)
-    });
-
-    if (res.ok) {
-      alert(isEdit ? '✅ Test updated successfully!' : '✅ Test created successfully!');
-      window.location.reload();
-    } else {
-      const err = await res.text();
-      alert('❌ Failed: ' + err);
-    }
-  } catch (err) {
-    console.error(err);
-    alert('❌ Error connecting to server.');
-  }
-}
+        // Convert files to Base64 or push file names depending on backend
+        // Use uploaded file URL from hidden input
+        const fileUrl = q.querySelector('.question-file-url')?.value;
+        if (fileUrl) question.files.push(fileUrl);
 
 
-        // File preview handling
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('question-files')) {
-                const questionId = e.target.closest('.question-item').id.split('-')[1];
-                const previewSection = document.getElementById(`file-preview-${questionId}`);
-                previewSection.innerHTML = '';
+        if (type === 'identification') question.answer = q.querySelector('.identification-answer')?.value?.trim() || '';
+        if (type === 'multiple') {
+            const choices = Array.from(q.querySelectorAll('.choice-text')).map(c => c.value.trim());
+            const correctChoice = q.querySelector('.correct-choice:checked')?.value;
+            question.choices = choices;
+            question.correctAnswer = correctChoice;
+        }
+        if (type === 'enumeration') {
+            question.answers = Array.from(q.querySelectorAll('.enumeration-answer')).map(a => a.value.trim());
+        }
 
-                Array.from(e.target.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const preview = document.createElement('img');
-                        preview.src = e.target.result;
-                        preview.className = 'file-preview';
-                        previewSection.appendChild(preview);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
+        if (question.text || question.files.length) testData.questions.push(question);
+        }
+
+        console.log('📤 Sending testData with files:', testData);
+
+        // Determine if creating or editing
+        const isEdit = form.dataset.mode === 'edit';
+        const testId = form.dataset.id;
+
+        const endpoint = isEdit
+        ? `/dean/tests/${testId}`
+        : '/dean/tests/create';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        try {
+        const res = await fetch(endpoint, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(testData)
         });
+
+        if (res.ok) {
+            alert(isEdit ? '✅ Test updated successfully!' : '✅ Test created successfully!');
+            window.location.reload();
+        } else {
+            const err = await res.text();
+            alert('❌ Failed: ' + err);
+        }
+
+        } catch (err) {
+            console.error(err);
+            alert('❌ Error connecting to server.');
+        }
+    }
+
+        // Helper function to convert File -> Base64
+        function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -704,105 +738,119 @@
         });
 
         document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector("#testForm");
-  const modalTitle = document.querySelector("#createTestModalLabel");
-  const modal = document.querySelector("#createTestModal");
-  const saveBtn = document.querySelector(".modal-footer .btn-primary");
+        const form = document.querySelector("#testForm");
+        const modalTitle = document.querySelector("#createTestModalLabel");
+        const modal = document.querySelector("#createTestModal");
+        const saveBtn = document.querySelector(".modal-footer .btn-primary");
 
-  document.querySelectorAll(".edit-test").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const testId = btn.dataset.id;
+        document.querySelectorAll(".edit-test").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const testId = btn.dataset.id;
 
-    modalTitle.textContent = "Edit Test";
-    saveBtn.textContent = "Update Test";
-    form.dataset.mode = "edit";
-    form.dataset.id = testId;
+            modalTitle.textContent = "Edit Test";
+            saveBtn.textContent = "Update Test";
+            form.dataset.mode = "edit";
+            form.dataset.id = testId;
 
-    const res = await fetch(`/dean/tests/${testId}`);
-    if (!res.ok) {
-      alert("Failed to fetch test details.");
-      return;
-    }
-    const test = await res.json();
+            const res = await fetch(`/dean/tests/${testId}`);
+            if (!res.ok) {
+            alert("Failed to fetch test details.");
+            return;
+            }
+            const test = await res.json();
 
-    // Populate top-level test fields
-    form.querySelector("[name='title']").value = test.title || "";
-    form.querySelector("[name='subjectCode']").value = test.subjectCode || "";
-    form.querySelector("[name='description']").value = test.description || "";
-    form.querySelector("[name='access']").value = test.access || "Private";
-    form.querySelector("[name='timeLimit']").value = test.timeLimit || "";
-    form.querySelector("[name='deadline']").value = test.deadline
-      ? new Date(test.deadline).toISOString().slice(0, 16)
-      : "";
+            // Populate top-level test fields
+            form.querySelector("[name='title']").value = test.title || "";
+            form.querySelector("[name='subjectCode']").value = test.subjectCode || "";
+            form.querySelector("[name='description']").value = test.description || "";
+            form.querySelector("[name='access']").value = test.access || "Private";
+            form.querySelector("[name='timeLimit']").value = test.timeLimit || "";
+            form.querySelector("[name='deadline']").value = test.deadline
+            ? new Date(test.deadline).toISOString().slice(0, 16)
+            : "";
 
-    // Clear existing questions
-    const container = document.getElementById("questionsContainer");
-    container.innerHTML = "";
-    questionCount = 0;
+            // Clear existing questions
+            const container = document.getElementById("questionsContainer");
+            container.innerHTML = "";
+            questionCount = 0;
 
-    // Rebuild questions dynamically
-    test.questions?.forEach(q => {
-        addQuestion(); // safely increments questionCount and appends question
+            // Rebuild questions dynamically
+            test.questions?.forEach(q => {
+                addQuestion(); // safely increments questionCount and appends question
 
-        const currentQ = container.lastElementChild;
-        currentQ.querySelector(".question-text").value = q.text || "";
-        currentQ.querySelector(".question-points").value = q.points || 1;
-        currentQ.querySelector(".question-type").value = q.type || "";
+                const currentQ = container.lastElementChild;
+                currentQ.querySelector(".question-text").value = q.text || "";
+                currentQ.querySelector(".question-points").value = q.points || 1;
+                currentQ.querySelector(".question-type").value = q.type || "";
 
-        changeQuestionType(questionCount);
+                changeQuestionType(questionCount);
 
-        if (q.type === "identification") {
-        currentQ.querySelector(".identification-answer").value = q.answer || "";
-    }
+                // ✅ Populate existing file if present
+                if (q.files && q.files.length > 0) {
+                    const fileUrl = q.files[0]; // assuming 1 file per question
+                    const img = currentQ.querySelector(".question-file-preview");
+                    const hiddenInput = currentQ.querySelector(".question-file-url");
+                    hiddenInput.value = fileUrl;
 
-        if (q.type === "multiple") {
-            const choicesContainer = currentQ.querySelector(".choices-container");
-            choicesContainer.innerHTML = ""; // clear default choices
+                    // Only show if image
+                    if (fileUrl.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+                        img.src = fileUrl;
+                        img.style.display = "block";
+                    }
+                }
 
-            q.choices?.forEach((choice, i) => {
-                const letter = String.fromCharCode(65 + i); // A, B, C...
-                const choiceHTML = `
-                    <div class="choice-item">
-                        <div class="input-group">
-                            <span class="input-group-text">${letter}</span>
-                            <input type="text" class="form-control choice-text" placeholder="Choice ${letter}" value="${choice}" required>
-                            <div class="input-group-text">
-                                <input class="form-check-input correct-choice" type="radio" name="correct-${questionCount}" value="${letter}" ${q.correctAnswer === letter ? "checked" : ""}>
+                if (q.type === "identification") {
+                currentQ.querySelector(".identification-answer").value = q.answer || "";
+            }
+
+                if (q.type === "multiple") {
+                    const choicesContainer = currentQ.querySelector(".choices-container");
+                    choicesContainer.innerHTML = ""; // clear default choices
+
+                    q.choices?.forEach((choice, i) => {
+                        const letter = String.fromCharCode(65 + i); // A, B, C...
+                        const choiceHTML = `
+                            <div class="choice-item">
+                                <div class="input-group">
+                                    <span class="input-group-text">${letter}</span>
+                                    <input type="text" class="form-control choice-text" placeholder="Choice ${letter}" value="${choice}" required>
+                                    <div class="input-group-text">
+                                        <input class="form-check-input correct-choice" type="radio" name="correct-${questionCount}" value="${letter}" ${q.correctAnswer === letter ? "checked" : ""}>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                choicesContainer.innerHTML += choiceHTML;
-            });
-        }
+                        `;
+                        choicesContainer.innerHTML += choiceHTML;
+                    });
+                }
 
-        if (q.type === "enumeration") {
-            const enumContainer = currentQ.querySelector(".enumeration-container");
-            enumContainer.innerHTML = ""; // clear default
+                if (q.type === "enumeration") {
+                    const enumContainer = currentQ.querySelector(".enumeration-container");
+                    enumContainer.innerHTML = ""; // clear default
 
-            q.answers?.forEach((ans, i) => {
-                const answerHTML = `
-                    <div class="enumeration-item">
-                        <div class="input-group">
-                            <input type="text" class="form-control enumeration-answer" value="${ans}" placeholder="Answer ${i+1}" required>
-                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                enumContainer.innerHTML += answerHTML;
+                    q.answers?.forEach((ans, i) => {
+                        const answerHTML = `
+                            <div class="enumeration-item">
+                                <div class="input-group">
+                                    <input type="text" class="form-control enumeration-answer" value="${ans}"async function saveTest() { placeholder="Answer ${i+1}" required>
+                                    <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        enumContainer.innerHTML += answerHTML;
+                    });
+                }
             });
-        }
+
+            updateTestSummary();
+            new bootstrap.Modal(modal).show();
+        });
     });
-
-    updateTestSummary();
-    new bootstrap.Modal(modal).show();
-  });
-});
 
 
   modal.addEventListener("hidden.bs.modal", () => {
