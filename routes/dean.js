@@ -1,16 +1,33 @@
 import express from "express";
+import path from "path";
+import Admin from "../models/Admin.js"; // Dean/Professor accounts
+import Test from "../models/Test.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import Admin from "../models/Admin.js"; // Assuming Dean and Professor accounts are stored here
-import {sendPasswordSetupEmail } from "../utils/passwordResetService.js";
+import { sendPasswordSetupEmail } from "../utils/passwordResetService.js";
+import multer from "multer";
+import fs from "fs";
+
 const router = express.Router();
 
-import Test from "../models/Test.js";
+// ====================== Multer Setup ======================
+const UPLOAD_DIR = path.join("public", "TestImages");
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-// All dean routes require authentication and dean role
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const uploadFiles = multer({ storage });
+
+// ====================== Middleware ======================
 router.use(requireAuth);
 router.use(requireRole(["Dean"]));
 
-// Dean Dashboard
+// ====================== Dean Dashboard ======================
 router.get("/dashboard", (req, res) => {
   res.render("dean/Dashboard", {
     title: "Dean Dashboard",
@@ -18,7 +35,7 @@ router.get("/dashboard", (req, res) => {
   });
 });
 
-// Manage Accounts — now fetches Professors & Deans dynamically
+// ====================== Manage Accounts ======================
 router.get("/manage-accounts", async (req, res) => {
   try {
     const professors = await Admin.find({ role: "Professor" }).lean();
@@ -36,19 +53,9 @@ router.get("/manage-accounts", async (req, res) => {
   }
 });
 
-// Add new Dean or Professor
 router.post("/add-user", async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      middleName,
-      email,
-      contactNumber,
-      employeeID,
-      department,
-      role,
-    } = req.body;
+    const { firstName, lastName, middleName, email, contactNumber, employeeID, department, role } = req.body;
 
     const newUser = new Admin({
       firstName,
@@ -63,13 +70,12 @@ router.post("/add-user", async (req, res) => {
       employmentStatus: "Full-time",
       accountStatus: "Active",
       password: "$2a$12$rypunVcKVCq.aomFTeBGFOD3E9sX62.SoSnLAYxY1Xt/AUg3tORqq", // Default hashed password
-      createdBy: req.session.user ? req.session.user.fullName : "System",
+      createdBy: req.session.user?.fullName || "System",
     });
 
     await newUser.save();
     console.log(`✅ New ${role} added: ${employeeID}`);
 
-    // 🔥 Send setup email with OTP link
     await sendPasswordSetupEmail(newUser.email, newUser._id);
 
     res.redirect("/dean/manage-accounts");
@@ -79,8 +85,6 @@ router.post("/add-user", async (req, res) => {
   }
 });
 
-
-// Delete Dean or Professor
 router.post("/delete/:id", async (req, res) => {
   try {
     await Admin.findByIdAndDelete(req.params.id);
@@ -92,21 +96,32 @@ router.post("/delete/:id", async (req, res) => {
   }
 });
 
-// GET /dean/tests  -> render tests page with tests data
+// ====================== Test Management ======================
+
+// Upload single file
+router.post("/tests/upload", uploadFiles.single("file"), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+    const fileUrl = `/TestImages/${req.file.filename}`;
+    res.json({ url: fileUrl });
+  } catch (err) {
+    console.error("❌ Error uploading file:", err);
+    res.status(500).json({ message: "Failed to upload file" });
+  }
+});
+
+// Render all tests
 router.get("/tests", async (req, res) => {
   try {
     const tests = await Test.find()
-      .populate("createdBy", "firstName lastName") // optional
+      .populate("createdBy", "firstName lastName")
       .sort({ createdAt: -1 })
       .lean();
 
-    // Create a readable createdBy name if populated
-    tests.forEach(t => {
-      if (t.createdBy && (t.createdBy.firstName || t.createdBy.lastName)) {
-        t.createdByName = `${t.createdBy.lastName || ""}, ${t.createdBy.firstName || ""}`.trim();
-      } else {
-        t.createdByName = req.session.user ? req.session.user.fullName : "Unknown";
-      }
+    tests.forEach((t) => {
+      t.createdByName = t.createdBy
+        ? `${t.createdBy.lastName || ""}, ${t.createdBy.firstName || ""}`.trim()
+        : req.session.user?.fullName || "Unknown";
     });
 
     res.render("dean/Tests", {
@@ -120,15 +135,11 @@ router.get("/tests", async (req, res) => {
   }
 });
 
-// ✅ GET /dean/tests/:id -> return one test as JSON for editing
+// Get test by ID (JSON for edit)
 router.get("/tests/:id", async (req, res) => {
   try {
     const test = await Test.findById(req.params.id).lean();
-
-    if (!test) {
-      return res.status(404).json({ message: "Test not found" });
-    }
-
+    if (!test) return res.status(404).json({ message: "Test not found" });
     res.json(test);
   } catch (err) {
     console.error("❌ Error fetching test:", err);
@@ -136,60 +147,23 @@ router.get("/tests/:id", async (req, res) => {
   }
 });
 
-// ✅ PUT /dean/tests/:id  -> update existing test (including questions)
-router.put("/tests/:id", async (req, res) => {
+// Create new test
+router.post("/tests/create", uploadFiles.array("questionFiles"), async (req, res) => {
   try {
-    const testId = req.params.id;
-    const {
-      title,
-      subjectCode,
-      description,
-      access,
-      timeLimit,
-      deadline,
-      questions,
-    } = req.body;
+    const { title, subjectCode, description, access = "Private", timeLimit, deadline, questions } = req.body;
 
-    const updated = await Test.findByIdAndUpdate(
-      testId,
-      {
-        title,
-        subjectCode,
-        description,
-        access,
-        timeLimit,
-        deadline,
-        questions, // ✅ include questions here
-        updatedAt: new Date(),
-      },
-      { new: true }
-    );
+    const parsedQuestions = questions
+      ? Array.isArray(questions)
+        ? questions
+        : JSON.parse(questions)
+      : [];
 
-    if (!updated) {
-      console.log(`❌ Test not found for update: ${testId}`);
-      return res.status(404).json({ message: "Test not found" });
+    if (req.files) {
+      req.files.forEach((file, idx) => {
+        if (!parsedQuestions[idx].files) parsedQuestions[idx].files = [];
+        parsedQuestions[idx].files.push(`TestImages/${file.filename}`);
+      });
     }
-
-    console.log(`✅ Test updated successfully: ${testId}`);
-    res.json({ message: "Test updated successfully", test: updated });
-  } catch (err) {
-    console.error("❌ Error updating test:", err);
-    res.status(500).json({ message: "Server error while updating test" });
-  }
-});
-
-// POST /dean/tests/create  -> create a simple test (questions array optional)
-router.post("/tests/create", async (req, res) => {
-  try {
-    // The test form should post these fields. For now we handle top-level fields only.
-    const {
-      title,
-      subjectCode,
-      description,
-      access = "Private",
-      timeLimit,
-      deadline
-    } = req.body;
 
     const newTest = new Test({
       title,
@@ -198,53 +172,63 @@ router.post("/tests/create", async (req, res) => {
       access,
       timeLimit: timeLimit ? Number(timeLimit) : undefined,
       deadline: deadline ? new Date(deadline) : undefined,
-      questions: [], // later you can send full questions array from the client
-      createdBy: req.session.user ? req.session.user.id : undefined,
+      questions: parsedQuestions,
+      createdBy: req.session.user?.id,
     });
 
     await newTest.save();
     console.log("✅ New Test created:", newTest._id);
-    console.log("📝 Incoming test data:", req.body);
     res.redirect("/dean/tests");
   } catch (err) {
-    console.error("❌ Error creating test:", err);
+    console.error(err);
     res.status(500).send("Failed to create test");
   }
 });
 
-// DELETE /dean/tests/delete/:id  -> delete a test
-router.post("/tests/delete/:id", async (req, res) => {
+// Update existing test
+router.put("/tests/:id", uploadFiles.array("questionFiles"), async (req, res) => {
   try {
     const testId = req.params.id;
-    await Test.findByIdAndDelete(testId);
-    console.log(`🗑️ Test deleted: ${testId}`);
+    let { title, subjectCode, description, access, timeLimit, deadline, questions } = req.body;
+
+    let parsedQuestions = questions
+      ? Array.isArray(questions)
+        ? questions
+        : JSON.parse(questions)
+      : [];
+
+    if (req.files) {
+      req.files.forEach((file) => {
+        const idx = parseInt(file.fieldname.split("_")[1]);
+        if (!parsedQuestions[idx].files) parsedQuestions[idx].files = [];
+        parsedQuestions[idx].files.push(`TestImages/${file.filename}`);
+        parsedQuestions[idx].text = parsedQuestions[idx].text || "";
+      });
+    }
+
+    const updated = await Test.findByIdAndUpdate(
+      testId,
+      { title, subjectCode, description, access, timeLimit, deadline, questions: parsedQuestions, updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Test not found" });
+    res.json({ message: "Test updated successfully", test: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error while updating test" });
+  }
+});
+
+// Delete test
+router.post("/tests/delete/:id", async (req, res) => {
+  try {
+    await Test.findByIdAndDelete(req.params.id);
+    console.log(`🗑️ Test deleted: ${req.params.id}`);
     res.redirect("/dean/tests");
   } catch (err) {
     console.error("❌ Error deleting test:", err);
     res.status(500).send("Failed to delete test");
-  }
-});
-
-// POST /dean/tests/update/:id  -> update test information
-router.post("/tests/update/:id", async (req, res) => {
-  try {
-    const testId = req.params.id;
-    const updateData = req.body;
-
-    // only allow specific fields to be updated
-    const allowedFields = ["title", "subjectCode", "description", "access", "timeLimit", "deadline"];
-    const filteredData = {};
-
-    allowedFields.forEach((field) => {
-      if (updateData[field] !== undefined) filteredData[field] = updateData[field];
-    });
-
-    await Test.findByIdAndUpdate(testId, filteredData, { new: true });
-    console.log(`✏️ Test updated: ${testId}`);
-    res.redirect("/dean/tests");
-  } catch (err) {
-    console.error("❌ Error updating test:", err);
-    res.status(500).send("Failed to update test");
   }
 });
 
