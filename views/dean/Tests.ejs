@@ -43,6 +43,7 @@
     </style>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="#">
@@ -101,8 +102,11 @@
 
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Header -->
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2"><i class="fas fa-file-alt me-2"></i><%= title %></h1>
+                    <h1 class="h2">
+                        <i class="fas fa-file-alt me-2"></i><%= title %>
+                    </h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTestModal">
                             <i class="fas fa-plus me-2"></i>Create Test
@@ -110,14 +114,19 @@
                     </div>
                 </div>
 
-                <!-- Tests Overview -->
+                <!-- Dynamic Overview Cards -->
                 <div class="row mb-4">
+                    <% 
+                        const totalTests = tests ? tests.length : 0;
+                        const publicTests = tests ? tests.filter(t => t.access === 'Public').length : 0;
+                        const privateTests = tests ? tests.filter(t => t.access === 'Private').length : 0;
+                    %>
                     <div class="col-md-3">
                         <div class="card text-white bg-primary">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4>48</h4>
+                                        <h4><%= totalTests %></h4>
                                         <p>Total Tests</p>
                                     </div>
                                     <i class="fas fa-file-alt fa-2x"></i>
@@ -130,10 +139,10 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4>32</h4>
-                                        <p>Active Tests</p>
+                                        <h4><%= publicTests %></h4>
+                                        <p>Public Tests</p>
                                     </div>
-                                    <i class="fas fa-play-circle fa-2x"></i>
+                                    <i class="fas fa-unlock fa-2x"></i>
                                 </div>
                             </div>
                         </div>
@@ -143,10 +152,10 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4>12</h4>
-                                        <p>Draft Tests</p>
+                                        <h4><%= privateTests %></h4>
+                                        <p>Private Tests</p>
                                     </div>
-                                    <i class="fas fa-edit fa-2x"></i>
+                                    <i class="fas fa-lock fa-2x"></i>
                                 </div>
                             </div>
                         </div>
@@ -156,26 +165,27 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h4>4</h4>
-                                        <p>Completed</p>
+                                        <h4><%= tests && tests.filter(t => t.questions.length > 0).length %></h4>
+                                        <p>With Questions</p>
                                     </div>
-                                    <i class="fas fa-check-circle fa-2x"></i>
+                                    <i class="fas fa-question-circle fa-2x"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tests Table -->
+                <!-- Dynamic Tests Table -->
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">All Tests</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped">
+                            <table class="table table-striped align-middle">
                                 <thead>
                                     <tr>
+                                        <th>#</th>
                                         <th>Title</th>
                                         <th>Subject Code</th>
                                         <th>Access</th>
@@ -186,64 +196,66 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>Midterm Examination</td>
-                                        <td>CS101</td>
-                                        <td><span class="badge bg-success">Public</span></td>
-                                        <td>Midterm exam for Computer Science 101</td>
-                                        <td>Dr. Maria Santos</td>
-                                        <td>
-                                            <small>Created: 2024-01-15</small><br>
-                                            <small>Updated: 2024-01-20</small>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                    <% if (tests && tests.length > 0) { %>
+                                        <% tests.forEach((test, index) => { %>
+                                        <tr>
+                                            <td><%= index + 1 %></td>
+                                            <td><%= test.title %></td>
+                                            <td><%= test.subjectCode %></td>
+                                            <td>
+                                            <span class="badge <%= test.access === 'Public' ? 'bg-success' : 'bg-secondary' %>">
+                                                <%= test.access %>
+                                            </span>
+                                            </td>
+                                            <td><%= test.description || '-' %></td>
+                                            <td><%= test.createdByName || user.fullName %></td>
+                                            <td>
+                                            <small>Created: <%= new Date(test.createdAt).toLocaleDateString() %></small><br>
+                                            <small>Updated: <%= new Date(test.updatedAt).toLocaleDateString() %></small>
+                                            </td>
+                                            <td class="text-center">
+                                                
+                                            <!-- Edit Test Button -->
+                                            <button 
+                                                class="btn btn-sm btn-outline-warning me-1 edit-test"
+                                                data-id="<%= test._id %>"
+                                                data-title="<%= test.title %>"
+                                                data-subject="<%= test.subjectCode %>"
+                                                data-description="<%= test.description %>"
+                                                data-access="<%= test.access %>"
+                                                data-timelimit="<%= test.timeLimit %>"
+                                                data-deadline="<%= test.deadline ? new Date(test.deadline).toISOString().slice(0, 16) : '' %>"
+                                                >
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+
+
+                                            <!-- Delete Test Form -->
+                                            <form 
+                                                action="/dean/tests/delete/<%= test._id %>" 
+                                                method="POST" 
+                                                class="d-inline"
+                                                onsubmit="return confirm('Are you sure you want to delete this test?')"
+                                            >
+                                                <button 
+                                                type="submit" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="Delete Test"
+                                                >
                                                 <i class="fas fa-trash"></i>
-                                            </button>
+                                                </button>
+                                            </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                        <td colspan="8" class="text-center text-muted py-3">
+                                            No tests created yet.
                                         </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Final Project</td>
-                                        <td>MATH202</td>
-                                        <td><span class="badge bg-warning">Private</span></td>
-                                        <td>Final project for Advanced Mathematics</td>
-                                        <td>Prof. Juan Cruz</td>
-                                        <td>
-                                            <small>Created: 2024-01-10</small><br>
-                                            <small>Updated: 2024-01-18</small>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Quiz 1 - Basics</td>
-                                        <td>PHY101</td>
-                                        <td><span class="badge bg-success">Public</span></td>
-                                        <td>First quiz for Physics 101</td>
-                                        <td><%= user.fullName %></td>
-                                        <td>
-                                            <small>Created: 2024-01-05</small><br>
-                                            <small>Updated: 2024-01-12</small>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
+                                        </tr>
+                                    <% } %>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
@@ -328,7 +340,7 @@
                                 </button>
                             </div>
                             <div id="questionsContainer">
-                                <!-- Questions will be added here dynamically -->
+                                <!-- Dynamic question inputs go here -->
                             </div>
                         </div>
                     </form>
@@ -576,22 +588,87 @@
         }
 
         // Save test
-        function saveTest() {
-            const form = document.getElementById('testForm');
-            if (form.checkValidity()) {
-                // Here you would typically send the data to your backend
-                alert('Test saved successfully!');
-                // Close modal and reset form
-                const modal = bootstrap.Modal.getInstance(document.getElementById('createTestModal'));
-                modal.hide();
-                form.reset();
-                document.getElementById('questionsContainer').innerHTML = '';
-                questionCount = 0;
-                updateTestSummary();
-            } else {
-                form.reportValidity();
-            }
-        }
+        async function saveTest() {
+  const form = document.getElementById('testForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  const testData = {
+    title: form.querySelector('[name="title"]').value.trim(),
+    subjectCode: form.querySelector('[name="subjectCode"]').value.trim(),
+    description: form.querySelector('[name="description"]').value.trim(),
+    timeLimit: parseInt(form.querySelector('[name="timeLimit"]').value || 0),
+    deadline: form.querySelector('[name="deadline"]').value || null,
+    access: form.querySelector('[name="access"]').value,
+    questions: []
+  };
+
+  // 🔹 Collect questions
+  document.querySelectorAll('.question-item').forEach(q => {
+    const type = q.querySelector('.question-type').value;
+    if (!type) return;
+
+    const question = {
+      text: q.querySelector('.question-text')?.value?.trim() || '',
+      type,
+      points: parseInt(q.querySelector('.question-points').value) || 1,
+      files: []
+    };
+
+    if (type === 'identification') {
+      question.answer = q.querySelector('.identification-answer')?.value?.trim() || '';
+    }
+
+    if (type === 'multiple') {
+      const choices = Array.from(q.querySelectorAll('.choice-text')).map(c => c.value.trim());
+      const correctChoice = q.querySelector('.correct-choice:checked')?.value;
+      question.choices = choices;
+      question.correctAnswer = correctChoice;
+    }
+
+    if (type === 'enumeration') {
+      const answers = Array.from(q.querySelectorAll('.enumeration-answer')).map(a => a.value.trim());
+      question.answers = answers;
+    }
+
+    if (question.text.length > 0) {
+      testData.questions.push(question);
+    }
+  });
+
+  console.log('📤 Sending testData:', testData);
+
+  // 🧠 Detect if we are editing or creating
+  const isEdit = form.dataset.mode === 'edit';
+  const testId = form.dataset.id;
+
+  const endpoint = isEdit
+    ? `/dean/tests/${testId}`
+    : '/dean/tests/create';
+  const method = isEdit ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testData)
+    });
+
+    if (res.ok) {
+      alert(isEdit ? '✅ Test updated successfully!' : '✅ Test created successfully!');
+      window.location.reload();
+    } else {
+      const err = await res.text();
+      alert('❌ Failed: ' + err);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('❌ Error connecting to server.');
+  }
+}
+
 
         // File preview handling
         document.addEventListener('change', function(e) {
@@ -617,6 +694,112 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateTestSummary();
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+  const form = document.querySelector("#testForm");
+  const modalTitle = document.querySelector("#createTestModalLabel");
+  const modal = document.querySelector("#createTestModal");
+  const saveBtn = document.querySelector(".modal-footer .btn-primary");
+
+  document.querySelectorAll(".edit-test").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const testId = btn.dataset.id;
+      console.log("Editing test:", testId);
+
+      modalTitle.textContent = "Edit Test";
+      saveBtn.textContent = "Update Test";
+      form.dataset.mode = "edit";
+      form.dataset.id = testId;
+
+      // ✅ Fetch full test details (with questions)
+      const res = await fetch(`/dean/tests/${testId}`);
+      if (!res.ok) {
+        alert("Failed to fetch test details.");
+        return;
+      }
+      const test = await res.json();
+      console.log("Loaded test:", test);
+
+      // Populate test fields
+      form.querySelector("[name='title']").value = test.title || "";
+      form.querySelector("[name='subjectCode']").value = test.subjectCode || "";
+      form.querySelector("[name='description']").value = test.description || "";
+      form.querySelector("[name='access']").value = test.access || "Private";
+      form.querySelector("[name='timeLimit']").value = test.timeLimit || "";
+      form.querySelector("[name='deadline']").value = test.deadline
+        ? new Date(test.deadline).toISOString().slice(0, 16)
+        : "";
+
+      // ✅ Clear existing question UI
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+      questionCount = 0;
+
+      // ✅ Rebuild question UI from existing data
+      if (test.questions && test.questions.length > 0) {
+        test.questions.forEach(q => {
+          container.innerHTML += getQuestionTemplate();
+          const currentQ = container.lastElementChild;
+
+          currentQ.querySelector(".question-text").value = q.text || "";
+          currentQ.querySelector(".question-type").value = q.type || "";
+          currentQ.querySelector(".question-points").value = q.points || 1;
+
+          changeQuestionType(questionCount);
+
+          if (q.type === "identification") {
+            currentQ.querySelector(".identification-answer").value = q.answer || "";
+          }
+
+          if (q.type === "multiple" && q.choices) {
+            const choicesContainer = currentQ.querySelector(".choices-container");
+            const radios = currentQ.querySelectorAll(".correct-choice");
+            q.choices.forEach((choice, i) => {
+              if (choicesContainer.children[i]) {
+                choicesContainer.children[i].querySelector(".choice-text").value = choice;
+                if (q.correctAnswer === String.fromCharCode(65 + i)) {
+                  radios[i].checked = true;
+                }
+              }
+            });
+          }
+
+          if (q.type === "enumeration" && q.answers) {
+            const enumContainer = currentQ.querySelector(".enumeration-container");
+            enumContainer.innerHTML = "";
+            q.answers.forEach((ans, i) => {
+              enumContainer.innerHTML += `
+                <div class="enumeration-item">
+                  <div class="input-group">
+                    <input type="text" class="form-control enumeration-answer" value="${ans}" placeholder="Answer ${i + 1}" required>
+                    <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              `;
+            });
+          }
+        });
+      }
+
+      updateTestSummary();
+      new bootstrap.Modal(modal).show();
+    });
+  });
+
+  modal.addEventListener("hidden.bs.modal", () => {
+    form.reset();
+    document.getElementById("questionsContainer").innerHTML = "";
+    questionCount = 0;
+    form.removeAttribute("data-mode");
+    form.removeAttribute("data-id");
+    modalTitle.textContent = "Create New Test";
+    saveBtn.textContent = "Save Test";
+  });
+});
+
+    
     </script>
 </body>
 </html>

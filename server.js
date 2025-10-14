@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import routes from './routes/index.js';
 import setupPasswordRoutes from './routes/passwordReset.js';
+import deanRoutes from "./routes/dean.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
 
 // Load environment variables FIRST
 dotenv.config();
@@ -52,6 +55,8 @@ app.use((req, res, next) => {
 // ✅ Register routes
 app.use('/', routes);
 app.use('/', setupPasswordRoutes);
+app.use("/dean", deanRoutes);
+app.use("/", adminRoutes);
 
 // ✅ MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
