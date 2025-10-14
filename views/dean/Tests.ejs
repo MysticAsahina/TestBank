@@ -405,12 +405,20 @@
             `;
         }
 
-        // Add new question
+        // ✅ Fixed Add Question function
         function addQuestion() {
             const container = document.getElementById('questionsContainer');
-            container.innerHTML += getQuestionTemplate();
+
+            // Create a temporary wrapper to hold the new question HTML
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = getQuestionTemplate();
+
+            // Append the new question element safely (no data loss)
+            container.appendChild(wrapper.firstElementChild);
+
             updateTestSummary();
         }
+
 
         // Remove question
         function removeQuestion(questionId) {
@@ -702,91 +710,100 @@
   const saveBtn = document.querySelector(".modal-footer .btn-primary");
 
   document.querySelectorAll(".edit-test").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const testId = btn.dataset.id;
-      console.log("Editing test:", testId);
+  btn.addEventListener("click", async () => {
+    const testId = btn.dataset.id;
 
-      modalTitle.textContent = "Edit Test";
-      saveBtn.textContent = "Update Test";
-      form.dataset.mode = "edit";
-      form.dataset.id = testId;
+    modalTitle.textContent = "Edit Test";
+    saveBtn.textContent = "Update Test";
+    form.dataset.mode = "edit";
+    form.dataset.id = testId;
 
-      // ✅ Fetch full test details (with questions)
-      const res = await fetch(`/dean/tests/${testId}`);
-      if (!res.ok) {
-        alert("Failed to fetch test details.");
-        return;
-      }
-      const test = await res.json();
-      console.log("Loaded test:", test);
+    const res = await fetch(`/dean/tests/${testId}`);
+    if (!res.ok) {
+      alert("Failed to fetch test details.");
+      return;
+    }
+    const test = await res.json();
 
-      // Populate test fields
-      form.querySelector("[name='title']").value = test.title || "";
-      form.querySelector("[name='subjectCode']").value = test.subjectCode || "";
-      form.querySelector("[name='description']").value = test.description || "";
-      form.querySelector("[name='access']").value = test.access || "Private";
-      form.querySelector("[name='timeLimit']").value = test.timeLimit || "";
-      form.querySelector("[name='deadline']").value = test.deadline
-        ? new Date(test.deadline).toISOString().slice(0, 16)
-        : "";
+    // Populate top-level test fields
+    form.querySelector("[name='title']").value = test.title || "";
+    form.querySelector("[name='subjectCode']").value = test.subjectCode || "";
+    form.querySelector("[name='description']").value = test.description || "";
+    form.querySelector("[name='access']").value = test.access || "Private";
+    form.querySelector("[name='timeLimit']").value = test.timeLimit || "";
+    form.querySelector("[name='deadline']").value = test.deadline
+      ? new Date(test.deadline).toISOString().slice(0, 16)
+      : "";
 
-      // ✅ Clear existing question UI
-      const container = document.getElementById("questionsContainer");
-      container.innerHTML = "";
-      questionCount = 0;
+    // Clear existing questions
+    const container = document.getElementById("questionsContainer");
+    container.innerHTML = "";
+    questionCount = 0;
 
-      // ✅ Rebuild question UI from existing data
-      if (test.questions && test.questions.length > 0) {
-        test.questions.forEach(q => {
-          container.innerHTML += getQuestionTemplate();
-          const currentQ = container.lastElementChild;
+    // Rebuild questions dynamically
+    test.questions?.forEach(q => {
+        addQuestion(); // safely increments questionCount and appends question
 
-          currentQ.querySelector(".question-text").value = q.text || "";
-          currentQ.querySelector(".question-type").value = q.type || "";
-          currentQ.querySelector(".question-points").value = q.points || 1;
+        const currentQ = container.lastElementChild;
+        currentQ.querySelector(".question-text").value = q.text || "";
+        currentQ.querySelector(".question-points").value = q.points || 1;
+        currentQ.querySelector(".question-type").value = q.type || "";
 
-          changeQuestionType(questionCount);
+        changeQuestionType(questionCount);
 
-          if (q.type === "identification") {
-            currentQ.querySelector(".identification-answer").value = q.answer || "";
-          }
+        if (q.type === "identification") {
+        currentQ.querySelector(".identification-answer").value = q.answer || "";
+    }
 
-          if (q.type === "multiple" && q.choices) {
+        if (q.type === "multiple") {
             const choicesContainer = currentQ.querySelector(".choices-container");
-            const radios = currentQ.querySelectorAll(".correct-choice");
-            q.choices.forEach((choice, i) => {
-              if (choicesContainer.children[i]) {
-                choicesContainer.children[i].querySelector(".choice-text").value = choice;
-                if (q.correctAnswer === String.fromCharCode(65 + i)) {
-                  radios[i].checked = true;
-                }
-              }
-            });
-          }
+            choicesContainer.innerHTML = ""; // clear default choices
 
-          if (q.type === "enumeration" && q.answers) {
+            q.choices?.forEach((choice, i) => {
+                const letter = String.fromCharCode(65 + i); // A, B, C...
+                const choiceHTML = `
+                    <div class="choice-item">
+                        <div class="input-group">
+                            <span class="input-group-text">${letter}</span>
+                            <input type="text" class="form-control choice-text" placeholder="Choice ${letter}" value="${choice}" required>
+                            <div class="input-group-text">
+                                <input class="form-check-input correct-choice" type="radio" name="correct-${questionCount}" value="${letter}" ${q.correctAnswer === letter ? "checked" : ""}>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                choicesContainer.innerHTML += choiceHTML;
+            });
+        }
+
+        if (q.type === "enumeration") {
             const enumContainer = currentQ.querySelector(".enumeration-container");
-            enumContainer.innerHTML = "";
-            q.answers.forEach((ans, i) => {
-              enumContainer.innerHTML += `
-                <div class="enumeration-item">
-                  <div class="input-group">
-                    <input type="text" class="form-control enumeration-answer" value="${ans}" placeholder="Answer ${i + 1}" required>
-                    <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-              `;
-            });
-          }
-        });
-      }
+            enumContainer.innerHTML = ""; // clear default
 
-      updateTestSummary();
-      new bootstrap.Modal(modal).show();
+            q.answers?.forEach((ans, i) => {
+                const answerHTML = `
+                    <div class="enumeration-item">
+                        <div class="input-group">
+                            <input type="text" class="form-control enumeration-answer" value="${ans}" placeholder="Answer ${i+1}" required>
+                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                enumContainer.innerHTML += answerHTML;
+            });
+        }
     });
+
+    updateTestSummary();
+    new bootstrap.Modal(modal).show();
   });
+});
+
 
   modal.addEventListener("hidden.bs.modal", () => {
     form.reset();
