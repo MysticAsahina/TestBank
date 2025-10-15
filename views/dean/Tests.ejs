@@ -224,6 +224,7 @@
                                                 data-description="<%= test.description %>"
                                                 data-access="<%= test.access %>"
                                                 data-timelimit="<%= test.timeLimit %>"
+                                                data-howManyQuestions="<%= test.howManyQuestions %>"
                                                 data-deadline="<%= test.deadline ? new Date(test.deadline).toISOString().slice(0, 16) : '' %>"
                                                 >
                                                 <i class="fas fa-edit"></i>
@@ -307,6 +308,10 @@
                                             <option value="Public">Public</option>
                                             <option value="Private" selected>Private</option>
                                         </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">How Many Questions Per Student *</label>
+                                        <input type="number" class="form-control" name="howManyQuestions" min="1" required>
                                     </div>
                                 </div>
                             </div>
@@ -651,6 +656,7 @@
         subjectCode: form.querySelector('[name="subjectCode"]').value.trim(),
         description: form.querySelector('[name="description"]').value.trim(),
         timeLimit: parseInt(form.querySelector('[name="timeLimit"]').value || 0),
+        howManyQuestions: parseInt(form.querySelector('[name="howManyQuestions"]').value || 0),
         access: form.querySelector('[name="access"]').value,
         // Only send deadline if user picked a valid date
         deadline: deadlineValue ? deadlineValue : undefined,
@@ -765,6 +771,7 @@
             form.querySelector("[name='description']").value = test.description || "";
             form.querySelector("[name='access']").value = test.access || "Private";
             form.querySelector("[name='timeLimit']").value = test.timeLimit || "";
+            form.querySelector("[name='howManyQuestions']").value = test.howManyQuestions || "";
             form.querySelector("[name='deadline']").value = test.deadline
             ? new Date(test.deadline).toISOString().slice(0, 16)
             : "";
@@ -868,3 +875,8 @@
     </script>
 </body>
 </html>
+
+<!-- Add New Textbox To Fill Out
+How Many Questions Per Student 
+Saves The Integer In The Database
+-->

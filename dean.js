@@ -145,6 +145,7 @@ router.put("/tests/:id", async (req, res) => {
       subjectCode,
       description,
       access,
+      howManyQuestions, // ✅ added from frontend
       timeLimit,
       deadline,
       questions,
@@ -157,6 +158,7 @@ router.put("/tests/:id", async (req, res) => {
         subjectCode,
         description,
         access,
+        howManyQuestions, // ✅ match schema field
         timeLimit,
         deadline,
         questions, // ✅ include questions here
@@ -188,6 +190,7 @@ router.post("/tests/create", async (req, res) => {
       description,
       access = "Private",
       timeLimit,
+      howManyQuestions,
       deadline
     } = req.body;
 
@@ -196,6 +199,7 @@ router.post("/tests/create", async (req, res) => {
       subjectCode,
       description,
       access,
+      howManyQuestions: howManyQuestions ? Number(howManyQuestions) : undefined,
       timeLimit: timeLimit ? Number(timeLimit) : undefined,
       deadline: deadline ? new Date(deadline) : undefined,
       questions: [], // later you can send full questions array from the client
@@ -232,7 +236,7 @@ router.post("/tests/update/:id", async (req, res) => {
     const updateData = req.body;
 
     // only allow specific fields to be updated
-    const allowedFields = ["title", "subjectCode", "description", "access", "timeLimit", "deadline"];
+    const allowedFields = ["title", "subjectCode", "description", "access", "timeLimit", "howManyQuestions", "deadline"];
     const filteredData = {};
 
     allowedFields.forEach((field) => {
