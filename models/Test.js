@@ -1,4 +1,3 @@
-// models/Test.js
 import mongoose from "mongoose";
 
 const questionSchema = new mongoose.Schema({
@@ -9,7 +8,7 @@ const questionSchema = new mongoose.Schema({
   correctAnswer: String,
   answer: String,
   answers: [String],
-  files: [String]
+  files: [String],
 });
 
 const testSchema = new mongoose.Schema({
@@ -19,10 +18,11 @@ const testSchema = new mongoose.Schema({
   timeLimit: Number,
   deadline: Date,
   access: String,
-  createdBy: mongoose.Schema.Types.ObjectId,
+  howManyQuestions: Number, // ✅ match your routes
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  questions: [questionSchema]
+  questions: [questionSchema],
 });
 
 export default mongoose.model("Test", testSchema);
