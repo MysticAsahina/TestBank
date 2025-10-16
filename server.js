@@ -11,10 +11,9 @@ dotenv.config();
 // Import routes
 import routes from './routes/index.js';
 import setupPasswordRoutes from './routes/passwordReset.js';
-import deanRoutes from './routes/dean.js';
 import adminRoutes from './routes/adminRoutes.js';
 import fileUploadRouter from './utils/fileUpload.js';
-import StudentPerformanceRoutes from './routes/StudentPerformance.js'; // ✅ Added
+import deanRoutes from "./routes/deanPages/index.js";
 
 console.log('🔧 Environment check:');
 console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
@@ -66,9 +65,8 @@ app.use((req, res, next) => {
 // ✅ Register routes
 app.use('/', routes);
 app.use('/', setupPasswordRoutes);
-app.use('/dean', deanRoutes);
 app.use('/', adminRoutes);
-app.use('/dean/student-performance', StudentPerformanceRoutes); // ✅ Added route
+app.use("/dean", deanRoutes);
 
 // ✅ MongoDB connection
 mongoose

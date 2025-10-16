@@ -1,11 +1,12 @@
 import express from "express";
 import path from "path";
-import Admin from "../models/Admin.js"; // Dean/Professor accounts
+import fs from "fs";
+import multer from "multer";
+
+import Admin from "../models/Admin.js";
 import Test from "../models/Test.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { sendPasswordSetupEmail } from "../utils/passwordResetService.js";
-import multer from "multer";
-import fs from "fs";
 
 const router = express.Router();
 
@@ -55,7 +56,16 @@ router.get("/manage-accounts", async (req, res) => {
 
 router.post("/add-user", async (req, res) => {
   try {
-    const { firstName, lastName, middleName, email, contactNumber, employeeID, department, role } = req.body;
+    const {
+      firstName,
+      lastName,
+      middleName,
+      email,
+      contactNumber,
+      employeeID,
+      department,
+      role,
+    } = req.body;
 
     const newUser = new Admin({
       firstName,
@@ -147,10 +157,19 @@ router.get("/tests/:id", async (req, res) => {
   }
 });
 
-// Create new test
+// ✅ Create new test (fixed)
 router.post("/tests/create", uploadFiles.array("questionFiles"), async (req, res) => {
   try {
-    const { title, subjectCode, description, access = "Private", timeLimit, deadline, questions } = req.body;
+    const {
+      title,
+      subjectCode,
+      description,
+      access = "Private",
+      timeLimit,
+      deadline,
+      howManyQuestions,
+      questions,
+    } = req.body;
 
     const parsedQuestions = questions
       ? Array.isArray(questions)
@@ -158,7 +177,8 @@ router.post("/tests/create", uploadFiles.array("questionFiles"), async (req, res
         : JSON.parse(questions)
       : [];
 
-    if (req.files) {
+    // Attach file URLs to the questions
+    if (req.files && req.files.length > 0) {
       req.files.forEach((file, idx) => {
         if (!parsedQuestions[idx].files) parsedQuestions[idx].files = [];
         parsedQuestions[idx].files.push(`TestImages/${file.filename}`);
@@ -172,15 +192,16 @@ router.post("/tests/create", uploadFiles.array("questionFiles"), async (req, res
       access,
       timeLimit: timeLimit ? Number(timeLimit) : undefined,
       deadline: deadline ? new Date(deadline) : undefined,
+      howManyQuestions: howManyQuestions ? Number(howManyQuestions) : 0, // ✅ fixed key
       questions: parsedQuestions,
-      createdBy: req.session.user?.id,
+      createdBy: req.session.user?._id, // ✅ fixed key
     });
 
     await newTest.save();
     console.log("✅ New Test created:", newTest._id);
     res.redirect("/dean/tests");
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error creating test:", err);
     res.status(500).send("Failed to create test");
   }
 });
@@ -189,7 +210,7 @@ router.post("/tests/create", uploadFiles.array("questionFiles"), async (req, res
 router.put("/tests/:id", uploadFiles.array("questionFiles"), async (req, res) => {
   try {
     const testId = req.params.id;
-    let { title, subjectCode, description, access, timeLimit, deadline, questions } = req.body;
+    let { title, subjectCode, description, access, timeLimit, howManyQuestions, deadline, questions } = req.body;
 
     let parsedQuestions = questions
       ? Array.isArray(questions)
@@ -197,7 +218,7 @@ router.put("/tests/:id", uploadFiles.array("questionFiles"), async (req, res) =>
         : JSON.parse(questions)
       : [];
 
-    if (req.files) {
+    if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
         const idx = parseInt(file.fieldname.split("_")[1]);
         if (!parsedQuestions[idx].files) parsedQuestions[idx].files = [];
@@ -208,7 +229,17 @@ router.put("/tests/:id", uploadFiles.array("questionFiles"), async (req, res) =>
 
     const updated = await Test.findByIdAndUpdate(
       testId,
-      { title, subjectCode, description, access, timeLimit, deadline, questions: parsedQuestions, updatedAt: new Date() },
+      {
+        title,
+        subjectCode,
+        description,
+        access,
+        timeLimit,
+        howManyQuestions,
+        deadline,
+        questions: parsedQuestions,
+        updatedAt: new Date(),
+      },
       { new: true }
     );
 

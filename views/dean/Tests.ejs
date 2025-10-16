@@ -51,7 +51,7 @@
             </a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text me-3">
-                    Welcome, <%= user.fullName %> (Dean)
+                    Welcome, <%= user ? user.fullName : "Guest" %> (Dean)
                 </span>
                 <form action="/auth/logout" method="POST" class="d-inline">
                     <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
@@ -760,9 +760,10 @@
 
             const res = await fetch(`/dean/tests/${testId}`);
             if (!res.ok) {
-            alert("Failed to fetch test details.");
-            return;
+                alert("Failed to fetch test details.");
+                return;
             }
+
             const test = await res.json();
 
             // Populate top-level test fields
