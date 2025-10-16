@@ -370,6 +370,76 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// ✅ API Login (for Expo or mobile clients)
+router.post('/api/login', async (req, res) => {
+  try {
+    const { userID, password } = req.body;
+    console.log('📱 Mobile login attempt:', { userID });
+
+    if (!userID || !password) {
+      return res.status(400).json({ success: false, message: 'Please enter both ID and password!' });
+    }
+
+    let user = null;
+    let role = '';
+    let userModel = null;
+
+    // Check if Admin
+    user = await Admin.findOne({
+      $or: [{ employeeID: userID }, { email: userID }]
+    });
+
+    if (user) {
+      role = user.role;
+      userModel = 'Admin';
+    } else {
+      // Check Student
+      user = await Student.findOne({
+        $or: [{ studentID: userID }, { email: userID }]
+      });
+      if (user) {
+        role = 'Student';
+        userModel = 'Student';
+      }
+    }
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid ID or password!' });
+    }
+
+    if (userModel === 'Admin' && user.accountStatus && user.accountStatus !== 'Active') {
+      return res.status(400).json({
+        success: false,
+        message: `Account is ${user.accountStatus}. Please contact administrator.`,
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ success: false, message: 'Invalid ID or password!' });
+    }
+
+    console.log(`✅ Mobile login successful: ${user.fullName} (${role})`);
+    return res.json({
+      success: true,
+      message: 'Login successful!',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role,
+        ...(role === 'Student'
+          ? { course: user.course, section: user.section, yearLevel: user.yearLevel }
+          : { department: user.department, designation: user.designation }),
+      },
+    });
+  } catch (error) {
+    console.error('❌ Mobile login error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error during login.' });
+  }
+});
+
+
 // Forgot Password - Page
 router.get('/forgot-password', (req, res) => {
     res.render('ForgotPassword', { 

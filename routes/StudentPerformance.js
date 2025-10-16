@@ -1,9 +1,5 @@
 import express from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-// import Admin from "../models/Admin.js";
-// import Student from "../models/Student.js";
-// import Test from "../models/Test.js";
-// import Result from "../models/Result.js"; // if you track test scores
 
 const router = express.Router();
 
@@ -72,7 +68,7 @@ router.get(
 
       res.render("dean/StudentPerformance", {
         title: "Student Performance",
-        user: req.user,
+        user: req.session.user,
         stats,
         students,
       });
