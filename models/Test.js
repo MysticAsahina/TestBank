@@ -18,7 +18,7 @@ const testSchema = new mongoose.Schema({
   timeLimit: Number,
   deadline: Date,
   access: String,
-  howManyQuestions: Number, // ✅ match your routes
+  howManyQuestions: { type: Number, required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
