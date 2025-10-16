@@ -130,7 +130,7 @@
                             </td>
                             <td>
                               <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
-                              <form action="/dean/delete/<%= prof._id %>" method="POST" class="d-inline">
+                                <form action="/dean/manage-accounts/delete/<%= prof._id %>" method="POST">
                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                               </form>
                             </td>
@@ -178,7 +178,7 @@
                             </td>
                             <td>
                               <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
-                              <form action="/dean/delete/<%= dean._id %>" method="POST" class="d-inline">
+                              <form action="/dean/manage-accounts/delete/<%= dean._id %>" method="POST" class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                               </form>
                             </td>
@@ -203,7 +203,7 @@
   <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <form action="/dean/add-user" method="POST">
+        <form action="/dean/manage-accounts/add-user" method="POST">
           <div class="modal-header">
             <h5 class="modal-title">Add New User</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -260,18 +260,3 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
-<!-- NOTES FOR IMPLEMENTATION FOR LATER (TO BE DONE BY BACKEND DEVELOPER):
-When The Dean Creates A New Professor or Dean Account, An Email Should Be Sent To The New User With Their Login Credentials And A Prompt To Change Their Password Upon First Login.
-List Of Professors And Deans Should Be Fetched From The Database And Rendered Dynamically.
-
-
-
-
-
-
-
-
-
--->
