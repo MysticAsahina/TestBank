@@ -30,13 +30,13 @@ const sendOTP = async (email, otp) => {
 // Register student
 router.post("/register", async (req, res) => {
   try {
-    const { fullName, studentID, email, password, course, yearLevel } = req.body;
+    const { fullName, studentID, email, password, course, yearLevel, campus } = req.body;
 
     const exists = await Student.findOne({ $or: [{ email }, { studentID }] });
     if (exists) return res.status(400).json({ msg: "Email or Student ID already exists." });
 
     const otp = generateOTP();
-    otpStore[email] = { otp, data: { fullName, studentID, email, password, course, yearLevel } };
+    otpStore[email] = { otp, data: { fullName, studentID, email, password, course, yearLevel, campus } };
 
     await sendOTP(email, otp);
     res.json({ msg: "OTP sent to your email for verification." });
