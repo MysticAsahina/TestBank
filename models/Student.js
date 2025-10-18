@@ -11,7 +11,8 @@ const studentSchema = new mongoose.Schema({
   password: { type: String, required: true },
   course: { type: String, required: true },
   section: { type: String, required: true }, 
-  yearLevel: { type: String, required: true }
+  yearLevel: { type: String, required: true },
+  campus: { type: String, required: true },
 }, { timestamps: true });
 
 // Virtual for full name (computed property)
