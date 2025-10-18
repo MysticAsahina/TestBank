@@ -1,6 +1,6 @@
 import express from 'express';
 import authRoutes from './auth.js';
-import deanRoutes from './dean.js';
+import deanRoutes from './deanPages/index.js';
 import professorRoutes from './professor.js';
 import studentRoutes from './student.js';
 

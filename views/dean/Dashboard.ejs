@@ -8,10 +8,78 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-  
-        .navbar.navbar-expand-lg.navbar-dark {
-            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
-        }
+body {
+    background: linear-gradient(50deg, #c9c2ff 0%, #feffd0 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0;
+    padding-top: 20px;
+}
+.main-body{
+    display: flex;
+    flex-direction: row;
+}
+.center-body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 1800px;
+    margin-left: 5px;
+}
+.ms-sm-auto{
+    margin:0 !important;
+    width: 100%;
+}
+
+.navbar.navbar-expand-lg.navbar-dark {
+    background: #F7F7F7 !important;
+    width: 100%;
+    border-radius: 20px;
+    padding:20px;
+    box-shadow:
+        5px 5px 10px 5px rgba(0, 0, 0, 0.1),
+        inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
+    animation: fadeFromBottom 1.5s ease forwards;
+    opacity: 1;
+    width: 100%;
+    margin-bottom: 10px;
+}
+.navbar.navbar-expand-lg.navbar-dark.bg-primary a,
+.navbar-nav.ms-auto span{
+    color:#000000;
+}
+.col-md-3.col-lg-2.d-md-block.bg-light.sidebar {
+    border-radius: 20px;
+    box-shadow:
+        5px 5px 10px 5px rgba(0, 0, 0, 0.1),
+        inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
+}
+.login-header{
+    text-align: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+.login-header img{
+    width: 70px;
+}
+.login-header h2{
+    font-size: 14px;
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+    color: #333;
+}
+.login-header p{
+    font-size: 10px;
+    color: #666;
+    margin: 0;
+}
         .stat-card {
             transition: transform 0.2s;
             border-left: 4px solid;
@@ -50,28 +118,16 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    Welcome, <%= user.fullName %> (Dean)
-                </span>
-                <form action="/auth/logout" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
+    <div class="main-body">
+        <!-- Sidebar -->
             <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
                 <div class="position-sticky pt-3">
                     <ul class="nav flex-column">
+                        <div class="login-header">
+                            <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2" >
+                            <h2>PHINMA EDUCATION</h2>
+                            <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+                        </div>
                         <li class="nav-item">
                             <a class="nav-link active" href="/dean/dashboard">
                                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
@@ -105,6 +161,26 @@
                     </ul>
                 </div>
             </nav>
+    <div class="center-body">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    Welcome, <%= user.fullName %> (Dean)
+                </span>
+                <form action="/auth/logout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            
 
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -681,5 +757,7 @@
             // Here you would typically fetch new data from the server
         }, 300000);
     </script>
+    </div>
+    </div>
 </body>
 </html>
