@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> - Test Bank System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    .navbar.navbar-expand-lg.navbar-dark {
+      background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+    }
+    .student-list {
+      height: 400px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+    }
+    .student-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+      cursor: pointer;
+    }
+    .student-item:hover {
+      background-color: #f8f9fa;
+    }
+    .student-item.selected {
+      background-color: #e7f1ff;
+      border-left: 4px solid #0d6efd;
+    }
+    .transfer-buttons {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+      </a>
+      <div class="navbar-nav ms-auto">
+        <span class="navbar-text me-3">
+          Welcome, <%= user.fullName %> (Dean)
+        </span>
+        <form action="/auth/logout" method="POST" class="d-inline">
+          <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+        <div class="position-sticky pt-3">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link" href="/dean/dashboard">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dean/manage-accounts">
+                <i class="fas fa-users-cog me-2"></i>Manage Accounts
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/dean/sections">
+                <i class="fas fa-layer-group me-2"></i>Sections
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dean/tests">
+                <i class="fas fa-file-alt me-2"></i>Test Management
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dean/student-performance">
+                <i class="fas fa-chart-line me-2"></i>Student Performance
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dean/reports">
+                <i class="fas fa-chart-bar me-2"></i>Reports & Analytics
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dean/account">
+                <i class="fas fa-user-cog me-2"></i>My Account
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Main content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2"><i class="fas fa-layer-group me-2"></i><%= title %></h1>
+          <div class="btn-toolbar mb-2 mb-md-0">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSectionModal">
+              <i class="fas fa-plus me-2"></i>Create Section
+            </button>
+          </div>
+        </div>
+
+        <!-- Existing Sections -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Existing Sections</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Section Name</th>
+                    <th>School Year</th>
+                    <th>Course</th>
+                    <th>Number of Students</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="sectionsTable">
+                  <!-- Sections will be populated here -->
+                  <tr>
+                    <td colspan="5" class="text-center text-muted">No sections created yet</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Create Section Modal -->
+  <div class="modal fade" id="createSectionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New Section</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Section Details Form -->
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <label class="form-label">School Year</label>
+              <select class="form-select" id="schoolYear">
+                <option value="">Select School Year</option>
+                <option value="2024-2025">2024-2025</option>
+                <option value="2025-2026">2025-2026</option>
+                <option value="2026-2027">2026-2027</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Course</label>
+              <select class="form-select" id="course">
+                <option value="">Select Course</option>
+                <option value="BSIT">BS Information Technology</option>
+                <option value="BSCS">BS Computer Science</option>
+                <option value="BSIS">BS Information Systems</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Campus</label>
+              <select class="form-select" id="campus">
+                <option value="">Select Campus</option>
+                <option value="Main">Main</option>
+                <option value="South">South</option>
+                <option value="SanJose">San Jose</option>
+       
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Section</label>
+              <select class="form-select" id="section">
+                <option value="">Select Section</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Student Transfer Interface -->
+          <div class="row">
+            <!-- Available Students -->
+            <div class="col-md-5">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="mb-0">Available Students</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <input type="text" class="form-control" id="availableSearch" placeholder="Search students...">
+                  </div>
+                  <div class="student-list" id="availableStudents">
+                    <!-- Available students will be populated here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Transfer Buttons -->
+            <div class="col-md-2 transfer-buttons">
+              <button class="btn btn-primary" id="addToSection">
+                <i class="fas fa-arrow-right"></i><br>
+                Add to Section
+              </button>
+              <button class="btn btn-outline-primary" id="removeFromSection">
+                <i class="fas fa-arrow-left"></i><br>
+                Remove
+              </button>
+            </div>
+
+            <!-- Section Students -->
+            <div class="col-md-5">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="mb-0">Students in Section</h6>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <input type="text" class="form-control" id="sectionSearch" placeholder="Search students...">
+                  </div>
+                  <div class="student-list" id="sectionStudents">
+                    <!-- Section students will be populated here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="createSectionBtn">Create Section</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Static sample data
+    const availableStudents = [
+      { id: 1, name: 'John Smith', studentId: '2021001' },
+      { id: 2, name: 'Maria Garcia', studentId: '2021002' },
+      { id: 3, name: 'David Johnson', studentId: '2021003' },
+      { id: 4, name: 'Sarah Wilson', studentId: '2021004' },
+      { id: 5, name: 'Michael Brown', studentId: '2021005' },
+      { id: 6, name: 'Emily Davis', studentId: '2021006' },
+      { id: 7, name: 'Daniel Martinez', studentId: '2021007' },
+      { id: 8, name: 'Jennifer Anderson', studentId: '2021008' }
+    ];
+
+    let sectionStudents = [];
+    let selectedAvailable = [];
+    let selectedSection = [];
+
+    // Initialize the interface
+    function initializeInterface() {
+      renderAvailableStudents();
+      renderSectionStudents();
+      
+      // Event listeners
+      document.getElementById('addToSection').addEventListener('click', addToSection);
+      document.getElementById('removeFromSection').addEventListener('click', removeFromSection);
+      document.getElementById('createSectionBtn').addEventListener('click', createSection);
+      document.getElementById('availableSearch').addEventListener('input', filterAvailableStudents);
+      document.getElementById('sectionSearch').addEventListener('input', filterSectionStudents);
+    }
+
+    // Render available students
+    function renderAvailableStudents(filter = '') {
+      const container = document.getElementById('availableStudents');
+      const filteredStudents = availableStudents.filter(student => 
+        student.name.toLowerCase().includes(filter.toLowerCase()) ||
+        student.studentId.includes(filter)
+      );
+
+      container.innerHTML = filteredStudents.map(student => `
+        <div class="student-item ${selectedAvailable.includes(student.id) ? 'selected' : ''}" 
+             onclick="toggleAvailableSelection(${student.id})">
+          <div class="fw-bold">${student.name}</div>
+          <small class="text-muted">${student.studentId}</small>
+        </div>
+      `).join('');
+    }
+
+    // Render section students
+    function renderSectionStudents(filter = '') {
+      const container = document.getElementById('sectionStudents');
+      const filteredStudents = sectionStudents.filter(student => 
+        student.name.toLowerCase().includes(filter.toLowerCase()) ||
+        student.studentId.includes(filter)
+      );
+
+      container.innerHTML = filteredStudents.map(student => `
+        <div class="student-item ${selectedSection.includes(student.id) ? 'selected' : ''}" 
+             onclick="toggleSectionSelection(${student.id})">
+          <div class="fw-bold">${student.name}</div>
+          <small class="text-muted">${student.studentId}</small>
+        </div>
+      `).join('');
+    }
+
+    // Toggle selection for available students
+    function toggleAvailableSelection(studentId) {
+      const index = selectedAvailable.indexOf(studentId);
+      if (index > -1) {
+        selectedAvailable.splice(index, 1);
+      } else {
+        selectedAvailable.push(studentId);
+      }
+      renderAvailableStudents(document.getElementById('availableSearch').value);
+    }
+
+    // Toggle selection for section students
+    function toggleSectionSelection(studentId) {
+      const index = selectedSection.indexOf(studentId);
+      if (index > -1) {
+        selectedSection.splice(index, 1);
+      } else {
+        selectedSection.push(studentId);
+      }
+      renderSectionStudents(document.getElementById('sectionSearch').value);
+    }
+
+    // Add selected students to section
+    function addToSection() {
+      selectedAvailable.forEach(studentId => {
+        const student = availableStudents.find(s => s.id === studentId);
+        if (student && !sectionStudents.some(s => s.id === studentId)) {
+          sectionStudents.push(student);
+        }
+      });
+      selectedAvailable = [];
+      renderAvailableStudents(document.getElementById('availableSearch').value);
+      renderSectionStudents(document.getElementById('sectionSearch').value);
+    }
+
+    // Remove selected students from section
+    function removeFromSection() {
+      sectionStudents = sectionStudents.filter(student => !selectedSection.includes(student.id));
+      selectedSection = [];
+      renderSectionStudents(document.getElementById('sectionSearch').value);
+    }
+
+    // Filter available students
+    function filterAvailableStudents(e) {
+      renderAvailableStudents(e.target.value);
+    }
+
+    // Filter section students
+    function filterSectionStudents(e) {
+      renderSectionStudents(e.target.value);
+    }
+
+    // Create section
+    function createSection() {
+      const schoolYear = document.getElementById('schoolYear').value;
+      const course = document.getElementById('course').value;
+      const sectionName = document.getElementById('sectionName').value;
+
+      if (!schoolYear || !course || !sectionName) {
+        alert('Please fill in all section details');
+        return;
+      }
+
+      if (sectionStudents.length === 0) {
+        alert('Please add at least one student to the section');
+        return;
+      }
+
+      // Here you would typically send the data to the server
+      console.log('Creating section:', {
+        schoolYear,
+        course,
+        sectionName,
+        students: sectionStudents
+      });
+
+      alert('Section created successfully!');
+      
+      // Close modal and reset
+      const modal = bootstrap.Modal.getInstance(document.getElementById('createSectionModal'));
+      modal.hide();
+      resetModal();
+    }
+
+    // Reset modal
+    function resetModal() {
+      document.getElementById('schoolYear').value = '';
+      document.getElementById('course').value = '';
+      document.getElementById('sectionName').value = '';
+      document.getElementById('availableSearch').value = '';
+      document.getElementById('sectionSearch').value = '';
+      sectionStudents = [];
+      selectedAvailable = [];
+      selectedSection = [];
+      renderAvailableStudents();
+      renderSectionStudents();
+    }
+
+    // Initialize when modal is shown
+    document.getElementById('createSectionModal').addEventListener('show.bs.modal', initializeInterface);
+  </script>
+</body>
+</html>
