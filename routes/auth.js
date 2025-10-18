@@ -3,14 +3,17 @@ import bcrypt from 'bcryptjs';
 import Student from '../models/Student.js';
 import Admin from '../models/Admin.js';
 import { sendOTPEmail } from '../utils/emailService.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Store OTPs temporarily (in production, use Redis or database)
+// Temporary OTP stores (use Redis or DB in production)
 const otpStore = new Map();
 const resetOtpStore = new Map();
 
-// Student Registration
+/* ================================================================
+   🧩 STUDENT REGISTRATION + OTP
+================================================================ */
 router.post('/register', async (req, res) => {
     try {
         const {
@@ -23,313 +26,176 @@ router.post('/register', async (req, res) => {
             password,
             course,
             section,
-            yearLevel
+            yearLevel,
+            campus, 
         } = req.body;
 
         console.log('📝 Registration attempt:', { studentID, email });
 
         // Validate required fields
-        const requiredFields = ['lastName', 'firstName', 'middleName', 'studentID', 'email', 'password', 'course', 'section', 'yearLevel'];
-        const missingFields = requiredFields.filter(field => !req.body[field]);
-        
-        if (missingFields.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: `Missing required fields: ${missingFields.join(', ')}`
-            });
-        }
+        const requiredFields = ['lastName', 'firstName', 'studentID', 'email', 'password', 'course', 'section', 'yearLevel', 'campus'];
+        const missing = requiredFields.filter(f => !req.body[f]);
+        if (missing.length > 0)
+            return res.status(400).json({ success: false, message: `Missing: ${missing.join(', ')}` });
 
         // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please enter a valid email address!'
-            });
-        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+            return res.status(400).json({ success: false, message: 'Invalid email format!' });
 
-        // Validate student ID format (12-3456-789012)
-        const studentIDRegex = /^\d{2}-\d{4}-\d{6}$/;
-        if (!studentIDRegex.test(studentID)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Student ID must be in format: 12-3456-789012'
-            });
-        }
+        // Validate Student ID (e.g., 12-3456-789012)
+        if (!/^\d{2}-\d{4}-\d{6}$/.test(studentID))
+            return res.status(400).json({ success: false, message: 'Student ID must match: 12-3456-789012' });
 
-        // Check if student already exists
-        const existingStudent = await Student.findOne({
-            $or: [
-                { studentID: studentID },
-                { email: email }
-            ]
-        });
-
-        if (existingStudent) {
-            return res.status(400).json({
-                success: false,
-                message: 'Student ID or Email already exists!'
-            });
-        }
+        // Check duplicates
+        const existing = await Student.findOne({ $or: [{ studentID }, { email }] });
+        if (existing)
+            return res.status(400).json({ success: false, message: 'Student ID or Email already exists!' });
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 12);
+        const hashed = await bcrypt.hash(password, 12);
 
-        // Create new student
+        // Create new student (not yet saved)
         const newStudent = new Student({
-            lastName,
-            firstName,
-            middleName,
-            suffix: suffix || '',
-            studentID,
-            email,
-            password: hashedPassword,
-            course,
-            section,
-            yearLevel
+            lastName, firstName, middleName, suffix: suffix || '',
+            studentID, email, password: hashed, course, section, yearLevel, campus
         });
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+        const expiry = Date.now() + 10 * 60 * 1000;
 
-        // Store OTP temporarily
-        otpStore.set(studentID, {
-            studentData: newStudent,
-            otp: otp,
-            expiry: otpExpiry
+        otpStore.set(studentID, { studentData: newStudent, otp, expiry });
+        console.log(`🔐 OTP for ${studentID}: ${otp}`);
+
+        // Send OTP via email
+        await sendOTPEmail(email, otp);
+        res.status(200).json({
+            success: true,
+            message: 'OTP sent to your email! Please verify to complete registration.'
         });
 
-        console.log(`🔐 OTP generated for ${studentID}: ${otp}`);
-
-        // Send OTP email
-        try {
-            await sendOTPEmail(email, otp);
-            
-            res.status(200).json({
-                success: true,
-                message: 'OTP sent to your email! Please check your inbox and verify to complete registration.'
-            });
-
-        } catch (emailError) {
-            console.error('📧 Email service error:', emailError);
-            
-            // Clear OTP data since email failed
-            otpStore.delete(studentID);
-            
-            res.status(500).json({
-                success: false,
-                message: emailError.message || 'Failed to send OTP email. Please try again later.'
-            });
-        }
-
-    } catch (error) {
-        console.error('❌ Registration error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error during registration!'
-        });
+    } catch (err) {
+        console.error('❌ Registration error:', err);
+        res.status(500).json({ success: false, message: 'Internal server error during registration!' });
     }
 });
 
-// Verify OTP and Complete Registration
+/* ================================================================
+   🧩 VERIFY OTP (STUDENT REGISTRATION)
+================================================================ */
 router.post('/verify-otp', async (req, res) => {
     try {
         const { studentId, otpCode } = req.body;
-
-        console.log('OTP verification attempt:', { studentId, otpCode });
-
-        // Check if OTP exists and is valid
         const otpData = otpStore.get(studentId);
-        
-        if (!otpData) {
-            return res.status(400).json({
-                success: false,
-                message: 'OTP expired or invalid! Please register again.'
-            });
-        }
 
-        // Check OTP expiry
+        if (!otpData)
+            return res.status(400).json({ success: false, message: 'OTP expired or invalid!' });
+
         if (Date.now() > otpData.expiry) {
             otpStore.delete(studentId);
-            return res.status(400).json({
-                success: false,
-                message: 'OTP has expired! Please register again.'
-            });
+            return res.status(400).json({ success: false, message: 'OTP expired!' });
         }
 
-        // Verify OTP
-        if (otpData.otp !== otpCode) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid OTP code!'
-            });
-        }
+        if (otpData.otp !== otpCode)
+            return res.status(400).json({ success: false, message: 'Incorrect OTP!' });
 
-        // Save student to database
         await otpData.studentData.save();
-
-        // Remove OTP data from store
         otpStore.delete(studentId);
 
-        console.log(`Student ${studentId} registered successfully`);
+        console.log(`✅ Student ${studentId} registered successfully`);
+        res.status(200).json({ success: true, message: 'Registration completed!' });
 
-        res.status(200).json({
-            success: true,
-            message: 'Registration completed successfully!'
-        });
-
-    } catch (error) {
-        console.error('OTP verification error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error during OTP verification!'
-        });
+    } catch (err) {
+        console.error('❌ OTP verification error:', err);
+        res.status(500).json({ success: false, message: 'Server error verifying OTP!' });
     }
 });
 
-// Resend OTP
+/* ================================================================
+   🔁 RESEND OTP
+================================================================ */
 router.post('/resend-otp', async (req, res) => {
     try {
         const { studentId } = req.body;
-
-        console.log('Resend OTP request:', studentId);
-
-        // Check if registration data exists
         const otpData = otpStore.get(studentId);
-        
-        if (!otpData) {
-            return res.status(400).json({
-                success: false,
-                message: 'Registration session expired! Please register again.'
-            });
-        }
 
-        // Generate new OTP
+        if (!otpData)
+            return res.status(400).json({ success: false, message: 'Registration session expired!' });
+
         const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        const newOtpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-        // Update OTP data
         otpData.otp = newOtp;
-        otpData.expiry = newOtpExpiry;
+        otpData.expiry = Date.now() + 10 * 60 * 1000;
 
-        console.log(`New OTP generated for ${studentId}: ${newOtp}`);
+        console.log(`🔁 Resent OTP for ${studentId}: ${newOtp}`);
+        await sendOTPEmail(otpData.studentData.email, newOtp);
 
-        // Send new OTP email
-        try {
-            await sendOTPEmail(otpData.studentData.email, newOtp);
-            res.status(200).json({
-                success: true,
-                message: 'New OTP sent to your email!'
-            });
-        } catch (emailError) {
-            console.error('Email error:', emailError);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to resend OTP email!'
-            });
-        }
+        res.status(200).json({ success: true, message: 'New OTP sent!' });
 
-    } catch (error) {
-        console.error('Resend OTP error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to resend OTP!'
-        });
+    } catch (err) {
+        console.error('❌ Resend OTP error:', err);
+        res.status(500).json({ success: false, message: 'Failed to resend OTP!' });
     }
 });
 
-// Unified Login for all roles (Student, Professor, Dean)
+/* ================================================================
+   🔐 LOGIN (ROLE-BASED)
+================================================================ */
 router.post('/login', async (req, res) => {
     try {
         const { userID, password } = req.body;
 
-        console.log('🔐 Login attempt:', { userID });
-
-        if (!userID || !password) {
-            return res.status(400).render('Login', {
-                title: 'Login - Test Bank System',
-                error: 'Please enter both ID and password!',
-                success: null
-            });
-        }
+        if (!userID || !password)
+            return res.status(400).render('Login', { title: 'Login', error: 'Please enter ID & password!', success: null });
 
         let user = null;
         let role = '';
-        let userModel = null;
+        let userModel = '';
 
-        // First, check if it's an Admin (Professor/Dean) by employeeID or email
-        user = await Admin.findOne({ 
-            $or: [
-                { employeeID: userID },
-                { email: userID }
-            ]
-        });
-
+        // 1️⃣ Check Admins (Dean/Professor)
+        user = await Admin.findOne({ $or: [{ employeeID: userID }, { email: userID }] });
         if (user) {
             role = user.role; // 'Professor' or 'Dean'
             userModel = 'Admin';
-            console.log(`👤 Found admin user: ${user.fullName} (${role})`);
         } else {
-            // If not admin, check if it's a Student
-            user = await Student.findOne({ 
-                $or: [
-                    { studentID: userID },
-                    { email: userID }
-                ]
-            });
-            
+            // 2️⃣ Check Students
+            user = await Student.findOne({ $or: [{ studentID: userID }, { email: userID }] });
             if (user) {
                 role = 'Student';
                 userModel = 'Student';
-                console.log(`👤 Found student user: ${user.fullName}`);
             }
         }
 
-        // User not found
-        if (!user) {
-            console.log('❌ User not found');
-            return res.status(400).render('Login', {
-                title: 'Login - Test Bank System',
-                error: 'Invalid ID or password!',
-                success: null
-            });
-        }
+        // No user found
+        if (!user)
+            return res.status(400).render('Login', { title: 'Login', error: 'Invalid credentials!', success: null });
 
-        // Check account status for Admin users
+        // Check account status for Admin
         if (userModel === 'Admin' && user.accountStatus && user.accountStatus !== 'Active') {
-            console.log(`❌ Account not active: ${user.accountStatus}`);
             return res.status(400).render('Login', {
-                title: 'Login - Test Bank System',
-                error: `Account is ${user.accountStatus}. Please contact administrator.`,
+                title: 'Login',
+                error: `Account is ${user.accountStatus}. Contact admin.`,
                 success: null
             });
         }
 
         // Check password
-        console.log(`🔑 Checking password for: ${user.fullName}`);
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            console.log('❌ Invalid password');
-            return res.status(400).render('Login', {
-                title: 'Login - Test Bank System',
-                error: 'Invalid ID or password!',
-                success: null
-            });
-        }
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid)
+            return res.status(400).render('Login', { title: 'Login', error: 'Invalid credentials!', success: null });
 
-        // Set session
+        // Create session
         req.session.user = {
             id: user._id,
             userID: user.studentID || user.employeeID,
-            email: user.email,
             fullName: user.fullName,
-            role: role,
-            userModel: userModel,
+            email: user.email,
+            role,
+            userModel,
             ...(role === 'Student' && {
                 course: user.course,
                 section: user.section,
-                yearLevel: user.yearLevel
+                yearLevel: user.yearLevel,
+                campus: user.campus
             }),
             ...(role !== 'Student' && {
                 department: user.department,
@@ -338,117 +204,52 @@ router.post('/login', async (req, res) => {
             })
         };
 
-        console.log(`✅ Login successful: ${user.fullName} (${role})`);
-        console.log('📋 Session data:', req.session.user);
+        console.log(`✅ Login success: ${user.fullName} (${role})`);
 
-        // Redirect based on role
+        // Redirect by role
         switch (role) {
-            case 'Student':
-                console.log('🎯 Redirecting to student dashboard');
-                res.redirect('/student/dashboard');
-                break;
-            case 'Professor':
-                console.log('🎯 Redirecting to professor dashboard');
-                res.redirect('/professor/dashboard');
-                break;
-            case 'Dean':
-                console.log('🎯 Redirecting to dean dashboard');
-                res.redirect('/dean/dashboard');
-                break;
-            default:
-                console.log('🎯 Redirecting to default dashboard');
-                res.redirect('/dashboard');
+            case 'Dean': return res.redirect('/dean/dashboard');
+            case 'Professor': return res.redirect('/professor/dashboard');
+            case 'Student': return res.redirect('/student/dashboard');
+            default: return res.redirect('/');
         }
 
-    } catch (error) {
-        console.error('❌ Login error:', error);
+    } catch (err) {
+        console.error('❌ Login error:', err);
         res.status(500).render('Login', {
             title: 'Login - Test Bank System',
-            error: 'Internal server error during login!',
+            error: 'Internal server error!',
             success: null
         });
     }
 });
 
-// ✅ API Login (for Expo or mobile clients)
-router.post('/api/login', async (req, res) => {
-  try {
-    const { userID, password } = req.body;
-    console.log('📱 Mobile login attempt:', { userID });
-
-    if (!userID || !password) {
-      return res.status(400).json({ success: false, message: 'Please enter both ID and password!' });
-    }
-
-    let user = null;
-    let role = '';
-    let userModel = null;
-
-    // Check if Admin
-    user = await Admin.findOne({
-      $or: [{ employeeID: userID }, { email: userID }]
+/* ================================================================
+   🚪 LOGOUT
+================================================================ */
+router.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) console.error('❌ Logout error:', err);
+        res.redirect('/login');
     });
+});
 
-    if (user) {
-      role = user.role;
-      userModel = 'Admin';
-    } else {
-      // Check Student
-      user = await Student.findOne({
-        $or: [{ studentID: userID }, { email: userID }]
-      });
-      if (user) {
-        role = 'Student';
-        userModel = 'Student';
-      }
-    }
+/* ================================================================
+   🔒 TEST ROUTES (FOR ROLE CHECK)
+================================================================ */
+router.get('/dean-only', requireAuth, requireRole(['Dean']), (req, res) => {
+    res.render('dean/Dashboard', { title: 'Dean Dashboard', user: req.session.user });
+});
 
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid ID or password!' });
-    }
+router.get('/professor-only', requireAuth, requireRole(['Professor', 'Dean']), (req, res) => {
+    res.render('professor/Dashboard', { title: 'Professor Dashboard', user: req.session.user });
+});
 
-    if (userModel === 'Admin' && user.accountStatus && user.accountStatus !== 'Active') {
-      return res.status(400).json({
-        success: false,
-        message: `Account is ${user.accountStatus}. Please contact administrator.`,
-      });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ success: false, message: 'Invalid ID or password!' });
-    }
-
-    console.log(`✅ Mobile login successful: ${user.fullName} (${role})`);
-    return res.json({
-      success: true,
-      message: 'Login successful!',
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role,
-        ...(role === 'Student'
-          ? { course: user.course, section: user.section, yearLevel: user.yearLevel }
-          : { department: user.department, designation: user.designation }),
-      },
-    });
-  } catch (error) {
-    console.error('❌ Mobile login error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error during login.' });
-  }
+router.get('/student-only', requireAuth, requireRole(['Student']), (req, res) => {
+    res.render('student/Dashboard', { title: 'Student Dashboard', user: req.session.user });
 });
 
 
-// Forgot Password - Page
-router.get('/forgot-password', (req, res) => {
-    res.render('ForgotPassword', { 
-        title: 'Forgot Password',
-        error: null,
-        success: null,
-        showOtpForm: false
-    });
-});
 
 // Forgot Password - Send OTP
 router.post('/forgot-password', async (req, res) => {
@@ -628,14 +429,6 @@ router.post('/logout', (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
 // Temporary route to create Dean account (remove in production)
 router.post('/setup-dean', async (req, res) => {
     try {
@@ -713,14 +506,6 @@ router.get('/check-accounts', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-
-
-
-
-
-
-
 
 // Temporary route to access Manage Accounts page directly
 router.get('/test-manage-accounts', (req, res) => {
