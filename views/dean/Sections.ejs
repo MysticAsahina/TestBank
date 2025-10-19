@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title><%= title %> - Test Bank System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    .navbar.navbar-expand-lg.navbar-dark {
+      background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+    }
+    .student-list { height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: .375rem; padding: 0.25rem; }
+    .student-item { padding: .5rem; border-bottom: 1px solid #dee2e6; cursor: pointer; }
+    .student-item:hover { background: #f8f9fa; }
+    .student-item.selected { background: #e7f1ff; border-left: 4px solid #0d6efd; }
+    .transfer-buttons { display:flex; flex-direction:column; justify-content:center; gap:10px; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fas fa-graduation-cap me-2"></i>Test Bank System</a>
+    <div class="navbar-nav ms-auto">
+      <span class="navbar-text me-3">Welcome, <%= user.fullName %> (Dean)</span>
+      <form action="/auth/logout" method="POST" class="d-inline"><button class="btn btn-outline-light btn-sm">Logout</button></form>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid my-3">
+  <div class="row">
+    <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+      <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item"><a class="nav-link" href="/dean/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="/dean/manage-accounts"><i class="fas fa-users-cog me-2"></i>Manage Accounts</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/dean/sections"><i class="fas fa-layer-group me-2"></i>Sections</a></li>
+          <li class="nav-item"><a class="nav-link" href="/dean/tests"><i class="fas fa-file-alt me-2"></i>Test Management</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3"><i class="fas fa-layer-group me-2"></i><%= title %></h1>
+        <div>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSectionModal">Create Section</button>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header"><strong>Existing Sections</strong></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Section Name</th><th>School Year</th><th>Course</th><th>Campus</th><th>Students</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sectionsTable">
+                <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="createSectionModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sectionModalTitle">Create New Section</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="sectionForm" class="mb-3">
+          <input type="hidden" id="sectionId" value="">
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <label class="form-label">School Year</label>
+              <select id="schoolYear" class="form-select">
+                <option value="">Select</option>
+                <option>2024-2025</option><option>2025-2026</option><option>2026-2027</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Course</label>
+              <select id="course" class="form-select">
+                <option value="">Select</option>
+                <option>BSIT</option><option>BSCS</option><option>BSIS</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Campus</label>
+              <select id="campus" class="form-select"><option value="">Select</option><option>Main</option><option>South</option><option>SanJose</option></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Section Name</label>
+              <input id="sectionName" class="form-control" placeholder="e.g. BSIT3-A or 3A" />
+            </div>
+          </div>
+        </form>
+
+        <div class="row">
+          <div class="col-md-5">
+            <div class="card">
+              <div class="card-header">
+                <strong>Available Students</strong>
+              </div>
+              <div class="card-body">
+                <div class="mb-2">
+                  <input id="availableSearch" class="form-control" placeholder="Search students (name or id)"/>
+                </div>
+                <div id="availableStudents" class="student-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-2 transfer-buttons">
+            <button class="btn btn-primary mb-2" id="addToSection"> <i class="fas fa-arrow-right"></i> Add </button>
+            <button class="btn btn-outline-primary" id="removeFromSection"> <i class="fas fa-arrow-left"></i> Remove </button>
+          </div>
+
+          <div class="col-md-5">
+            <div class="card">
+              <div class="card-header"><strong>Students in Section</strong></div>
+              <div class="card-body">
+                <div class="mb-2"><input id="sectionSearch" class="form-control" placeholder="Search in section..." /></div>
+                <div id="sectionStudents" class="student-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" id="saveSectionBtn">Save Section</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details Modal (reusable) -->
+<div class="modal fade" id="sectionDetailsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Section Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" id="sectionDetailsBody"></div>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // client-side dynamic behavior connecting to the API endpoints implemented server-side
+
+  let availableStudents = [];      // loaded from GET /api/students
+  let sectionStudents = [];        // holds currently selected students in modal
+  let selectedAvailable = new Set();
+  let selectedSection = new Set();
+  let editingSectionId = null;
+
+  function el(html){ const d=document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; }
+
+  // load sections and students
+  async function loadInitial() {
+    await loadStudents();
+    await loadSections();
+  }
+
+  async function loadStudents(q = '') {
+    try {
+      const res = await fetch('/api/students' + (q ? '?q=' + encodeURIComponent(q) : ''));
+      if (!res.ok) throw new Error('Failed to load students');
+      availableStudents = await res.json();
+      renderAvailableStudents();
+    } catch (err) {
+      console.error(err);
+      availableStudents = [];
+      renderAvailableStudents();
+    }
+  }
+
+  async function loadSections() {
+    const tbody = document.getElementById('sectionsTable');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>';
+    try {
+      const res = await fetch('/api/sections');
+      if (!res.ok) throw new Error('Failed to load sections');
+      const sections = await res.json();
+      if (!sections.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No sections yet</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      sections.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${s.name}</td>
+          <td>${s.schoolYear}</td>
+          <td>${s.course}</td>
+          <td>${s.campus || ''}</td>
+          <td>${(s.students||[]).length}</td>
+          <td>
+            <div class="btn-group" role="group">
+              <button class="btn btn-sm btn-outline-primary" onclick="openDetails('${s._id}')">Details</button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="openEdit('${s._id}')">Edit</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteSection('${s._id}')">Delete</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load sections</td></tr>';
+    }
+  }
+
+  function renderAvailableStudents(filter = '') {
+    const container = document.getElementById('availableStudents');
+    const q = (filter || document.getElementById('availableSearch').value || '').toLowerCase();
+    const list = availableStudents.filter(s => {
+      if (!q) return true;
+      return (s.name||'').toLowerCase().includes(q) || (s.studentId||'').includes(q);
+    });
+    if (!list.length) {
+      container.innerHTML = '<div class="text-center text-muted py-3">No students found</div>';
+      return;
+    }
+    container.innerHTML = '';
+    list.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'student-item' + (selectedAvailable.has(s._id || s.studentId) ? ' selected' : '');
+      div.innerHTML = `<div class="fw-bold">${s.name}</div><small class="text-muted">${s.studentId || s._id}</small>`;
+      div.onclick = () => {
+        const key = s._id || s.studentId;
+        if (selectedAvailable.has(key)) selectedAvailable.delete(key); else selectedAvailable.add(key);
+        renderAvailableStudents();
+      };
+      container.appendChild(div);
+    });
+  }
+
+  function renderSectionStudents(filter = '') {
+    const container = document.getElementById('sectionStudents');
+    const q = (filter || document.getElementById('sectionSearch').value || '').toLowerCase();
+    const list = sectionStudents.filter(s => {
+      if (!q) return true;
+      return (s.name||'').toLowerCase().includes(q) || (s.studentId||'').includes(q);
+    });
+    if (!list.length) { container.innerHTML = '<div class="text-center text-muted py-3">No students in section</div>'; return; }
+    container.innerHTML = '';
+    list.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'student-item' + (selectedSection.has(s._id || s.studentId) ? ' selected' : '');
+      div.innerHTML = `<div class="fw-bold">${s.name}</div><small class="text-muted">${s.studentId || s._id}</small>`;
+      div.onclick = () => {
+        const key = s._id || s.studentId;
+        if (selectedSection.has(key)) selectedSection.delete(key); else selectedSection.add(key);
+        renderSectionStudents();
+      };
+      container.appendChild(div);
+    });
+  }
+
+  // transfers
+  function addToSection() {
+    // move selected from availableStudents to sectionStudents
+    const keys = Array.from(selectedAvailable);
+    keys.forEach(k => {
+      const s = availableStudents.find(x => (x._id === k) || (x.studentId === k));
+      if (s && !sectionStudents.some(x => x._id === s._id || x.studentId === s.studentId)) {
+        sectionStudents.push(s);
+      }
+    });
+    selectedAvailable.clear();
+    renderAvailableStudents();
+    renderSectionStudents();
+  }
+
+  function removeFromSection() {
+    const keys = Array.from(selectedSection);
+    sectionStudents = sectionStudents.filter(s => !keys.includes(s._id) && !keys.includes(s.studentId));
+    selectedSection.clear();
+    renderSectionStudents();
+  }
+
+  // Save (create or update) section
+  async function saveSection() {
+    const id = document.getElementById('sectionId').value || null;
+    const payload = {
+      name: document.getElementById('sectionName').value.trim(),
+      schoolYear: document.getElementById('schoolYear').value,
+      course: document.getElementById('course').value,
+      campus: document.getElementById('campus').value,
+      students: sectionStudents.map(s => ({ id: s._id || s.studentId, name: s.name, studentId: s.studentId }))
+    };
+
+    if (!payload.name || !payload.schoolYear || !payload.course) {
+      alert('Please fill required section fields (name, school year, course).');
+      return;
+    }
+
+    try {
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `/api/sections/${id}` : '/api/sections';
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({message:'Failed'}));
+        throw new Error(err.message || 'Save failed');
+      }
+      await loadSections();
+      bootstrap.Modal.getInstance(document.getElementById('createSectionModal'))?.hide();
+      resetModal();
+      alert('Section saved');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save section: ' + (err.message || 'Unknown'));
+    }
+  }
+
+  // reset modal state
+  function resetModal() {
+    document.getElementById('sectionId').value = '';
+    document.getElementById('sectionName').value = '';
+    document.getElementById('schoolYear').value = '';
+    document.getElementById('course').value = '';
+    document.getElementById('campus').value = '';
+    sectionStudents = [];
+    selectedAvailable.clear();
+    selectedSection.clear();
+    renderAvailableStudents();
+    renderSectionStudents();
+    document.getElementById('sectionModalTitle').textContent = 'Create New Section';
+    editingSectionId = null;
+  }
+
+  // open edit modal and populate
+  async function openEdit(id) {
+    try {
+      const res = await fetch(`/api/sections/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch section');
+      const sec = await res.json();
+      document.getElementById('sectionId').value = sec._id;
+      document.getElementById('sectionName').value = sec.name;
+      document.getElementById('schoolYear').value = sec.schoolYear;
+      document.getElementById('course').value = sec.course;
+      document.getElementById('campus').value = sec.campus || '';
+      sectionStudents = (sec.students || []).map(s => ({ name: s.name, studentId: s.studentId, _id: s.id }));
+      selectedAvailable.clear();
+      selectedSection.clear();
+      editingSectionId = sec._id;
+      document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+      renderAvailableStudents();
+      renderSectionStudents();
+      new bootstrap.Modal(document.getElementById('createSectionModal')).show();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to open edit form');
+    }
+  }
+
+  async function deleteSection(id) {
+    if (!confirm('Delete this section? This action cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/sections/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      await loadSections();
+      alert('Deleted');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete section');
+    }
+  }
+
+  function openDetails(id) {
+    const sec = allSectionsCache?.find(s => s._id === id);
+    if (!sec) {
+      // fallback fetch
+      fetch(`/api/sections/${id}`).then(r => r.json()).then(sec=>{
+        showDetails(sec);
+      }).catch(err=>{console.error(err); alert('Failed to load details');});
+    } else showDetails(sec);
+  }
+
+  function showDetails(sec) {
+    const body = document.getElementById('sectionDetailsBody');
+    body.innerHTML = `<h5>${sec.name}</h5>
+      <p><strong>Course:</strong> ${sec.course} &nbsp; <strong>School Year:</strong> ${sec.schoolYear} &nbsp; <strong>Campus:</strong> ${sec.campus||''}</p>
+      <h6>Students (${(sec.students||[]).length})</h6>
+      <ul>${(sec.students||[]).map(s=>`<li>${s.name} (${s.studentId||s.id||''})</li>`).join('')}</ul>`;
+    new bootstrap.Modal(document.getElementById('sectionDetailsModal')).show();
+  }
+
+  // small cache used for details view
+  let allSectionsCache = [];
+
+  // wire up UI
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('availableSearch')?.addEventListener('input', (e)=> renderAvailableStudents(e.target.value));
+    document.getElementById('sectionSearch')?.addEventListener('input', (e)=> renderSectionStudents(e.target.value));
+    document.getElementById('addToSection')?.addEventListener('click', addToSection);
+    document.getElementById('removeFromSection')?.addEventListener('click', removeFromSection);
+    document.getElementById('saveSectionBtn')?.addEventListener('click', saveSection);
+    // when modal opens, prepare available students and reset if creating
+    document.getElementById('createSectionModal')?.addEventListener('show.bs.modal', async () => {
+      await loadStudents();
+      if (!editingSectionId) resetModal();
+    });
+
+    // load data
+    await loadInitial();
+    // keep a cache for quick details
+    const res = await fetch('/api/sections'); if (res.ok) allSectionsCache = await res.json();
+  });
+</script>
+</body>
+</html>
