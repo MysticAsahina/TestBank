@@ -6,82 +6,424 @@
     <title>Student Dashboard - Test Bank System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar.navbar-expand-lg.navbar-dark {
+            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+        }
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            color: #333;
+            padding: 10px 15px;
+            margin: 2px 0;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .test-card, .group-card {
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+        }
+        .test-card:hover, .group-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .status-open {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-done {
+            color: #6c757d;
+            font-weight: bold;
+        }
+        .group-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff, #6610f2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+    </style>
 </head>
-<style>
-.navbar.navbar-expand-lg.navbar-dark {
-    background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
-}
-</style>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-info">
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="fas fa-graduation-cap me-2"></i>Test Bank System
             </a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text me-3">
-                    Welcome, Student <%= user.fullName %>
+                    Welcome, <%= user.fullName %> (Student)
                 </span>
                 <form action="/auth/logout" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-sign-out-alt me-1"></i>Logout
-                    </button>
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
                 </form>
             </div>
         </div>
     </nav>
-    <div class="container mt-4">
-        <h1>Student Dashboard</h1>
-        <p>This is the student dashboard. Content coming soon...</p>
-        
-        <!-- Quick Info Card -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Student Information</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Student ID:</strong> <%= user.userID %></p>
-                        <p><strong>Name:</strong> <%= user.fullName %></p>
-                        <p><strong>Email:</strong> <%= user.email %></p>
-                        <% if (user.course) { %>
-                            <p><strong>Course:</strong> <%= user.course %></p>
-                        <% } %>
-                        <% if (user.section) { %>
-                            <p><strong>Section:</strong> <%= user.section %></p>
-                        <% } %>
-                        <% if (user.yearLevel) { %>
-                            <p><strong>Year Level:</strong> <%= user.yearLevel %></p>
-                        <% } %>
-                        <% if (user.campus) { %>
-                            <p><strong>Campus:</strong> <%= user.campus %></p>
-                    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#home" data-bs-toggle="collapse" data-bs-target="#homeSubmenu">
+                                <i class="fas fa-home me-2"></i>Home
+                            </a>
+                            <div class="collapse show" id="homeSubmenu">
+                                <ul class="nav flex-column ms-3">
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#assigned" onclick="showSection('assigned')">
+                                            <i class="fas fa-tasks me-2"></i>Assigned
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#done" onclick="showSection('done')">
+                                            <i class="fas fa-check-circle me-2"></i>Done
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/groups">
+                                <i class="fas fa-users me-2"></i>Groups
+                            </a>
+                        </li>
+                        
+                    </ul>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quick Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="/student/tests" class="btn btn-primary">
-                                <i class="fas fa-file-alt me-2"></i>Take Tests
-                            </a>
-                            <a href="/student/results" class="btn btn-success">
-                                <i class="fas fa-chart-line me-2"></i>View Results
-                            </a>
-                            <a href="/student/account" class="btn btn-warning">
-                                <i class="fas fa-user-cog me-2"></i>My Account
-                            </a>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Home Section -->
+                <div id="home-section">
+                    <!-- Search Bar -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Search for tests by title..." id="searchInput">
+                                        <button class="btn btn-primary" type="button" onclick="searchTests()">
+                                            <i class="fas fa-search me-2"></i>Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Assigned Tests Section -->
+                    <div id="assigned-section" class="section-content">
+                        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                            <h3>Assigned Tests</h3>
+                        </div>
+                        
+                        <div class="row" id="assigned-tests">
+                            <!-- Test Card 1 -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card test-card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">Midterm Examination</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text"><strong>Subject Code:</strong> CS101</p>
+                                        <p class="card-text"><strong>Created By:</strong> Prof. Smith</p>
+                                        <p class="card-text"><strong>Time Limit:</strong> 60 minutes</p>
+                                        <p class="card-text"><strong>Deadline:</strong> Dec 15, 2024 23:59</p>
+                                        <p class="card-text"><strong>Questions:</strong> 10</p>
+                                        <p class="card-text"><strong>Status:</strong> <span class="status-open">Open</span></p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button class="btn btn-success w-100" onclick="openTestModal('Midterm Examination')">
+                                            <i class="fas fa-play-circle me-2"></i>Take Test
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Test Card 2 -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card test-card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">Programming Basics Quiz</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text"><strong>Subject Code:</strong> PROG101</p>
+                                        <p class="card-text"><strong>Created By:</strong> Prof. Johnson</p>
+                                        <p class="card-text"><strong>Time Limit:</strong> 30 minutes</p>
+                                        <p class="card-text"><strong>Deadline:</strong> Dec 20, 2024 23:59</p>
+                                        <p class="card-text"><strong>Questions:</strong> 5</p>
+                                        <p class="card-text"><strong>Status:</strong> <span class="status-open">Open</span></p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button class="btn btn-success w-100" onclick="openTestModal('Programming Basics Quiz')">
+                                            <i class="fas fa-play-circle me-2"></i>Take Test
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Done Tests Section -->
+                    <div id="done-section" class="section-content" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                            <h3>Completed Tests</h3>
+                        </div>
+                        
+                        <div class="row" id="done-tests">
+                            <!-- Test Card 1 -->
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card test-card">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h5 class="mb-0">Introduction to Computing</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text"><strong>Subject Code:</strong> ITC101</p>
+                                        <p class="card-text"><strong>Created By:</strong> Prof. Davis</p>
+                                        <p class="card-text"><strong>Time Limit:</strong> 45 minutes</p>
+                                        <p class="card-text"><strong>Deadline:</strong> Dec 10, 2024 23:59</p>
+                                        <p class="card-text"><strong>Questions:</strong> 8</p>
+                                        <p class="card-text"><strong>Status:</strong> <span class="status-done">Done</span></p>
+                                        <p class="card-text"><strong>Score:</strong> 85/100</p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button class="btn btn-info w-100" onclick="viewResults('Introduction to Computing')">
+                                            <i class="fas fa-chart-line me-2"></i>View Results
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Take Test Modal -->
+    <div class="modal fade" id="testModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="testModalTitle">Take Test</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Do you want to take this test?</strong><br>
+                        Once started, the timer will begin and you must complete the test within the time limit.
+                    </div>
+                    <div id="testQuestions" style="display: none;">
+                        <!-- Question 1: Multiple Choice -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>Question 1 (Multiple Choice)</strong>
+                            </div>
+                            <div class="card-body">
+                                <p>What does HTML stand for?</p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="q1" id="q1a">
+                                    <label class="form-check-label" for="q1a">
+                                        Hyper Text Markup Language
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="q1" id="q1b">
+                                    <label class="form-check-label" for="q1b">
+                                        High Tech Modern Language
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="q1" id="q1c">
+                                    <label class="form-check-label" for="q1c">
+                                        Hyper Transfer Markup Language
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 2: Identification -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>Question 2 (Identification)</strong>
+                            </div>
+                            <div class="card-body">
+                                <p>What programming language is known for its use in web development and shares its name with a gem?</p>
+                                <input type="text" class="form-control" placeholder="Your answer...">
+                            </div>
+                        </div>
+
+                        <!-- Question 3: Enumeration -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>Question 3 (Enumeration)</strong>
+                            </div>
+                            <div class="card-body">
+                                <p>List the three primary colors:</p>
+                                <input type="text" class="form-control mb-2" placeholder="Color 1">
+                                <input type="text" class="form-control mb-2" placeholder="Color 2">
+                                <input type="text" class="form-control mb-2" placeholder="Color 3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="startTestBtn" onclick="startTest()">Start Test</button>
+                    <button type="button" class="btn btn-success" id="submitTestBtn" style="display: none;" onclick="submitTest()">Submit Test</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal fade" id="resultsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Test Results - <span id="resultsTestTitle"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-trophy me-2"></i>Final Score: 85/100</h6>
+                    </div>
+                    
+                    <!-- Question Results -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <strong>Question 1: Correct</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Question:</strong> What does HTML stand for?</p>
+                            <p><strong>Your Answer:</strong> Hyper Text Markup Language</p>
+                            <p><strong>Status:</strong> <span class="text-success">Correct</span></p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-danger text-white">
+                            <strong>Question 2: Incorrect</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Question:</strong> What programming language is known for its use in web development and shares its name with a gem?</p>
+                            <p><strong>Your Answer:</strong> Java</p>
+                            <p><strong>Status:</strong> <span class="text-danger">Incorrect</span></p>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Study Tip:</strong> Review basic web development languages. 
+                                <a href="#" class="alert-link">Click here for learning resources</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <strong>Question 3: Correct</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Question:</strong> List the three primary colors</p>
+                            <p><strong>Your Answer:</strong> Red, Blue, Yellow</p>
+                            <p><strong>Status:</strong> <span class="text-success">Correct</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show/hide sections
+        function showSection(section) {
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.getElementById(section + '-section').style.display = 'block';
+            
+            // Update active links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Search functionality
+        function searchTests() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const testCards = document.querySelectorAll('.test-card');
+            
+            testCards.forEach(card => {
+                const title = card.querySelector('.card-header h5').textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Open test modal
+        function openTestModal(testTitle) {
+            document.getElementById('testModalTitle').textContent = 'Take Test - ' + testTitle;
+            document.getElementById('testQuestions').style.display = 'none';
+            document.getElementById('startTestBtn').style.display = 'block';
+            document.getElementById('submitTestBtn').style.display = 'none';
+            
+            const modal = new bootstrap.Modal(document.getElementById('testModal'));
+            modal.show();
+        }
+
+        // Start test
+        function startTest() {
+            document.getElementById('testQuestions').style.display = 'block';
+            document.getElementById('startTestBtn').style.display = 'none';
+            document.getElementById('submitTestBtn').style.display = 'block';
+        }
+
+        // Submit test
+        function submitTest() {
+            if (confirm('Are you sure you want to submit your test?')) {
+                alert('Test submitted successfully!');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('testModal'));
+                modal.hide();
+                
+                // Move test from Assigned to Done (in real app, this would be server-side)
+                showSection('done');
+            }
+        }
+
+        // View results
+        function viewResults(testTitle) {
+            document.getElementById('resultsTestTitle').textContent = testTitle;
+            const modal = new bootstrap.Modal(document.getElementById('resultsModal'));
+            modal.show();
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('assigned');
+        });
+    </script>
 </body>
 </html>
