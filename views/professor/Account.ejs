@@ -37,38 +37,46 @@
                 <div class="position-sticky pt-3 sidebar-sticky">
                     <ul class="nav flex-column">
 
+                        <% if (user && user.role === "Dean") { %>
                         <li class="nav-item">
-                            <a class="nav-link" href="/professor/Dashboard">
+                            <a class="nav-link" href="/dean/manage-accounts">
+                                <i class="fas fa-users-cog me-2"></i> Manage Accounts
+                            </a>
+                        </li>
+                        <% } %>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/dean/dashboard">
                                 <i class="fas fa-home me-2"></i> Dashboard
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="/professor/Sections">
+                            <a class="nav-link" href="/dean/sections">
                                 <i class="fas fa-layer-group me-2"></i> Sections
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="/professor/Tests">
+                            <a class="nav-link" href="/dean/tests">
                                 <i class="fas fa-file-alt me-2"></i> Test Management
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="/professor/StudentPerformance">
+                            <a class="nav-link" href="/dean/student-performance">
                                 <i class="fas fa-chart-line me-2"></i> Student Performance
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="/professor/Reports">
+                            <a class="nav-link" href="/dean/reports">
                                 <i class="fas fa-chart-pie me-2"></i> Reports
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="/professor/Account">
+                            <a class="nav-link" href="/dean/account">
                                 <i class="fas fa-user me-2"></i> My Account
                             </a>
                         </li>
@@ -128,29 +136,6 @@
                                         <input type="tel" class="form-control" value="+1 (555) 123-4567">
                                     </div>
                                     <button type="submit" class="btn btn-primary">Update Profile</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="card mt-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">Change Password</h5>
-                            </div>
-                            <div class="card-body">
-                                <form>
-                                    <div class="mb-3">
-                                        <label class="form-label">Current Password</label>
-                                        <input type="password" class="form-control" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">New Password</label>
-                                        <input type="password" class="form-control" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Confirm New Password</label>
-                                        <input type="password" class="form-control" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-warning">Change Password</button>
                                 </form>
                             </div>
                         </div>
