@@ -1,1 +1,769 @@
-s
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Test Bank System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+body {
+    background: linear-gradient(50deg, #c9c2ff 0%, #feffd0 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin: 0;
+    padding-top: 20px;
+}
+.main-body{
+    display: flex;
+    flex-direction: row;
+}
+.center-body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 1800px;
+    margin-left: 5px;
+}
+.ms-sm-auto{
+    margin:0 !important;
+    width: 100%;
+}
+
+.navbar.navbar-expand-lg.navbar-dark {
+    background: #F7F7F7 !important;
+    width: 100%;
+    border-radius: 20px;
+    padding:20px;
+    box-shadow:
+        5px 5px 10px 5px rgba(0, 0, 0, 0.1),
+        inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
+    animation: fadeFromBottom 1.5s ease forwards;
+    opacity: 1;
+    width: 100%;
+    margin-bottom: 10px;
+}
+.navbar.navbar-expand-lg.navbar-dark.bg-primary a,
+.navbar-nav.ms-auto span{
+    color:#000000;
+}
+.col-md-3.col-lg-2.d-md-block.bg-light.sidebar {
+    border-radius: 20px;
+    box-shadow:
+        5px 5px 10px 5px rgba(0, 0, 0, 0.1),
+        inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
+}
+.login-header{
+    text-align: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+.login-header img{
+    width: 70px;
+}
+.login-header h2{
+    font-size: 14px;
+    font-weight: bold;
+    margin: 10px 0 5px 0;
+    color: #333;
+}
+.login-header p{
+    font-size: 10px;
+    color: #666;
+    margin: 0;
+}
+        .stat-card {
+            transition: transform 0.2s;
+            border-left: 4px solid;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-primary { border-left-color: #0d6efd; }
+        .card-success { border-left-color: #198754; }
+        .card-warning { border-left-color: #ffc107; }
+        .card-info { border-left-color: #0dcaf0; }
+        .card-danger { border-left-color: #dc3545; }
+        .card-purple { border-left-color: #6f42c1; }
+        .card-teal { border-left-color: #20c997; }
+        .card-orange { border-left-color: #fd7e14; }
+        
+        .quick-action-btn {
+            transition: all 0.3s;
+        }
+        .quick-action-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .notification-item {
+            border-left: 3px solid;
+            transition: background-color 0.2s;
+        }
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .progress-thin {
+            height: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-body">
+        <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <div class="login-header">
+                            <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2" >
+                            <h2>PHINMA EDUCATION</h2>
+                            <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+                        </div>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/professor/Dashboard">
+                                <i class="fas fa-home me-2"></i> Dashboard
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/professor/Sections">
+                                <i class="fas fa-layer-group me-2"></i> Sections
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/professor/Tests">
+                                <i class="fas fa-file-alt me-2"></i> Test Management
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/professor/StudentPerformance">
+                                <i class="fas fa-chart-line me-2"></i> Student Performance
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/professor/Reports">
+                                <i class="fas fa-chart-pie me-2"></i> Reports
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/professor/Account">
+                                <i class="fas fa-user me-2"></i> My Account
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+    <div class="center-body">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    Welcome, <%= user.fullName %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
+                </span>
+                <form action="/auth/logout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i><%= title %></h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Today</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Week</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Month</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">Year</button>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Overview Metrics -->
+                <div class="row mb-4">
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card stat-card card-primary h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title">1,247</h4>
+                                        <p class="card-text">Total Students</p>
+                                    </div>
+                                    <i class="fas fa-user-graduate fa-2x text-primary"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>5.2% from last month
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card stat-card card-success h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title">25</h4>
+                                        <p class="card-text">Professors</p>
+                                    </div>
+                                    <i class="fas fa-chalkboard-teacher fa-2x text-success"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>2 new this month
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card stat-card card-warning h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title">48</h4>
+                                        <p class="card-text">Active Tests</p>
+                                    </div>
+                                    <i class="fas fa-file-alt fa-2x text-warning"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>12 new tests
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card stat-card card-info h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title">85.3%</h4>
+                                        <p class="card-text">Avg Performance</p>
+                                    </div>
+                                    <i class="fas fa-chart-line fa-2x text-info"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>2.1% improvement
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card stat-card card-danger h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title">92.7%</h4>
+                                        <p class="card-text">Completion Rate</p>
+                                    </div>
+                                    <i class="fas fa-check-circle fa-2x text-danger"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>1.5% increase
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card stat-card card-purple h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title">15</h4>
+                                        <p class="card-text">Departments</p>
+                                    </div>
+                                    <i class="fas fa-university fa-2x text-purple"></i>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Active departments</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-xl-2 col-md-3 col-sm-4 col-6 mb-3">
+                                        <a href="professor/Dashboard" class="btn btn-outline-primary quick-action-btn w-100 py-3">
+                                            <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                                            Add User ( Remove This )
+                                        </a>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3 col-sm-4 col-6 mb-3">
+                                        <a href="professor/Tests" class="btn btn-outline-success quick-action-btn w-100 py-3">
+                                            <i class="fas fa-file-alt fa-2x mb-2"></i><br>
+                                            Create Test
+                                        </a>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3 col-sm-4 col-6 mb-3">
+                                        <a href="/professor/Reports" class="btn btn-outline-warning quick-action-btn w-100 py-3">
+                                            <i class="fas fa-chart-bar fa-2x mb-2"></i><br>
+                                            Generate Report
+                                        </a>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3 col-sm-4 col-6 mb-3">
+                                        <a href="/professor/StudentPerformance" class="btn btn-outline-info quick-action-btn w-100 py-3">
+                                            <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+                                            View Analytics
+                                        </a>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3 col-sm-4 col-6 mb-3">
+                                        <button class="btn btn-outline-danger quick-action-btn w-100 py-3">
+                                            <i class="fas fa-bell fa-2x mb-2"></i><br>
+                                            Notifications ( Remove This)
+                                        </button>
+                                    </div>
+                                    <div class="col-xl-2 col-md-3 col-sm-4 col-6 mb-3">
+                                        <a href="/professor/Account" class="btn btn-outline-secondary quick-action-btn w-100 py-3">
+                                            <i class="fas fa-cog fa-2x mb-2"></i><br>
+                                            Settings
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div class="row mb-4">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Performance Trends</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="performanceTrendChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Department Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="departmentDistributionChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div class="row mb-4">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Test Completion Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="completionStatusChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Score Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="scoreDistributionChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Notifications -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recent Activity</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Activity</th>
+                                                <th>User</th>
+                                                <th>Department</th>
+                                                <th>Time</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Created new test: Midterm Exam</td>
+                                                <td>Dr. Maria Santos</td>
+                                                <td>Computer Science</td>
+                                                <td>2 hours ago</td>
+                                                <td><span class="badge bg-success">Completed</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Updated student grades</td>
+                                                <td>Prof. Juan Cruz</td>
+                                                <td>Mathematics</td>
+                                                <td>4 hours ago</td>
+                                                <td><span class="badge bg-success">Completed</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>New student registration</td>
+                                                <td>System</td>
+                                                <td>Engineering</td>
+                                                <td>6 hours ago</td>
+                                                <td><span class="badge bg-success">Completed</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Test submission pending review</td>
+                                                <td>Ana Lim (Student)</td>
+                                                <td>Physics</td>
+                                                <td>8 hours ago</td>
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Department report generated</td>
+                                                <td><%= user.fullName %></td>
+                                                <td>All Departments</td>
+                                                <td>1 day ago</td>
+                                                <td><span class="badge bg-success">Completed</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Notifications & Alerts</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item notification-item border-success">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1 text-success">System Update</h6>
+                                            <small>1 min ago</small>
+                                        </div>
+                                        <p class="mb-1">System performance optimized successfully.</p>
+                                    </div>
+                                    <div class="list-group-item notification-item border-warning">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1 text-warning">Pending Approval</h6>
+                                            <small>30 min ago</small>
+                                        </div>
+                                        <p class="mb-1">5 test submissions require your review.</p>
+                                    </div>
+                                    <div class="list-group-item notification-item border-info">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1 text-info">New Registration</h6>
+                                            <small>2 hours ago</small>
+                                        </div>
+                                        <p class="mb-1">12 new students registered today.</p>
+                                    </div>
+                                    <div class="list-group-item notification-item border-primary">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1 text-primary">Report Ready</h6>
+                                            <small>4 hours ago</small>
+                                        </div>
+                                        <p class="mb-1">Monthly performance report is ready for download.</p>
+                                    </div>
+                                    <div class="list-group-item notification-item border-danger">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1 text-danger">Attention Required</h6>
+                                            <small>1 day ago</small>
+                                        </div>
+                                        <p class="mb-1">3 professors have overdue test submissions.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Status -->
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">System Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Server Uptime</span>
+                                        <span>99.8%</span>
+                                    </div>
+                                    <div class="progress progress-thin">
+                                        <div class="progress-bar bg-success" style="width: 99.8%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Database Performance</span>
+                                        <span>98.5%</span>
+                                    </div>
+                                    <div class="progress progress-thin">
+                                        <div class="progress-bar bg-info" style="width: 98.5%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Storage Usage</span>
+                                        <span>65.2%</span>
+                                    </div>
+                                    <div class="progress progress-thin">
+                                        <div class="progress-bar bg-warning" style="width: 65.2%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Active Users</span>
+                                        <span>247</span>
+                                    </div>
+                                    <div class="progress progress-thin">
+                                        <div class="progress-bar bg-primary" style="width: 82%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Department Performance -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Department Performance Overview</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Computer Science</h6>
+                                                <h4 class="text-primary">88.5%</h4>
+                                                <div class="progress progress-thin mb-2">
+                                                    <div class="progress-bar bg-primary" style="width: 88.5%"></div>
+                                                </div>
+                                                <small class="text-muted">245 students</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Mathematics</h6>
+                                                <h4 class="text-success">82.3%</h4>
+                                                <div class="progress progress-thin mb-2">
+                                                    <div class="progress-bar bg-success" style="width: 82.3%"></div>
+                                                </div>
+                                                <small class="text-muted">198 students</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Physics</h6>
+                                                <h4 class="text-warning">79.1%</h4>
+                                                <div class="progress progress-thin mb-2">
+                                                    <div class="progress-bar bg-warning" style="width: 79.1%"></div>
+                                                </div>
+                                                <small class="text-muted">156 students</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6 class="card-title">Engineering</h6>
+                                                <h4 class="text-info">85.7%</h4>
+                                                <div class="progress progress-thin mb-2">
+                                                    <div class="progress-bar bg-info" style="width: 85.7%"></div>
+                                                </div>
+                                                <small class="text-muted">312 students</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize all charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Performance Trend Chart
+            const trendCtx = document.getElementById('performanceTrendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: [78, 82, 85, 83, 86, 88, 85, 87, 89, 88, 90, 92],
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Completion Rate (%)',
+                        data: [75, 78, 82, 80, 84, 86, 83, 85, 88, 87, 89, 92],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // Department Distribution Chart
+            const deptDistCtx = document.getElementById('departmentDistributionChart').getContext('2d');
+            new Chart(deptDistCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Computer Science', 'Mathematics', 'Physics', 'Engineering', 'Biology', 'Chemistry'],
+                    datasets: [{
+                        data: [25, 20, 15, 22, 10, 8],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Completion Status Chart
+            const completionCtx = document.getElementById('completionStatusChart').getContext('2d');
+            new Chart(completionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Completed', 'In Progress', 'Not Started', 'Overdue'],
+                    datasets: [{
+                        label: 'Number of Tests',
+                        data: [320, 85, 45, 12],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Score Distribution Chart
+            const scoreDistCtx = document.getElementById('scoreDistributionChart').getContext('2d');
+            new Chart(scoreDistCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['90-100%', '80-89%', '70-79%', '60-69%', 'Below 60%'],
+                    datasets: [{
+                        data: [35, 45, 15, 3, 2],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+
+        // Auto-refresh dashboard every 5 minutes
+        setInterval(() => {
+            console.log('Refreshing dashboard data...');
+            // Here you would typically fetch new data from the server
+        }, 300000);
+    </script>
+    </div>
+    </div>
+</body>
+</html>
