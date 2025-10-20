@@ -1,20 +1,23 @@
 import express from "express";
-
+import { requireAuth, requireRole } from "../../middleware/auth.js";
 const router = express.Router();
 
-// GET /dean/test-static - Display static test page
-router.get("/", async (req, res) => {
+/**
+ * @route GET /dean/Test
+ * @desc Display Dean account/profile page
+ * @access Dean only
+ */
+router.get("/", requireAuth, requireRole("Dean"), async (req, res) => {
   try {
+    const user = req.session.user;
+
     res.render("dean/Tests", {
       title: "Test Management",
-      user: req.user || { fullName: "Dean User" }
+      user,
     });
-  } catch (error) {
-    console.error("Error loading test static page:", error);
-    res.status(500).render("Error", {
-      message: "Error loading test static page",
-      error: {}
-    });
+  } catch (err) {
+    console.error("❌ Error loading Dean Account page:", err);
+    res.status(500).send("Server Error");
   }
 });
 

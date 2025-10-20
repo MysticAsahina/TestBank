@@ -1,18 +1,17 @@
 import express from "express";
-import Section from "../../models/Section.js";
+import { requireAuth, requireRole } from "../../middleware/auth.js";
 
 const router = express.Router();
 
 // GET /dean/sections - Display sections page
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, requireRole(["Dean", "Professor"]), async (req, res) => {
   try {
-    // For now, using static data - later we'll fetch from database
-    const sections = []; // Empty array for now since we're using static frontend
-    
+    const user = req.session.user;
+
     res.render("dean/Sections", {
       title: "Sections Management",
-      user: req.user || { fullName: "Dean User" }, // Fallback for static data
-      sections: sections
+      user,
+      sections: [] // still static for now
     });
   } catch (error) {
     console.error("Error loading sections page:", error);
@@ -23,13 +22,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST /dean/sections/create - Create new section (static version)
-router.post("/create", async (req, res) => {
+// POST /dean/sections/create - Create new section (Dean only)
+router.post("/create", requireAuth, requireRole("Dean"), async (req, res) => {
   try {
-    // For static implementation, just return success
-    // In real implementation, we would save to database
     console.log("Section creation data:", req.body);
-    
     res.json({
       success: true,
       message: "Section created successfully (static implementation)"
@@ -43,10 +39,9 @@ router.post("/create", async (req, res) => {
   }
 });
 
-// GET /dean/sections/list - Get all sections (static version)
-router.get("/list", async (req, res) => {
+// GET /dean/sections/list - Get all sections (Dean+Professor)
+router.get("/list", requireAuth, requireRole(["Dean", "Professor"]), async (req, res) => {
   try {
-    // Static sample data for demonstration
     const sections = [
       {
         _id: "1",
@@ -60,7 +55,7 @@ router.get("/list", async (req, res) => {
         createdAt: new Date()
       },
       {
-        _id: "2", 
+        _id: "2",
         sectionName: "Section B",
         schoolYear: "2025-2026",
         course: "BSCS",
@@ -71,11 +66,8 @@ router.get("/list", async (req, res) => {
         createdAt: new Date()
       }
     ];
-    
-    res.json({
-      success: true,
-      sections: sections
-    });
+
+    res.json({ success: true, sections });
   } catch (error) {
     console.error("Error fetching sections:", error);
     res.status(500).json({
