@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Results - Test Bank System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar.navbar-expand-lg.navbar-dark {
+            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+        }
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            color: #333;
+            padding: 10px 15px;
+            margin: 2px 0;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#28a745 0% 85%, #e9ecef 85% 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 0 auto;
+        }
+        .question-card.correct {
+            border-left: 4px solid #28a745;
+        }
+        .question-card.incorrect {
+            border-left: 4px solid #dc3545;
+        }
+        .correct-answer {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .user-answer.correct {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .user-answer.incorrect {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    Welcome, <%= user.fullName %> (Student)
+                </span>
+                <form action="/auth/logout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/dashboard">
+                                <i class="fas fa-home me-2"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/groups">
+                                <i class="fas fa-users me-2"></i>Groups
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-chart-line me-2"></i>Test Results
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <!-- Test Header -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h2>Chapter 1 Quiz Results</h2>
+                                        <p class="text-muted mb-1"><strong>Subject:</strong> Computer Science 101</p>
+                                        <p class="text-muted mb-1"><strong>Group:</strong> CS101 - Computer Science 101</p>
+                                        <p class="text-muted mb-1"><strong>Created by:</strong> Prof. Smith</p>
+                                        <p class="text-muted mb-0"><strong>Date Taken:</strong> November 25, 2024</p>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <div class="score-circle">
+                                            <div class="text-center">
+                                                <div>85%</div>
+                                                <small>17/20</small>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <span class="badge bg-success fs-6">Passed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Tabs -->
+                <ul class="nav nav-tabs mt-4" id="resultsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                            <i class="fas fa-list me-2"></i>All Answers
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="correct-tab" data-bs-toggle="tab" data-bs-target="#correct" type="button" role="tab">
+                            <i class="fas fa-check-circle me-2"></i>Correct (17)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="incorrect-tab" data-bs-toggle="tab" data-bs-target="#incorrect" type="button" role="tab">
+                            <i class="fas fa-times-circle me-2"></i>Incorrect (3)
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content mt-3" id="resultsTabContent">
+                    <!-- All Answers Tab -->
+                    <div class="tab-pane fade show active" id="all" role="tabpanel">
+                        <!-- Question 1 - Correct -->
+                        <div class="card question-card correct mb-3">
+                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                <strong>Question 1: Correct</strong>
+                                <span class="badge bg-light text-success">+1 point</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text"><strong>Question:</strong> What does HTML stand for?</p>
+                                <div class="mb-2">
+                                    <strong>Your Answer:</strong>
+                                    <span class="user-answer correct p-2 rounded d-inline-block">Hyper Text Markup Language</span>
+                                </div>
+                                <div>
+                                    <strong>Correct Answer:</strong>
+                                    <span class="correct-answer p-2 rounded d-inline-block">Hyper Text Markup Language</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 2 - Correct -->
+                        <div class="card question-card correct mb-3">
+                            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                <strong>Question 2: Correct</strong>
+                                <span class="badge bg-light text-success">+1 point</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text"><strong>Question:</strong> Which of the following is a programming language?</p>
+                                <div class="mb-2">
+                                    <strong>Your Answer:</strong>
+                                    <span class="user-answer correct p-2 rounded d-inline-block">Python</span>
+                                </div>
+                                <div>
+                                    <strong>Correct Answer:</strong>
+                                    <span class="correct-answer p-2 rounded d-inline-block">Python</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 3 - Incorrect -->
+                        <div class="card question-card incorrect mb-3">
+                            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                                <strong>Question 3: Incorrect</strong>
+                                <span class="badge bg-light text-danger">0 points</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text"><strong>Question:</strong> What programming language is known for its use in web development and shares its name with a gem?</p>
+                                <div class="mb-2">
+                                    <strong>Your Answer:</strong>
+                                    <span class="user-answer incorrect p-2 rounded d-inline-block">Java</span>
+                                </div>
+                                <div>
+                                    <strong>Correct Answer:</strong>
+                                    <span class="correct-answer p-2 rounded d-inline-block">Ruby</span>
+                                </div>
+                                <div class="alert alert-warning mt-2">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Study Tip:</strong> Review basic web development languages. 
+                                    <a href="#" class="alert-link">Click here for learning resources</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Correct Answers Tab -->
+                    <div class="tab-pane fade" id="correct" role="tabpanel">
+                        <!-- Only correct questions will be shown here -->
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            You answered 17 questions correctly.
+                        </div>
+                        
+                        <!-- Sample correct question -->
+                        <div class="card question-card correct mb-3">
+                            <div class="card-header bg-success text-white">
+                                <strong>Question 1: Correct</strong>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text"><strong>Question:</strong> What does HTML stand for?</p>
+                                <div class="mb-2">
+                                    <strong>Your Answer:</strong>
+                                    <span class="user-answer correct p-2 rounded d-inline-block">Hyper Text Markup Language</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Incorrect Answers Tab -->
+                    <div class="tab-pane fade" id="incorrect" role="tabpanel">
+                        <!-- Only incorrect questions will be shown here -->
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You answered 3 questions incorrectly. Review these topics.
+                        </div>
+                        
+                        <!-- Sample incorrect question -->
+                        <div class="card question-card incorrect mb-3">
+                            <div class="card-header bg-danger text-white">
+                                <strong>Question 3: Incorrect</strong>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text"><strong>Question:</strong> What programming language is known for its use in web development and shares its name with a gem?</p>
+                                <div class="mb-2">
+                                    <strong>Your Answer:</strong>
+                                    <span class="user-answer incorrect p-2 rounded d-inline-block">Java</span>
+                                </div>
+                                <div>
+                                    <strong>Correct Answer:</strong>
+                                    <span class="correct-answer p-2 rounded d-inline-block">Ruby</span>
+                                </div>
+                                <div class="alert alert-warning mt-2">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Study Tip:</strong> Review basic web development languages. 
+                                    <a href="#" class="alert-link">Click here for learning resources</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
