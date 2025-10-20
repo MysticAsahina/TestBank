@@ -53,16 +53,50 @@ label, p {
 }
 
 .login-card {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 100px;
+    background: rgba(255, 255, 255, 0);
+    border-radius: 20px;
     box-shadow:
         5px 5px 10px 5px rgba(0, 0, 0, 0.1),
         inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
     overflow: hidden;
     animation: fadeFromBottom 1.5s ease forwards;
     opacity: 0;
-  
     width: 100%;
+    
+    /* Glare effect variables */
+    --gh-width: 100%;
+    --gh-height: 100%;
+    --gh-bg: transparent;
+    --gh-br: 100px;
+    --gh-border: transparent;
+    --gh-angle: 135deg;
+    --gh-rgba: rgba(255, 255, 255, 0.4);
+    --gh-duration: 0.6s;
+    --gh-size: 200%;
+    
+    position: relative;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        var(--gh-angle),
+        transparent 40%,
+        var(--gh-rgba) 50%,
+        transparent 60%
+    );
+    transition: var(--gh-duration) ease;
+    background-size: 300% 300%;
+    background-repeat: no-repeat;
+    background-position: -100% -100%;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.login-card:hover::before {
+    background-position: 100% 100%;
 }
 .col-md-6{
     width: 800px !important;
@@ -122,6 +156,7 @@ label, p {
 }
 
 .btn-login:hover {
+    color:#23314C !important;
     background-color: #00c8ff;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
@@ -244,3 +279,5 @@ label, p {
     </script>
 </body>
 </html>
+
+
