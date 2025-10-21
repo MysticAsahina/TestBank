@@ -50,8 +50,8 @@ function normalizeQuestions(questions = []) {
   });
 }
 
-// Create a test
-router.post("/tests", async (req, res) => {
+// Create a test - CHANGED FROM /tests to /
+router.post("/", async (req, res) => {
   try {
     const payload = req.body;
 
@@ -100,8 +100,8 @@ router.post("/tests", async (req, res) => {
   }
 });
 
-// List tests
-router.get("/tests", async (req, res) => {
+// List tests - CHANGED FROM /tests to /
+router.get("/", async (req, res) => {
   try {
     const tests = await Test.find().sort({ createdAt: -1 }).lean();
     res.json(tests);
@@ -111,8 +111,8 @@ router.get("/tests", async (req, res) => {
   }
 });
 
-// Get single test
-router.get("/tests/:id", async (req, res) => {
+// Get single test - CHANGED FROM /tests/:id to /:id
+router.get("/:id", async (req, res) => {
   try {
     const t = await Test.findById(req.params.id).lean();
     if (!t) return res.status(404).json({ message: "Test not found" });
@@ -123,8 +123,8 @@ router.get("/tests/:id", async (req, res) => {
   }
 });
 
-// Update test
-router.put("/tests/:id", async (req, res) => {
+// Update test - CHANGED FROM /tests/:id to /:id
+router.put("/:id", async (req, res) => {
   try {
     const payload = req.body;
     const questions = Array.isArray(payload.questions) ? normalizeQuestions(payload.questions) : [];
@@ -167,8 +167,8 @@ router.put("/tests/:id", async (req, res) => {
   }
 });
 
-// Delete test
-router.delete("/tests/:id", async (req, res) => {
+// Delete test - CHANGED FROM /tests/:id to /:id
+router.delete("/:id", async (req, res) => {
   try {
     const removed = await Test.findByIdAndDelete(req.params.id);
     if (!removed) return res.status(404).json({ message: "Test not found" });
@@ -179,21 +179,8 @@ router.delete("/tests/:id", async (req, res) => {
   }
 });
 
-/**
- * Check eligibility for a student to take a test based on prerequisites.
- *
- * POST /api/tests/:id/check-eligibility
- * Body options:
- *  - { studentId: "<studentObjectId>" }
- *    Server will look up StudentTestAttempt documents for that student.
- *  - { completedTests: [{ testId: "<id>", passed: true|false, score?: number }, ...] }
- *    Use this to check client-side known completions without server attempts.
- *
- * Response:
- *  - { eligible: true }
- *  - { eligible: false, missing: ["<prereqTestId>", ...] }
- */
-router.post("/tests/:id/check-eligibility", async (req, res) => {
+// Check eligibility - CHANGED FROM /tests/:id/check-eligibility to /:id/check-eligibility
+router.post("/:id/check-eligibility", async (req, res) => {
   try {
     const testId = req.params.id;
     const t = await Test.findById(testId).lean();
