@@ -4,6 +4,8 @@ import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import sectionApiRoutes from "./routes/api/sections.js";
+import testsApiRoutes from "./routes/api/tests.js"; // Add this import
 
 // Load environment variables FIRST
 dotenv.config();
@@ -13,7 +15,6 @@ import routes from './routes/index.js';
 import setupPasswordRoutes from './routes/passwordReset.js';
 import adminRoutes from './routes/adminRoutes.js';
 import fileUploadRouter from './utils/fileUpload.js';
-import deanRoutes from "./routes/deanPages/index.js";
 
 console.log('🔧 Environment check:');
 console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
@@ -24,7 +25,7 @@ console.log('SESSION_SECRET exists:', !!process.env.SESSION_SECRET);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express(); // ✅ Define app BEFORE using it
+const app = express();
 
 // Middleware
 app.use(express.json());
@@ -66,13 +67,17 @@ app.use((req, res, next) => {
 app.use('/', routes);
 app.use('/', setupPasswordRoutes);
 app.use('/', adminRoutes);
-app.use("/dean", deanRoutes);
+// Remove the duplicate deanRoutes import - it's already in routes/index.js
 
 // ✅ MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
+
+// ✅ API Routes
+app.use("/api", sectionApiRoutes);
+app.use("/api/tests", testsApiRoutes); // Add tests API routes
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
