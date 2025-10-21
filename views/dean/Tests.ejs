@@ -113,18 +113,31 @@
                     </div>
                 </div>
 
-                <!-- Search Bar -->
+                <!-- Search and Filter Bar -->
                 <div class="card mb-4">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <input type="text" class="form-control" id="testSearch" placeholder="Search tests by title, subject code, or description...">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <select class="form-select" id="testFilter">
                                     <option value="">All Tests</option>
                                     <option value="Public">Public Tests</option>
                                     <option value="Private">Private Tests</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="subjectFilter">
+                                    <option value="">All Subjects</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Science">Science</option>
+                                    <option value="English">English</option>
+                                    <option value="Filipino">Filipino</option>
+                                    <option value="Computer Programming">Computer Programming</option>
+                                    <option value="Data Structures">Data Structures</option>
+                                    <option value="Web Development">Web Development</option>
+                                    <option value="Database Management">Database Management</option>
                                 </select>
                             </div>
                         </div>
@@ -150,13 +163,16 @@
                                         <th style="width:25%">Title</th>
                                         <th style="width:10%">Subject Code</th>
                                         <th style="width:8%">Access</th>
-                                        <th style="width:15%">Assigned</th>
+                                        <th style="width:15%">Assigned Sections</th>
                                         <th style="width:10%">Created By</th>
                                         <th style="width:12%">Created/Updated</th>
+                                        <th style="width:10%">Questions</th>
                                         <th style="width:10%">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="testsTableBody"><!-- populated by JS --></tbody>
+                                <tbody id="testsTableBody">
+                                    <tr><td colspan="8" class="text-center text-muted">Loading tests...</td></tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -235,7 +251,7 @@
                 <div class="col-md-5"><div class="card"><div class="card-header"><h6 class="mb-0">Assigned Sections</h6></div><div class="card-body"><div class="mb-3"><input type="text" class="form-control" id="assignedSectionSearch" placeholder="Search sections..."></div><div class="student-list" id="assignedSections"></div></div></div></div>
             </div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveSectionAssignment">Save Assignment</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelAssignSections">Cancel</button><button type="button" class="btn btn-primary" id="saveSectionAssignment">Save Assignment</button></div>
     </div></div></div>
 
     <!-- Prerequisites Modal -->
@@ -246,7 +262,7 @@
             <div class="card"><div class="card-header"><h6 class="mb-0">Available Tests</h6></div><div class="card-body"><div class="mb-3"><input type="text" class="form-control" id="prerequisiteSearch" placeholder="Search tests..."></div><div class="student-list" id="availablePrerequisites"></div></div></div>
             <div class="card mt-3"><div class="card-header"><h6 class="mb-0">Selected Prerequisites</h6></div><div class="card-body"><div id="selectedPrerequisites"></div></div></div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="savePrerequisites">Save Prerequisites</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelPrerequisites">Cancel</button><button type="button" class="btn btn-primary" id="savePrerequisites">Save Prerequisites</button></div>
     </div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -255,16 +271,33 @@
     let allTests = [];
     let sections = [];
     let showAllSections = false;
-    let currentTestForAssignment = null; // when editing an existing test this should be set to that test's _id
+    let currentTestForAssignment = null;
     let selectedAvailableSections = [];
     let selectedAssignedSections = [];
     let questionCount = 0;
-    let selectedPrerequisites = []; // holds prereq ids for "new" test creation or when editing before saving
+    let selectedPrerequisites = [];
+    let assignedSectionsForNewTest = [];
+    let prerequisitesForNewTest = [];
 
     // ---------- utils ----------
     function formatDate(d) {
         if (!d) return 'N/A';
         try { return new Date(d).toLocaleString(); } catch (e) { return d; }
+    }
+
+    // NEW: Format section name for display
+    function formatSectionDisplayName(section) {
+        if (!section) return '';
+        
+        // Try to parse from section name format "BSIT3-South2"
+        const match = section.name.match(/^([A-Z]+)(\d+)-([^-]+)(\d+)$/);
+        if (match) {
+            const [, course, yearLevel, campus, sectionNum] = match;
+            return `${course} ${yearLevel} - ${campus} ${sectionNum}`;
+        }
+        
+        // If parsing fails, use the stored section data
+        return `${section.course || ''} ${section.yearLevel || ''} - ${section.campus || ''} ${section.name || ''}`;
     }
 
     // ---------- data loading ----------
@@ -273,12 +306,12 @@
             const res = await fetch('/api/tests');
             if (!res.ok) throw new Error('Failed to load tests');
             allTests = await res.json();
+            console.log('Loaded tests:', allTests); // Debug log
         } catch (err) {
             console.error('Error loading tests:', err);
             allTests = [];
         }
 
-        // Try loading sections from an API endpoint. If not available, sections remain empty.
         try {
             const sres = await fetch('/api/sections');
             if (sres.ok) sections = await sres.json();
@@ -299,41 +332,77 @@
 
         const filter = document.getElementById('testFilter')?.value || '';
         const search = (document.getElementById('testSearch')?.value || '').toLowerCase();
+        const subjectFilter = document.getElementById('subjectFilter')?.value || '';
 
         const testsToShow = allTests.filter(test => {
+            // Filter by access type
             if (filter && test.access !== filter) return false;
+            
+            // Filter by subject
+            if (subjectFilter && test.subjectCode !== subjectFilter) return false;
+            
+            // Search filter
             if (!search) return true;
             return (test.title || '').toLowerCase().includes(search) ||
-                   (test.subjectCode || '').toLowerCase().includes(search) ||
-                   (test.description || '').toLowerCase().includes(search);
+                (test.subjectCode || '').toLowerCase().includes(search) ||
+                (test.description || '').toLowerCase().includes(search);
         });
 
+        if (testsToShow.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No tests match your search criteria</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = '';
         testsToShow.forEach(test => {
             const row = document.createElement('tr');
 
+            // UPDATED: Better assigned sections display with formatted names
             const assignedSections = test.assignedSections && test.assignedSections.length > 0
-                ? test.assignedSections.map(s => `<span class="badge bg-secondary">${s}</span>`).join(' ')
-                : '<span class="text-muted">None</span>';
+            ? test.assignedSections.map(sectionName => {
+                // Find the section data to get proper formatting
+                const section = sections.find(s => s.name === sectionName);
+                if (section) {
+                    const displayName = formatSectionDisplayName(section);
+                    return `<span class="badge bg-secondary me-1 mb-1" title="${sectionName}">${displayName}</span>`;
+                }
+                // Fallback: try to parse from the section name
+                const match = sectionName.match(/^([A-Z]+)(\d+)-([^-]+)(\d+)$/);
+                if (match) {
+                    const [, course, yearLevel, campus, sectionNum] = match;
+                    const displayName = `${course} ${yearLevel} - ${campus} ${sectionNum}`;
+                    return `<span class="badge bg-secondary me-1 mb-1" title="${sectionName}">${displayName}</span>`;
+                }
+                return `<span class="badge bg-secondary me-1 mb-1">${sectionName}</span>`;
+                }).join('')
+            : '<span class="text-muted">None</span>';
+
+            // UPDATED: Better creator name display
+            const createdByName = test.createdByName || 
+            (test.createdBy && test.createdBy.firstName ? 
+                `${test.createdBy.firstName} ${test.createdBy.lastName || ''}`.trim() : 
+                'System Admin');
 
             row.innerHTML = `
-                <td><a class="test-title-link" onclick="viewTestDetails('${test._id}')">${test.title}</a></td>
-                <td>${test.subjectCode || ''}</td>
-                <td><span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">${test.access || ''}</span></td>
-                <td class="assigned-sections">${assignedSections}</td>
-                <td>${test.createdByName || (test.createdBy && test.createdBy.firstName ? (test.createdBy.firstName + ' ' + (test.createdBy.lastName||'')) : '')}</td>
-                <td><small>Created: ${formatDate(test.createdAt)}</small><br><small>Updated: ${formatDate(test.updatedAt)}</small></td>
-                <td>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="duplicateTest('${test._id}')"><i class="fas fa-copy me-2"></i>Duplicate</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="openAssignSections('${test._id}')"><i class="fas fa-users me-2"></i>Assign</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="openEditTest('${test._id}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteTest('${test._id}')"><i class="fas fa-trash me-2"></i>Delete</a></li>
-                        </ul>
-                    </div>
-                </td>
+            <td><a class="test-title-link" onclick="viewTestDetails('${test._id}')">${test.title || 'Untitled'}</a></td>
+            <td>${test.subjectCode || ''}</td>
+            <td><span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">${test.access || 'Private'}</span></td>
+            <td class="assigned-sections">${assignedSections}</td>
+            <td>${createdByName}</td>
+            <td><small>Created: ${formatDate(test.createdAt)}</small><br><small>Updated: ${formatDate(test.updatedAt)}</small></td>
+            <td>${test.totalQuestions || 0} questions<br>${test.totalPoints || 0} points</td>
+            <td>
+                <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="duplicateTest('${test._id}')"><i class="fas fa-copy me-2"></i>Duplicate</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="openAssignSections('${test._id}')"><i class="fas fa-users me-2"></i>Assign</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="openEditTest('${test._id}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteTest('${test._id}')"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                </ul>
+                </div>
+            </td>
             `;
             tableBody.appendChild(row);
         });
@@ -351,7 +420,7 @@
         document.getElementById('activeTestsCount').textContent = activeTests;
     }
 
-    // ---------- CRUD actions (use API) ----------
+    // ---------- CRUD actions ----------
     async function viewTestDetails(testId) {
         try {
             let test = allTests.find(t => t._id === testId);
@@ -376,20 +445,38 @@
                         questionsHTML += `<li>${choice} ${isCorrect ? '<span class="badge bg-success">Correct</span>' : ''}</li>`;
                     });
                     questionsHTML += '</ul>';
-                } else if (q.type === 'identification') {
-                    questionsHTML += `<p><strong>Answer:</strong> ${q.answer || ''}</p>`;
+                } else if (q.type === 'truefalse') {
+                    questionsHTML += `<p><strong>Answer:</strong> ${q.correctAnswer || ''}</p>`;
                 } else if (q.type === 'enumeration') {
                     questionsHTML += '<p><strong>Answers:</strong></p><ul>';
                     (q.answers || []).forEach(answer => { questionsHTML += `<li>${answer}</li>`; });
                     questionsHTML += '</ul>';
+                } else if (q.type === 'identification') {
+                    questionsHTML += `<p><strong>Answer:</strong> ${q.answers ? q.answers.join(', ') : ''}</p>`;
                 } else if (q.type === 'essay') {
                     questionsHTML += `<p><strong>Expected Answer:</strong> ${q.expectedAnswer || 'N/A'}</p>`;
                 }
                 questionsHTML += `</div></div>`;
             });
 
+            // UPDATED: Format assigned sections for display
             const assignedSections = test.assignedSections && test.assignedSections.length > 0
-                ? test.assignedSections.map(s => `<span class="badge bg-secondary me-1">${s}</span>`).join('')
+                ? test.assignedSections.map(sectionName => {
+                    // Find the section data to get proper formatting
+                    const section = sections.find(s => s.name === sectionName);
+                    if (section) {
+                        const displayName = formatSectionDisplayName(section);
+                        return `<span class="badge bg-secondary me-1">${displayName}</span>`;
+                    }
+                    // Fallback: try to parse from the section name
+                    const match = sectionName.match(/^([A-Z]+)(\d+)-([^-]+)(\d+)$/);
+                    if (match) {
+                        const [, course, yearLevel, campus, sectionNum] = match;
+                        const displayName = `${course} ${yearLevel} - ${campus} ${sectionNum}`;
+                        return `<span class="badge bg-secondary me-1">${displayName}</span>`;
+                    }
+                    return `<span class="badge bg-secondary me-1">${sectionName}</span>`;
+                }).join('')
                 : '<span class="text-muted">None</span>';
 
             const prerequisites = test.prerequisites && test.prerequisites.length > 0
@@ -440,7 +527,89 @@
         }
     }
 
-    // Open Assign Sections modal for an existing test (helper)
+    // ---------- Assign Sections ----------
+    function populateSectionAssignment() {
+        const availableEl = document.getElementById('availableSections');
+        const assignedEl = document.getElementById('assignedSections');
+        
+        availableEl.innerHTML = '';
+        assignedEl.innerHTML = '';
+
+        // Get current assigned sections
+        let currentAssigned = [];
+        if (currentTestForAssignment) {
+            const test = allTests.find(t => t._id === currentTestForAssignment);
+            currentAssigned = test ? (test.assignedSections || []) : [];
+        } else {
+            currentAssigned = assignedSectionsForNewTest || [];
+        }
+
+        // Populate available sections (all sections not currently assigned)
+        sections.forEach(section => {
+            if (!currentAssigned.includes(section.name)) {
+                const div = document.createElement('div');
+                div.className = 'student-item';
+                // UPDATED: Format section display as "Course Year Level - Campus Section"
+                const displayName = formatSectionDisplayName(section);
+                div.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input section-checkbox" type="checkbox" value="${section.name}">
+                        <label class="form-check-label">${displayName}</label>
+                    </div>
+                `;
+                availableEl.appendChild(div);
+            }
+        });
+
+        // Populate assigned sections
+        currentAssigned.forEach(sectionName => {
+            const section = sections.find(s => s.name === sectionName);
+            if (section) {
+                const div = document.createElement('div');
+                div.className = 'student-item';
+                // UPDATED: Format section display as "Course Year Level - Campus Section"
+                const displayName = formatSectionDisplayName(section);
+                div.innerHTML = `
+                    <div class="form-check">
+                        <input class="form-check-input section-checkbox" type="checkbox" value="${section.name}">
+                        <label class="form-check-label">${displayName}</label>
+                    </div>
+                `;
+                assignedEl.appendChild(div);
+            }
+        });
+
+        // Add click handlers for row selection
+        document.querySelectorAll('#availableSections .student-item, #assignedSections .student-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (e.target.type === 'checkbox') return;
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                updateSectionSelection();
+            });
+        });
+
+        // Add checkbox change handlers
+        document.querySelectorAll('#availableSections .section-checkbox, #assignedSections .section-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSectionSelection);
+        });
+
+        updateSectionSelection();
+    }
+
+    function updateSectionSelection() {
+        selectedAvailableSections = [];
+        selectedAssignedSections = [];
+
+        document.querySelectorAll('#availableSections .section-checkbox:checked').forEach(cb => {
+            selectedAvailableSections.push(cb.value);
+        });
+
+        document.querySelectorAll('#assignedSections .section-checkbox:checked').forEach(cb => {
+            selectedAssignedSections.push(cb.value);
+        });
+    }
+
     function openAssignSections(testId) {
         currentTestForAssignment = testId;
         populateSectionAssignment();
@@ -448,21 +617,231 @@
         modal.show();
     }
 
+    // ---------- Prerequisites ----------
+    function populatePrerequisites() {
+        const container = document.getElementById('availablePrerequisites');
+        const selectedContainer = document.getElementById('selectedPrerequisites');
+        container.innerHTML = '';
+        selectedContainer.innerHTML = '';
+
+        // Get current prerequisites
+        let currentPrerequisites = [];
+        if (currentTestForAssignment) {
+            const test = allTests.find(t => t._id === currentTestForAssignment);
+            currentPrerequisites = test ? (test.prerequisites || []) : [];
+        } else {
+            currentPrerequisites = prerequisitesForNewTest || [];
+        }
+
+        // Populate available tests (excluding current test)
+        allTests.forEach(test => {
+            if (test._id === currentTestForAssignment) return;
+            
+            const isSelected = currentPrerequisites.includes(String(test._id));
+            const div = document.createElement('div');
+            div.className = 'student-item';
+            div.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input prerequisite-checkbox" type="checkbox" value="${test._id}" id="prereq-${test._id}" ${isSelected ? 'checked' : ''}>
+                    <label class="form-check-label" for="prereq-${test._id}">${test.title} (${test.subjectCode})</label>
+                </div>
+            `;
+            container.appendChild(div);
+
+            if (isSelected) {
+                const selectedDiv = document.createElement('div');
+                selectedDiv.className = 'badge bg-info me-1 mb-1';
+                selectedDiv.textContent = test.title;
+                selectedContainer.appendChild(selectedDiv);
+            }
+        });
+
+        // Add click handlers for row selection
+        document.querySelectorAll('#availablePrerequisites .student-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (e.target.type === 'checkbox') return;
+                const checkbox = this.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                updatePrerequisitesSelection();
+            });
+        });
+
+        // Add checkbox change handlers
+        document.querySelectorAll('.prerequisite-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updatePrerequisitesSelection);
+        });
+    }
+
+    function updatePrerequisitesSelection() {
+        const selectedContainer = document.getElementById('selectedPrerequisites');
+        selectedContainer.innerHTML = '';
+
+        document.querySelectorAll('.prerequisite-checkbox:checked').forEach(cb => {
+            const testId = cb.value;
+            const test = allTests.find(t => t._id === testId);
+            if (test) {
+                const div = document.createElement('div');
+                div.className = 'badge bg-info me-1 mb-1';
+                div.textContent = test.title;
+                selectedContainer.appendChild(div);
+            }
+        });
+    }
+
+    // ---------- Modal Event Handlers ----------
+    document.getElementById('cancelAssignSections')?.addEventListener('click', function() {
+        bootstrap.Modal.getInstance(document.getElementById('assignSectionsModal'))?.hide();
+        bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
+    });
+
+    document.getElementById('cancelPrerequisites')?.addEventListener('click', function() {
+        bootstrap.Modal.getInstance(document.getElementById('prerequisitesModal'))?.hide();
+        bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
+    });
+
+    document.getElementById('saveSectionAssignment')?.addEventListener('click', function() {
+        const assignedSections = Array.from(document.querySelectorAll('#assignedSections input[type="checkbox"]')).map(cb => cb.value);
+        
+        if (currentTestForAssignment) {
+            // Update existing test
+            updateTestAssignedSections(currentTestForAssignment, assignedSections);
+        } else {
+            // Store for new test
+            assignedSectionsForNewTest = assignedSections;
+            updateAssignedSectionsSummary();
+        }
+        
+        bootstrap.Modal.getInstance(document.getElementById('assignSectionsModal'))?.hide();
+        bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
+    });
+
+    document.getElementById('savePrerequisites')?.addEventListener('click', function() {
+        const selectedPrereqs = Array.from(document.querySelectorAll('.prerequisite-checkbox:checked')).map(cb => cb.value);
+        
+        if (currentTestForAssignment) {
+            // Update existing test
+            updateTestPrerequisites(currentTestForAssignment, selectedPrereqs);
+        } else {
+            // Store for new test
+            prerequisitesForNewTest = selectedPrereqs;
+            updatePrerequisitesSummary();
+        }
+        
+        bootstrap.Modal.getInstance(document.getElementById('prerequisitesModal'))?.hide();
+        bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
+    });
+
+    document.getElementById('addToTest')?.addEventListener('click', function() {
+        selectedAvailableSections.forEach(sectionName => {
+            const checkbox = document.querySelector(`#availableSections input[value="${sectionName}"]`);
+            if (checkbox) {
+                const item = checkbox.closest('.student-item');
+                document.getElementById('assignedSections').appendChild(item);
+                checkbox.checked = false;
+            }
+        });
+        updateSectionSelection();
+    });
+
+    document.getElementById('removeFromTest')?.addEventListener('click', function() {
+        selectedAssignedSections.forEach(sectionName => {
+            const checkbox = document.querySelector(`#assignedSections input[value="${sectionName}"]`);
+            if (checkbox) {
+                const item = checkbox.closest('.student-item');
+                document.getElementById('availableSections').appendChild(item);
+                checkbox.checked = false;
+            }
+        });
+        updateSectionSelection();
+    });
+
+    function updateAssignedSectionsSummary() {
+        const summaryElement = document.getElementById('assignedSectionsSummary');
+        if (assignedSectionsForNewTest.length > 0) {
+            summaryElement.innerHTML = assignedSectionsForNewTest.map(sectionName => {
+                // Find the section data to get proper formatting
+                const section = sections.find(s => s.name === sectionName);
+                if (section) {
+                    const displayName = formatSectionDisplayName(section);
+                    return `<span class="badge bg-secondary me-1 mb-1">${displayName}</span>`;
+                }
+                // Fallback: try to parse from the section name
+                const match = sectionName.match(/^([A-Z]+)(\d+)-([^-]+)(\d+)$/);
+                if (match) {
+                    const [, course, yearLevel, campus, sectionNum] = match;
+                    const displayName = `${course} ${yearLevel} - ${campus} ${sectionNum}`;
+                    return `<span class="badge bg-secondary me-1 mb-1">${displayName}</span>`;
+                }
+                return `<span class="badge bg-secondary me-1 mb-1">${sectionName}</span>`;
+            }).join('');
+        } else {
+            summaryElement.innerHTML = 'None';
+        }
+    }
+
+    function updatePrerequisitesSummary() {
+        const summaryElement = document.getElementById('prerequisitesSummary');
+        if (prerequisitesForNewTest.length > 0) {
+            const names = prerequisitesForNewTest.map(id => {
+                const t = allTests.find(x => x._id === id);
+                return t ? t.title : id;
+            });
+            summaryElement.innerHTML = names.map(name => `<span class="badge bg-info">${name}</span>`).join(' ');
+        } else {
+            summaryElement.innerHTML = 'None';
+        }
+    }
+
+    async function updateTestAssignedSections(testId, assignedSections) {
+        try {
+            const test = allTests.find(t => t._id === testId);
+            if (!test) return;
+
+            const res = await fetch(`/api/tests/${testId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...test, assignedSections })
+            });
+
+            if (!res.ok) throw new Error('Failed to update test assignment');
+            await loadInitialData();
+            alert('Section assignment updated successfully!');
+        } catch (err) {
+            console.error('Error updating section assignment:', err);
+            alert('Failed to save assignment');
+        }
+    }
+
+    async function updateTestPrerequisites(testId, prerequisites) {
+        try {
+            const test = allTests.find(t => t._id === testId);
+            if (!test) return;
+
+            const res = await fetch(`/api/tests/${testId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...test, prerequisites })
+            });
+
+            if (!res.ok) throw new Error('Failed to update prerequisites');
+            await loadInitialData();
+            alert('Prerequisites updated successfully!');
+        } catch (err) {
+            console.error('Error updating prerequisites:', err);
+            alert('Failed to save prerequisites');
+        }
+    }
+
     // ---------- EDIT: populate full questions when editing ----------
-    // Helper: render a question object into the create/edit modal form
     function renderQuestionInForm(questionObj) {
-        // create a blank question in the DOM
-        addQuestion(); // increments questionCount and appends template
-        // last appended question element
+        addQuestion();
         const container = document.getElementById('questionsContainer');
         const qEl = container.lastElementChild;
         if (!qEl) return;
 
-        // Set text and points
         qEl.querySelector('.question-text').value = questionObj.text || '';
         qEl.querySelector('.question-points').value = questionObj.points || 0;
 
-        // Set feedback text if present
         if (questionObj.feedbackWhenCorrect && questionObj.feedbackWhenCorrect.text) {
             qEl.querySelector('.feedback-correct').value = questionObj.feedbackWhenCorrect.text;
         }
@@ -470,17 +849,13 @@
             qEl.querySelector('.feedback-incorrect').value = questionObj.feedbackWhenIncorrect.text;
         }
 
-        // select type and render answer section
         const typeSelect = qEl.querySelector('.question-type');
         typeSelect.value = questionObj.type || '';
-        // trigger renderAnswerSection directly so input names and containers are created
         renderAnswerSection(qEl, questionObj.type);
 
-        // populate answers based on type
         const qType = questionObj.type;
         if (qType === 'multiple') {
             const choicesContainer = qEl.querySelector('.choices-container');
-            // clear default choices
             choicesContainer.innerHTML = '';
             const choices = Array.isArray(questionObj.choices) ? questionObj.choices : [];
             const correctAns = questionObj.correctAnswer || [];
@@ -500,21 +875,17 @@
                 `;
                 choicesContainer.insertAdjacentHTML('beforeend', choiceHTML);
             }
-            // set texts and correct checkboxes
             const choiceTextEls = choicesContainer.querySelectorAll('.choice-text');
             choiceTextEls.forEach((inp, idx) => {
                 inp.value = choices[idx] || '';
             });
-            // mark correct choices: support stored correctAnswer being letters OR choice texts
             const correctSet = new Set(Array.isArray(correctAns) ? correctAns.map(String) : [String(correctAns)]);
             choicesContainer.querySelectorAll('.correct-choice').forEach((cb, idx) => {
                 const letter = String.fromCharCode(65 + idx);
                 const choiceText = (choices[idx] || '').toString();
                 cb.checked = correctSet.has(letter) || correctSet.has(choiceText);
             });
-            // wire remove-choice buttons
             choicesContainer.querySelectorAll('.remove-choice').forEach(btn => btn.onclick = (e)=>{ e.target.closest('.choice-item').remove(); updateTestSummary(); });
-            // wire add-choice on this question
             qEl.querySelectorAll('.add-choice').forEach(btn => btn.onclick = () => {
                 const container = qEl.querySelector('.choices-container');
                 const nextLetter = String.fromCharCode(65 + container.children.length);
@@ -534,13 +905,11 @@
                 const html = `<div class="answer-item"><div class="input-group"><input type="text" class="form-control enumeration-answer" placeholder="Answer ${idx+1}" required></div></div>`;
                 enumContainer.insertAdjacentHTML('beforeend', html);
             });
-            // wire add-enum
             qEl.querySelectorAll('.add-enum').forEach(btn => btn.onclick = () => {
                 const container = qEl.querySelector('.enumeration-container');
                 const count = container.children.length + 1;
                 container.insertAdjacentHTML('beforeend', `<div class="answer-item"><div class="input-group"><input type="text" class="form-control enumeration-answer" placeholder="Answer ${count}" required></div></div>`);
             });
-            // set values
             qEl.querySelectorAll('.enumeration-answer').forEach((inp, idx) => inp.value = answers[idx] || '');
             const requiredCountEl = qEl.querySelector('.enumeration-required');
             if (requiredCountEl) requiredCountEl.value = questionObj.requiredCount || (answers.length || 1);
@@ -552,7 +921,6 @@
                 idContainer.insertAdjacentHTML('beforeend', `<div class="answer-item"><div class="input-group"><input type="text" class="form-control identification-answer" placeholder="Correct Answer ${idx+1}" required></div></div>`);
             });
             qEl.querySelectorAll('.identification-answer').forEach((inp, idx) => inp.value = answers[idx] || '');
-            // wire add-id
             qEl.querySelectorAll('.add-id').forEach(btn => btn.onclick = () => {
                 const container = qEl.querySelector('.identification-container');
                 const count = container.children.length + 1;
@@ -563,23 +931,19 @@
             if (ea) ea.value = questionObj.expectedAnswer || (questionObj.answer || '');
         }
 
-        // Note: files cannot be set programmatically into file inputs for security reasons.
-        // If you want to show existing file URLs, you could add a preview area and populate it here (not implemented).
         attachQuestionHandlers();
         updateTestSummary();
     }
 
-    // Open Edit Test (populate create modal for editing) - improved: populate questions as well
     async function openEditTest(testId) {
         try {
             const test = allTests.find(t => t._id === testId) || await (await fetch(`/api/tests/${testId}`)).json();
             if (!test) { alert('Test not found'); return; }
 
-            // set current editing id
             currentTestForAssignment = testId;
-            selectedPrerequisites = Array.isArray(test.prerequisites) ? test.prerequisites.slice() : [];
+            assignedSectionsForNewTest = test.assignedSections || [];
+            prerequisitesForNewTest = test.prerequisites || [];
 
-            // populate basic fields
             const form = document.getElementById('testForm');
             form.querySelector('[name="title"]').value = test.title || '';
             form.querySelector('[name="subjectCode"]').value = test.subjectCode || '';
@@ -590,15 +954,13 @@
             form.querySelector('[name="howManyQuestions"]').value = test.howManyQuestions || 1;
             form.querySelector('[name="passingPoints"]').value = test.passingPoints || 0;
 
-            // populate prerequisites summary
-            document.getElementById('prerequisitesSummary').innerHTML = selectedPrerequisites.length ? selectedPrerequisites.map(id => { const t=allTests.find(x=>x._id===id); return t ? t.title : id; }).join('<br>') : 'None';
+            updateAssignedSectionsSummary();
+            updatePrerequisitesSummary();
 
-            // clear and populate questions
             document.getElementById('questionsContainer').innerHTML = '';
             questionCount = 0;
             (Array.isArray(test.questions) ? test.questions : []).forEach(q => renderQuestionInForm(q));
 
-            // Show modal
             const modal = new bootstrap.Modal(document.getElementById('createTestModal'));
             modal.show();
         } catch (err) {
@@ -608,107 +970,131 @@
     }
 
     async function createTest() {
-        const form = document.getElementById('testForm');
-        if (!form.checkValidity()) { form.reportValidity(); return; }
+    const form = document.getElementById('testForm');
+    if (!form.checkValidity()) { form.reportValidity(); return; }
 
-        try {
-            const formData = new FormData(form);
-            const deadlineValue = (formData.get('deadline') || '').trim();
+    try {
+        const formData = new FormData(form);
+        const deadlineValue = (formData.get('deadline') || '').trim();
 
-            const payload = {
-                title: formData.get('title'),
-                subjectCode: formData.get('subjectCode'),
-                description: formData.get('description'),
-                access: formData.get('access'),
-                timeLimit: Number(formData.get('timeLimit')) || undefined,
-                deadline: deadlineValue ? new Date(deadlineValue).toISOString() : undefined,
-                howManyQuestions: Number(formData.get('howManyQuestions')),
-                passingPoints: Number(formData.get('passingPoints')) || 0,
-                assignedSections: [], // UI handles assignment separately
-                prerequisites: selectedPrerequisites.slice(), // use the selectedPrerequisites state
-                questions: []
+        // Build the payload with proper data
+        const payload = {
+            title: formData.get('title'),
+            subjectCode: formData.get('subjectCode'),
+            description: formData.get('description'),
+            access: formData.get('access'),
+            timeLimit: Number(formData.get('timeLimit')) || undefined,
+            deadline: deadlineValue ? new Date(deadlineValue).toISOString() : undefined,
+            howManyQuestions: Number(formData.get('howManyQuestions')),
+            passingPoints: Number(formData.get('passingPoints')) || 0,
+            assignedSections: currentTestForAssignment ? 
+                (allTests.find(t => t._id === currentTestForAssignment)?.assignedSections || []) : 
+                assignedSectionsForNewTest,
+            prerequisites: currentTestForAssignment ? 
+                (allTests.find(t => t._id === currentTestForAssignment)?.prerequisites || []) : 
+                prerequisitesForNewTest,
+            questions: []
+        };
+
+        // Collect questions from DOM
+        document.querySelectorAll('.question-item').forEach(q => {
+            const type = q.querySelector('.question-type')?.value;
+            if (!type) return;
+            const question = {
+                text: q.querySelector('.question-text')?.value.trim(),
+                type,
+                points: Number(q.querySelector('.question-points')?.value) || 0,
+                choices: [],
+                correctAnswer: undefined,
+                answer: undefined,
+                answers: [],
+                files: [],
+                feedbackWhenCorrect: { 
+                    text: q.querySelector('.feedback-correct')?.value.trim() || '', 
+                    file: '' 
+                },
+                feedbackWhenIncorrect: { 
+                    text: q.querySelector('.feedback-incorrect')?.value.trim() || '', 
+                    file: '' 
+                }
             };
 
-            // collect questions from DOM
-            document.querySelectorAll('.question-item').forEach(q => {
-                const type = q.querySelector('.question-type')?.value;
-                if (!type) return;
-                const question = {
-                    text: q.querySelector('.question-text')?.value.trim(),
-                    type,
-                    points: Number(q.querySelector('.question-points')?.value) || 0,
-                    choices: [],
-                    correctAnswer: undefined,
-                    answer: undefined,
-                    answers: [],
-                    files: [],
-                    feedbackWhenCorrect: { text: q.querySelector('.feedback-correct')?.value.trim() || '', file: '' },
-                    feedbackWhenIncorrect: { text: q.querySelector('.feedback-incorrect')?.value.trim() || '', file: '' }
-                };
-
-                if (type === 'multiple') {
-                    question.choices = Array.from(q.querySelectorAll('.choice-text')).map(i => i.value.trim());
-                    // correct-choice values are letter markers (A/B/...). Keep that format.
-                    question.correctAnswer = Array.from(q.querySelectorAll('.correct-choice:checked')).map(c => c.value);
-                } else if (type === 'truefalse') {
-                    const sel = q.querySelector('.correct-choice:checked');
-                    question.correctAnswer = sel ? sel.value : undefined;
-                } else if (type === 'enumeration') {
-                    question.answers = Array.from(q.querySelectorAll('.enumeration-answer')).map(a => a.value.trim());
-                    question.requiredCount = Number(q.querySelector('.enumeration-required')?.value) || 1;
-                } else if (type === 'identification') {
-                    question.answers = Array.from(q.querySelectorAll('.identification-answer')).map(a => a.value.trim());
-                } else if (type === 'essay') {
-                    question.expectedAnswer = q.querySelector('.essay-answer')?.value.trim() || '';
-                }
-
-                payload.questions.push(question);
-            });
-
-            // Validate howManyQuestions vs total questions
-            if (payload.howManyQuestions > payload.questions.length) {
-                alert('How many questions per student cannot exceed total number of questions.');
-                return;
+            if (type === 'multiple') {
+                question.choices = Array.from(q.querySelectorAll('.choice-text')).map(i => i.value.trim());
+                question.correctAnswer = Array.from(q.querySelectorAll('.correct-choice:checked')).map(c => c.value);
+            } else if (type === 'truefalse') {
+                const sel = q.querySelector('.correct-choice:checked');
+                question.correctAnswer = sel ? sel.value : undefined;
+            } else if (type === 'enumeration') {
+                question.answers = Array.from(q.querySelectorAll('.enumeration-answer')).map(a => a.value.trim());
+                question.requiredCount = Number(q.querySelector('.enumeration-required')?.value) || 1;
+            } else if (type === 'identification') {
+                question.answers = Array.from(q.querySelectorAll('.identification-answer')).map(a => a.value.trim());
+            } else if (type === 'essay') {
+                question.expectedAnswer = q.querySelector('.essay-answer')?.value.trim() || '';
             }
 
-            // If editing existing test -> PUT, else POST
-            let res;
-            if (currentTestForAssignment) {
-                res = await fetch(`/api/tests/${currentTestForAssignment}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } else {
-                res = await fetch('/api/tests', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            }
+            payload.questions.push(question);
+        });
 
-            if (!res.ok) {
-                const err = await res.json().catch(()=>({message:'Unknown error'}));
-                throw new Error(err.message || 'Failed to create/update test');
-            }
-
-            // refresh list
-            await loadInitialData();
-
-            const modal = bootstrap.Modal.getInstance(document.getElementById('createTestModal'));
-            modal?.hide();
-            form.reset();
-            document.getElementById('questionsContainer').innerHTML = '';
-            questionCount = 0;
-            selectedPrerequisites = [];
-            currentTestForAssignment = null;
-            document.getElementById('prerequisitesSummary').innerHTML = 'None';
-            alert('Test saved successfully!');
-        } catch (err) {
-            console.error('Error creating/updating test:', err);
-            alert('Error creating/updating test: ' + (err.message || 'Unknown'));
+        // Validate howManyQuestions vs total questions
+        if (payload.howManyQuestions > payload.questions.length) {
+            alert('How many questions per student cannot exceed total number of questions.');
+            return;
         }
+
+        let res;
+        let url;
+        let method;
+
+        if (currentTestForAssignment) {
+            // Update existing test
+            url = `/api/tests/${currentTestForAssignment}`;
+            method = 'PUT';
+        } else {
+            // Create new test
+            url = '/api/tests';
+            method = 'POST';
+        }
+
+        console.log('Sending payload:', payload); // Debug log
+
+        res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Server response:', errorText);
+            throw new Error(`Failed to ${currentTestForAssignment ? 'update' : 'create'} test: ${res.status} ${res.statusText}`);
+        }
+
+        const result = await res.json();
+        console.log('Test saved successfully:', result);
+
+        await loadInitialData();
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('createTestModal'));
+        modal?.hide();
+        
+        // Reset form
+        form.reset();
+        document.getElementById('questionsContainer').innerHTML = '';
+        questionCount = 0;
+        assignedSectionsForNewTest = [];
+        prerequisitesForNewTest = [];
+        currentTestForAssignment = null;
+        document.getElementById('assignedSectionsSummary').innerHTML = 'None';
+        document.getElementById('prerequisitesSummary').innerHTML = 'None';
+        
+        alert(`Test ${currentTestForAssignment ? 'updated' : 'created'} successfully!`);
+    } catch (err) {
+        console.error('Error creating/updating test:', err);
+        alert('Error creating/updating test: ' + (err.message || 'Unknown error'));
     }
+}
 
     async function deleteTest(testId) {
         if (!confirm('Are you sure you want to delete this test? This action cannot be undone.')) return;
@@ -747,160 +1133,7 @@
         }
     }
 
-    // ---------- sections / assignment ----------
-    function populateSectionAssignment() {
-        const test = allTests.find(t => t._id === currentTestForAssignment);
-        if (!test) return;
-        const available = sections.filter(s => !test.assignedSections || !test.assignedSections.includes(s.name));
-        const assigned = sections.filter(s => test.assignedSections && test.assignedSections.includes(s.name));
-
-        const availEl = document.getElementById('availableSections'); availEl.innerHTML = '';
-        available.forEach(s => {
-            const div = document.createElement('div'); div.className = 'student-item';
-            div.innerHTML = `<div class="form-check"><input class="form-check-input section-checkbox" type="checkbox" value="${s.name}"><label class="form-check-label">${s.name} (${s.course} - Year ${s.year})</label></div>`;
-            availEl.appendChild(div);
-        });
-
-        const assignedEl = document.getElementById('assignedSections'); assignedEl.innerHTML = '';
-        assigned.forEach(s => {
-            const div = document.createElement('div'); div.className = 'student-item';
-            div.innerHTML = `<div class="form-check"><input class="form-check-input section-checkbox" type="checkbox" value="${s.name}"><label class="form-check-label">${s.name} (${s.course} - Year ${s.year})</label></div>`;
-            assignedEl.appendChild(div);
-        });
-
-        // set listeners (simple)
-        document.querySelectorAll('#availableSections .section-checkbox').forEach(cb => cb.addEventListener('change', function(){ if(this.checked) selectedAvailableSections.push(this.value); else selectedAvailableSections = selectedAvailableSections.filter(v => v !== this.value); }));
-        document.querySelectorAll('#assignedSections .section-checkbox').forEach(cb => cb.addEventListener('change', function(){ if(this.checked) selectedAssignedSections.push(this.value); else selectedAssignedSections = selectedAssignedSections.filter(v => v !== this.value); }));
-    }
-
-    document.getElementById('addToTest')?.addEventListener('click', function() {
-        selectedAvailableSections.forEach(section => {
-            const el = document.querySelector(`#availableSections input[value="${section}"]`);
-            if (el) {
-                const item = el.closest('.student-item');
-                document.getElementById('assignedSections').appendChild(item);
-                el.checked = false;
-            }
-        });
-        selectedAvailableSections = [];
-    });
-
-    document.getElementById('removeFromTest')?.addEventListener('click', function() {
-        selectedAssignedSections.forEach(section => {
-            const el = document.querySelector(`#assignedSections input[value="${section}"]`);
-            if (el) {
-                const item = el.closest('.student-item');
-                document.getElementById('availableSections').appendChild(item);
-                el.checked = false;
-            }
-        });
-        selectedAssignedSections = [];
-    });
-
-    document.getElementById('saveSectionAssignment')?.addEventListener('click', async function() {
-        const test = allTests.find(t => t._id === currentTestForAssignment);
-        if (!test) return;
-        const assigned = Array.from(document.querySelectorAll('#assignedSections input[type="checkbox"]')).map(cb => cb.value);
-        test.assignedSections = assigned;
-        try {
-            const res = await fetch(`/api/tests/${test._id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(test)
-            });
-            if (!res.ok) throw new Error('Failed to update test assignment');
-            await loadInitialData();
-            bootstrap.Modal.getInstance(document.getElementById('assignSectionsModal'))?.hide();
-            alert('Section assignment updated successfully!');
-        } catch (err) {
-            console.error(err);
-            alert('Failed to save assignment');
-        }
-    });
-
-    // ---------- prerequisites ----------
-    // When prerequisites modal opens, populate list and pre-check currently selected prerequisites
-    document.getElementById('prerequisitesModal')?.addEventListener('show.bs.modal', function() {
-        const container = document.getElementById('availablePrerequisites');
-        container.innerHTML = '';
-
-        // Determine currently selected prerequisites: if editing an existing test, use its prerequisites,
-        // otherwise (creating new test) use selectedPrerequisites (local state).
-        let currentSelected = [];
-        if (currentTestForAssignment) {
-            const test = allTests.find(t => t._id === currentTestForAssignment);
-            currentSelected = test && Array.isArray(test.prerequisites) ? test.prerequisites.slice() : [];
-        } else {
-            currentSelected = selectedPrerequisites.slice();
-        }
-
-        allTests.forEach(test => {
-            if (test._id === currentTestForAssignment) return; // can't be prereq of itself
-            const checkedAttr = currentSelected.includes(String(test._id)) ? 'checked' : '';
-            const div = document.createElement('div');
-            div.className = 'student-item';
-            div.innerHTML = `
-                <div class="form-check">
-                    <input class="form-check-input prerequisite-checkbox" type="checkbox" value="${test._id}" id="prereq-${test._id}" ${checkedAttr}>
-                    <label class="form-check-label" for="prereq-${test._id}">${test.title} (${test.subjectCode})</label>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    });
-
-    // Save prerequisites - supports editing existing tests (PUT) and creating new tests (local state)
-    document.getElementById('savePrerequisites')?.addEventListener('click', async function() {
-        const container = document.getElementById('availablePrerequisites');
-        if (!container) return;
-
-        // collect selected prerequisites from modal
-        const selected = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-
-        if (currentTestForAssignment) {
-            // updating an existing test on the server
-            const test = allTests.find(t => t._id === currentTestForAssignment);
-            if (!test) {
-                alert('Test not found for updating prerequisites.');
-                return;
-            }
-            test.prerequisites = selected;
-            try {
-                const res = await fetch(`/api/tests/${test._id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(test)
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(()=>({message:'Unknown error'}));
-                    throw new Error(err.message || 'Failed to save prerequisites');
-                }
-                await loadInitialData();
-                bootstrap.Modal.getInstance(document.getElementById('prerequisitesModal'))?.hide();
-                alert('Prerequisites updated successfully!');
-            } catch (err) {
-                console.error('Failed to save prerequisites:', err);
-                alert('Failed to save prerequisites: ' + (err.message || 'Unknown'));
-            }
-        } else {
-            // creating a new test: store locally in selectedPrerequisites and update UI summary
-            selectedPrerequisites = selected.slice();
-            const summaryElement = document.getElementById('prerequisitesSummary');
-            if (selectedPrerequisites.length > 0) {
-                const names = selectedPrerequisites.map(id => {
-                    const t = allTests.find(x => x._id === id);
-                    return t ? t.title : id;
-                });
-                summaryElement.innerHTML = names.join('<br>');
-            } else {
-                summaryElement.innerHTML = 'None';
-            }
-            bootstrap.Modal.getInstance(document.getElementById('prerequisitesModal'))?.hide();
-            alert('Prerequisites saved locally. They will be persisted when you save the test.');
-        }
-    });
-
-    // ---------- question UI (reduced from static version, supports dynamic add/remove and type switching) ----------
+    // ---------- question UI ----------
     function getQuestionTemplate() {
         questionCount++;
         return `
@@ -968,7 +1201,6 @@
         }
         section.innerHTML = html;
 
-        // Attach add-choice / add-enum / add-id handlers
         section.querySelectorAll('.add-choice').forEach(btn => btn.onclick = () => {
             const container = section.querySelector('.choices-container');
             const nextLetter = String.fromCharCode(65 + container.children.length);
@@ -1001,20 +1233,20 @@
 
     // ---------- initialization ----------
     document.addEventListener('DOMContentLoaded', async () => {
-        // wire search/filter
         document.getElementById('testFilter')?.addEventListener('change', renderTestsTable);
         document.getElementById('testSearch')?.addEventListener('input', renderTestsTable);
+        document.getElementById('subjectFilter')?.addEventListener('change', renderTestsTable);
 
-        // add-question button
         document.getElementById('addQuestionBtn')?.addEventListener('click', () => { addQuestion(); attachQuestionHandlers(); });
 
-        // save test
         document.getElementById('saveTestBtn')?.addEventListener('click', () => createTest());
 
-        // load data
+        // Initialize modals
+        document.getElementById('assignSectionsModal')?.addEventListener('show.bs.modal', populateSectionAssignment);
+        document.getElementById('prerequisitesModal')?.addEventListener('show.bs.modal', populatePrerequisites);
+
         await loadInitialData();
 
-        // periodically attach handlers to dynamic elements
         setInterval(() => { attachQuestionHandlers(); updateTestSummary(); }, 1000);
     });
     </script>
