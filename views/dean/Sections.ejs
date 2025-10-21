@@ -15,6 +15,8 @@
     .student-item:hover { background: #f8f9fa; }
     .student-item.selected { background: #e7f1ff; border-left: 4px solid #0d6efd; }
     .transfer-buttons { display:flex; flex-direction:column; justify-content:center; gap:10px; }
+    .student-info { font-size: 0.875rem; }
+    .student-id { font-weight: bold; color: #495057; }
   </style>
 </head>
 <body>
@@ -51,7 +53,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" href="/dean/sections">
+                            <a class="nav-link active" href="/dean/sections">
                                 <i class="fas fa-layer-group me-2"></i> Sections
                             </a>
                         </li>
@@ -93,6 +95,41 @@
         </div>
       </div>
 
+      <!-- Search and Filter Bar -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <input type="text" class="form-control" id="sectionSearch" placeholder="Search sections by name, course, or subject...">
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="courseFilter">
+                <option value="">All Courses</option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSCS">BSCS</option>
+                <option value="BSIS">BSIS</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="campusFilter">
+                <option value="">All Campuses</option>
+                <option value="Main">Main</option>
+                <option value="South">South</option>
+                <option value="SanJose">SanJose</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <select class="form-select" id="schoolYearFilter">
+                <option value="">All Years</option>
+                <option value="2024-2025">2024-2025</option>
+                <option value="2025-2026">2025-2026</option>
+                <option value="2026-2027">2026-2027</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card mb-3">
         <div class="card-header"><strong>Existing Sections</strong></div>
         <div class="card-body">
@@ -100,11 +137,18 @@
             <table class="table table-striped align-middle">
               <thead>
                 <tr>
-                  <th>Section Name</th><th>School Year</th><th>Course</th><th>Campus</th><th>Students</th><th>Actions</th>
+                  <th>Course</th>
+                  <th>Section</th>
+                  <th>Campus</th>
+                  <th>Subject</th>
+                  <th>Year Level</th>
+                  <th>Students</th>
+                  <th>School Year</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="sectionsTable">
-                <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
               </tbody>
             </table>
           </div>
@@ -128,26 +172,67 @@
           <input type="hidden" id="sectionId" value="">
           <div class="row mb-3">
             <div class="col-md-3">
-              <label class="form-label">School Year</label>
-              <select id="schoolYear" class="form-select">
+              <label class="form-label">School Year *</label>
+              <select id="schoolYear" class="form-select" required>
                 <option value="">Select</option>
                 <option>2024-2025</option><option>2025-2026</option><option>2026-2027</option>
               </select>
             </div>
             <div class="col-md-3">
-              <label class="form-label">Course</label>
-              <select id="course" class="form-select">
+              <label class="form-label">Course *</label>
+              <select id="course" class="form-select" required>
                 <option value="">Select</option>
                 <option>BSIT</option><option>BSCS</option><option>BSIS</option>
               </select>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Campus</label>
-              <select id="campus" class="form-select"><option value="">Select</option><option>Main</option><option>South</option><option>SanJose</option></select>
+            <div class="col-md-2">
+              <label class="form-label">Year Level *</label>
+              <select id="yearLevel" class="form-select" required>
+                <option value="">Select</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Section Name</label>
-              <input id="sectionName" class="form-control" placeholder="e.g. BSIT3-A or 3A" />
+            <div class="col-md-2">
+              <label class="form-label">Campus *</label>
+              <select id="campus" class="form-select" required>
+                <option value="">Select</option>
+                <option>Main</option><option>South</option><option>SanJose</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Section *</label>
+              <select class="form-select" id="sectionName" required>
+                <option value="">Section</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Subject *</label>
+              <input type="text" id="subject" class="form-control" placeholder="Enter subject name" required>
             </div>
           </div>
         </form>
@@ -155,12 +240,16 @@
         <div class="row">
           <div class="col-md-5">
             <div class="card">
-              <div class="card-header">
+              <div class="card-header d-flex justify-content-between align-items-center">
                 <strong>Available Students</strong>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="selectAllAvailable">
+                  <label class="form-check-label small" for="selectAllAvailable">Select All</label>
+                </div>
               </div>
               <div class="card-body">
                 <div class="mb-2">
-                  <input id="availableSearch" class="form-control" placeholder="Search students (name or id)"/>
+                  <input id="availableSearch" class="form-control" placeholder="Search students (name, ID, course)"/>
                 </div>
                 <div id="availableStudents" class="student-list"></div>
               </div>
@@ -174,7 +263,13 @@
 
           <div class="col-md-5">
             <div class="card">
-              <div class="card-header"><strong>Students in Section</strong></div>
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Students in Section</strong>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="selectAllSection">
+                  <label class="form-check-label small" for="selectAllSection">Select All</label>
+                </div>
+              </div>
               <div class="card-body">
                 <div class="mb-2"><input id="sectionSearch" class="form-control" placeholder="Search in section..." /></div>
                 <div id="sectionStudents" class="student-list"></div>
@@ -207,6 +302,7 @@
   let selectedAvailable = new Set();
   let selectedSection = new Set();
   let editingSectionId = null;
+  let allSectionsCache = [];
 
   function el(html){ const d=document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; }
 
@@ -220,7 +316,16 @@
     try {
       const res = await fetch('/api/students' + (q ? '?q=' + encodeURIComponent(q) : ''));
       if (!res.ok) throw new Error('Failed to load students');
-      availableStudents = await res.json();
+      const students = await res.json();
+      // Transform students to include full name and proper fields
+      availableStudents = students.map(student => ({
+        _id: student._id,
+        studentId: student.studentID,
+        name: `${student.lastName}, ${student.firstName} ${student.middleName}`.trim(),
+        course: student.course,
+        yearLevel: student.yearLevel,
+        campus: student.campus
+      }));
       renderAvailableStudents();
     } catch (err) {
       console.error(err);
@@ -231,24 +336,37 @@
 
   async function loadSections() {
     const tbody = document.getElementById('sectionsTable');
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
     try {
       const res = await fetch('/api/sections');
       if (!res.ok) throw new Error('Failed to load sections');
       const sections = await res.json();
+      allSectionsCache = sections; // Update cache
+      
       if (!sections.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No sections yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No sections yet</td></tr>';
         return;
       }
+      
+      // Apply filters
+      const filteredSections = applyFilters(sections);
+      
+      if (filteredSections.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No sections match your search criteria</td></tr>';
+        return;
+      }
+      
       tbody.innerHTML = '';
-      sections.forEach(s => {
+      filteredSections.forEach(s => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${s.name}</td>
-          <td>${s.schoolYear}</td>
           <td>${s.course}</td>
+          <td>${s.name}</td>
           <td>${s.campus || ''}</td>
+          <td>${s.subject || ''}</td>
+          <td>${s.yearLevel || ''}</td>
           <td>${(s.students||[]).length}</td>
+          <td>${s.schoolYear}</td>
           <td>
             <div class="btn-group" role="group">
               <button class="btn btn-sm btn-outline-primary" onclick="openDetails('${s._id}')">Details</button>
@@ -261,8 +379,44 @@
       });
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load sections</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load sections</td></tr>';
     }
+  }
+
+  function applyFilters(sections) {
+    const searchTerm = (document.getElementById('sectionSearch')?.value || '').toLowerCase();
+    const courseFilter = document.getElementById('courseFilter')?.value || '';
+    const campusFilter = document.getElementById('campusFilter')?.value || '';
+    const schoolYearFilter = document.getElementById('schoolYearFilter')?.value || '';
+
+    return sections.filter(s => {
+      // Search filter
+      if (searchTerm && !(
+        (s.name || '').toLowerCase().includes(searchTerm) ||
+        (s.course || '').toLowerCase().includes(searchTerm) ||
+        (s.subject || '').toLowerCase().includes(searchTerm) ||
+        (s.campus || '').toLowerCase().includes(searchTerm)
+      )) {
+        return false;
+      }
+
+      // Course filter
+      if (courseFilter && s.course !== courseFilter) {
+        return false;
+      }
+
+      // Campus filter
+      if (campusFilter && s.campus !== campusFilter) {
+        return false;
+      }
+
+      // School Year filter
+      if (schoolYearFilter && s.schoolYear !== schoolYearFilter) {
+        return false;
+      }
+
+      return true;
+    });
   }
 
   function renderAvailableStudents(filter = '') {
@@ -270,22 +424,52 @@
     const q = (filter || document.getElementById('availableSearch').value || '').toLowerCase();
     const list = availableStudents.filter(s => {
       if (!q) return true;
-      return (s.name||'').toLowerCase().includes(q) || (s.studentId||'').includes(q);
+      return (s.name||'').toLowerCase().includes(q) || 
+             (s.studentId||'').toLowerCase().includes(q) ||
+             (s.course||'').toLowerCase().includes(q);
     });
+    
     if (!list.length) {
       container.innerHTML = '<div class="text-center text-muted py-3">No students found</div>';
       return;
     }
+    
     container.innerHTML = '';
     list.forEach(s => {
       const div = document.createElement('div');
-      div.className = 'student-item' + (selectedAvailable.has(s._id || s.studentId) ? ' selected' : '');
-      div.innerHTML = `<div class="fw-bold">${s.name}</div><small class="text-muted">${s.studentId || s._id}</small>`;
-      div.onclick = () => {
-        const key = s._id || s.studentId;
-        if (selectedAvailable.has(key)) selectedAvailable.delete(key); else selectedAvailable.add(key);
+      div.className = 'student-item' + (selectedAvailable.has(s._id) ? ' selected' : '');
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="student-id">${s.studentId}</div>
+            <div class="fw-bold">${s.name}</div>
+            <div class="student-info">
+              <span class="badge bg-secondary">${s.course}</span>
+              <span class="badge bg-light text-dark">${s.yearLevel}</span>
+              <span class="badge bg-info">${s.campus}</span>
+            </div>
+          </div>
+          <input type="checkbox" class="student-checkbox" data-id="${s._id}" ${selectedAvailable.has(s._id) ? 'checked' : ''}>
+        </div>
+      `;
+      div.onclick = (e) => {
+        if (e.target.type === 'checkbox') return;
+        const key = s._id;
+        if (selectedAvailable.has(key)) selectedAvailable.delete(key); 
+        else selectedAvailable.add(key);
         renderAvailableStudents();
       };
+      
+      // Add checkbox event listener
+      const checkbox = div.querySelector('.student-checkbox');
+      checkbox.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const key = s._id;
+        if (checkbox.checked) selectedAvailable.add(key);
+        else selectedAvailable.delete(key);
+        renderAvailableStudents();
+      });
+      
       container.appendChild(div);
     });
   }
@@ -295,21 +479,97 @@
     const q = (filter || document.getElementById('sectionSearch').value || '').toLowerCase();
     const list = sectionStudents.filter(s => {
       if (!q) return true;
-      return (s.name||'').toLowerCase().includes(q) || (s.studentId||'').includes(q);
+      return (s.name||'').toLowerCase().includes(q) || 
+             (s.studentId||'').toLowerCase().includes(q) ||
+             (s.course||'').toLowerCase().includes(q);
     });
-    if (!list.length) { container.innerHTML = '<div class="text-center text-muted py-3">No students in section</div>'; return; }
+    
+    if (!list.length) { 
+      container.innerHTML = '<div class="text-center text-muted py-3">No students in section</div>'; 
+      return; 
+    }
+    
     container.innerHTML = '';
     list.forEach(s => {
       const div = document.createElement('div');
-      div.className = 'student-item' + (selectedSection.has(s._id || s.studentId) ? ' selected' : '');
-      div.innerHTML = `<div class="fw-bold">${s.name}</div><small class="text-muted">${s.studentId || s._id}</small>`;
-      div.onclick = () => {
-        const key = s._id || s.studentId;
-        if (selectedSection.has(key)) selectedSection.delete(key); else selectedSection.add(key);
+      div.className = 'student-item' + (selectedSection.has(s._id) ? ' selected' : '');
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="student-id">${s.studentId}</div>
+            <div class="fw-bold">${s.name}</div>
+            <div class="student-info">
+              <span class="badge bg-secondary">${s.course}</span>
+              <span class="badge bg-light text-dark">${s.yearLevel}</span>
+              <span class="badge bg-info">${s.campus}</span>
+            </div>
+          </div>
+          <input type="checkbox" class="student-checkbox" data-id="${s._id}" ${selectedSection.has(s._id) ? 'checked' : ''}>
+        </div>
+      `;
+      div.onclick = (e) => {
+        if (e.target.type === 'checkbox') return;
+        const key = s._id;
+        if (selectedSection.has(key)) selectedSection.delete(key); 
+        else selectedSection.add(key);
         renderSectionStudents();
       };
+      
+      // Add checkbox event listener
+      const checkbox = div.querySelector('.student-checkbox');
+      checkbox.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const key = s._id;
+        if (checkbox.checked) selectedSection.add(key);
+        else selectedSection.delete(key);
+        renderSectionStudents();
+      });
+      
       container.appendChild(div);
     });
+  }
+
+  // Select all functionality
+  function setupSelectAll() {
+    const selectAllAvailable = document.getElementById('selectAllAvailable');
+    const selectAllSection = document.getElementById('selectAllSection');
+    
+    if (selectAllAvailable) {
+      selectAllAvailable.addEventListener('change', (e) => {
+        const container = document.getElementById('availableStudents');
+        const checkboxes = container.querySelectorAll('.student-checkbox');
+        const studentItems = container.querySelectorAll('.student-item');
+        
+        if (e.target.checked) {
+          // Select all visible students
+          studentItems.forEach(item => {
+            const studentId = item.querySelector('.student-checkbox').dataset.id;
+            selectedAvailable.add(studentId);
+          });
+        } else {
+          selectedAvailable.clear();
+        }
+        renderAvailableStudents();
+      });
+    }
+    
+    if (selectAllSection) {
+      selectAllSection.addEventListener('change', (e) => {
+        const container = document.getElementById('sectionStudents');
+        const studentItems = container.querySelectorAll('.student-item');
+        
+        if (e.target.checked) {
+          // Select all visible students in section
+          studentItems.forEach(item => {
+            const studentId = item.querySelector('.student-checkbox').dataset.id;
+            selectedSection.add(studentId);
+          });
+        } else {
+          selectedSection.clear();
+        }
+        renderSectionStudents();
+      });
+    }
   }
 
   // transfers
@@ -317,21 +577,45 @@
     // move selected from availableStudents to sectionStudents
     const keys = Array.from(selectedAvailable);
     keys.forEach(k => {
-      const s = availableStudents.find(x => (x._id === k) || (x.studentId === k));
-      if (s && !sectionStudents.some(x => x._id === s._id || x.studentId === s.studentId)) {
+      const s = availableStudents.find(x => x._id === k);
+      if (s && !sectionStudents.some(x => x._id === s._id)) {
         sectionStudents.push(s);
       }
     });
     selectedAvailable.clear();
+    document.getElementById('selectAllAvailable').checked = false;
     renderAvailableStudents();
     renderSectionStudents();
   }
 
   function removeFromSection() {
     const keys = Array.from(selectedSection);
-    sectionStudents = sectionStudents.filter(s => !keys.includes(s._id) && !keys.includes(s.studentId));
+    sectionStudents = sectionStudents.filter(s => !keys.includes(s._id));
     selectedSection.clear();
+    document.getElementById('selectAllSection').checked = false;
     renderSectionStudents();
+  }
+
+  // Check if section already exists
+  async function checkSectionExists(payload) {
+    try {
+      const res = await fetch('/api/sections');
+      if (!res.ok) return false;
+      
+      const existingSections = await res.json();
+      return existingSections.some(section => 
+        section.subject === payload.subject &&
+        section.schoolYear === payload.schoolYear &&
+        section.course === payload.course &&
+        section.name === payload.name &&
+        section.campus === payload.campus &&
+        section.yearLevel === payload.yearLevel &&
+        section._id !== payload._id // Exclude current section when editing
+      );
+    } catch (err) {
+      console.error('Error checking section existence:', err);
+      return false;
+    }
   }
 
   // Save (create or update) section
@@ -341,19 +625,40 @@
       name: document.getElementById('sectionName').value.trim(),
       schoolYear: document.getElementById('schoolYear').value,
       course: document.getElementById('course').value,
+      yearLevel: document.getElementById('yearLevel').value,
       campus: document.getElementById('campus').value,
-      students: sectionStudents.map(s => ({ id: s._id || s.studentId, name: s.name, studentId: s.studentId }))
+      subject: document.getElementById('subject').value.trim(),
+      students: sectionStudents.map(s => ({ 
+        id: s._id, 
+        name: s.name, 
+        studentId: s.studentId,
+        course: s.course,
+        yearLevel: s.yearLevel,
+        campus: s.campus
+      }))
     };
 
-    if (!payload.name || !payload.schoolYear || !payload.course) {
-      alert('Please fill required section fields (name, school year, course).');
+    // Validation
+    if (!payload.name || !payload.schoolYear || !payload.course || !payload.campus || !payload.subject || !payload.yearLevel) {
+      alert('Please fill all required section fields.');
+      return;
+    }
+
+    // Check if section already exists
+    const sectionExists = await checkSectionExists(payload);
+    if (sectionExists) {
+      alert('A section with the same Subject, School Year, Course, Section, Campus, and Year Level already exists. Please use different values.');
       return;
     }
 
     try {
       const method = id ? 'PUT' : 'POST';
       const url = id ? `/api/sections/${id}` : '/api/sections';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await fetch(url, { 
+        method, 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
       if (!res.ok) {
         const err = await res.json().catch(()=>({message:'Failed'}));
         throw new Error(err.message || 'Save failed');
@@ -361,10 +666,10 @@
       await loadSections();
       bootstrap.Modal.getInstance(document.getElementById('createSectionModal'))?.hide();
       resetModal();
-      alert('Section saved');
+      alert('Section saved successfully');
     } catch (err) {
       console.error(err);
-      alert('Failed to save section: ' + (err.message || 'Unknown'));
+      alert('Failed to save section: ' + (err.message || 'Unknown error'));
     }
   }
 
@@ -374,10 +679,14 @@
     document.getElementById('sectionName').value = '';
     document.getElementById('schoolYear').value = '';
     document.getElementById('course').value = '';
+    document.getElementById('yearLevel').value = '';
     document.getElementById('campus').value = '';
+    document.getElementById('subject').value = '';
     sectionStudents = [];
     selectedAvailable.clear();
     selectedSection.clear();
+    document.getElementById('selectAllAvailable').checked = false;
+    document.getElementById('selectAllSection').checked = false;
     renderAvailableStudents();
     renderSectionStudents();
     document.getElementById('sectionModalTitle').textContent = 'Create New Section';
@@ -394,10 +703,21 @@
       document.getElementById('sectionName').value = sec.name;
       document.getElementById('schoolYear').value = sec.schoolYear;
       document.getElementById('course').value = sec.course;
+      document.getElementById('yearLevel').value = sec.yearLevel || '';
       document.getElementById('campus').value = sec.campus || '';
-      sectionStudents = (sec.students || []).map(s => ({ name: s.name, studentId: s.studentId, _id: s.id }));
+      document.getElementById('subject').value = sec.subject || '';
+      sectionStudents = (sec.students || []).map(s => ({ 
+        _id: s.id, 
+        name: s.name, 
+        studentId: s.studentId,
+        course: s.course,
+        yearLevel: s.yearLevel,
+        campus: s.campus
+      }));
       selectedAvailable.clear();
       selectedSection.clear();
+      document.getElementById('selectAllAvailable').checked = false;
+      document.getElementById('selectAllSection').checked = false;
       editingSectionId = sec._id;
       document.getElementById('sectionModalTitle').textContent = 'Edit Section';
       renderAvailableStudents();
@@ -410,12 +730,12 @@
   }
 
   async function deleteSection(id) {
-    if (!confirm('Delete this section? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) return;
     try {
       const res = await fetch(`/api/sections/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       await loadSections();
-      alert('Deleted');
+      alert('Section deleted successfully');
     } catch (err) {
       console.error(err);
       alert('Failed to delete section');
@@ -434,15 +754,44 @@
 
   function showDetails(sec) {
     const body = document.getElementById('sectionDetailsBody');
-    body.innerHTML = `<h5>${sec.name}</h5>
-      <p><strong>Course:</strong> ${sec.course} &nbsp; <strong>School Year:</strong> ${sec.schoolYear} &nbsp; <strong>Campus:</strong> ${sec.campus||''}</p>
+    body.innerHTML = `
+      <h5>${sec.name}</h5>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p><strong>Course:</strong> ${sec.course}</p>
+          <p><strong>School Year:</strong> ${sec.schoolYear}</p>
+          <p><strong>Year Level:</strong> ${sec.yearLevel ? sec.yearLevel + ' Year' : 'Not specified'}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Campus:</strong> ${sec.campus||''}</p>
+          <p><strong>Subject:</strong> ${sec.subject||''}</p>
+        </div>
+      </div>
       <h6>Students (${(sec.students||[]).length})</h6>
-      <ul>${(sec.students||[]).map(s=>`<li>${s.name} (${s.studentId||s.id||''})</li>`).join('')}</ul>`;
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Course</th>
+              <th>Year Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(sec.students||[]).map(s=>`
+              <tr>
+                <td>${s.studentId||''}</td>
+                <td>${s.name}</td>
+                <td>${s.course||''}</td>
+                <td>${s.yearLevel||''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
     new bootstrap.Modal(document.getElementById('sectionDetailsModal')).show();
   }
-
-  // small cache used for details view
-  let allSectionsCache = [];
 
   // wire up UI
   document.addEventListener('DOMContentLoaded', async () => {
@@ -451,6 +800,16 @@
     document.getElementById('addToSection')?.addEventListener('click', addToSection);
     document.getElementById('removeFromSection')?.addEventListener('click', removeFromSection);
     document.getElementById('saveSectionBtn')?.addEventListener('click', saveSection);
+    
+    // Setup select all functionality
+    setupSelectAll();
+    
+    // Setup filter event listeners
+    document.getElementById('sectionSearch')?.addEventListener('input', () => loadSections());
+    document.getElementById('courseFilter')?.addEventListener('change', () => loadSections());
+    document.getElementById('campusFilter')?.addEventListener('change', () => loadSections());
+    document.getElementById('schoolYearFilter')?.addEventListener('change', () => loadSections());
+    
     // when modal opens, prepare available students and reset if creating
     document.getElementById('createSectionModal')?.addEventListener('show.bs.modal', async () => {
       await loadStudents();
@@ -459,8 +818,6 @@
 
     // load data
     await loadInitial();
-    // keep a cache for quick details
-    const res = await fetch('/api/sections'); if (res.ok) allSectionsCache = await res.json();
   });
 </script>
 </body>

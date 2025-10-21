@@ -3,92 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - Test Bank System</title>
+    <title>Dashboard - Test Bank System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-body {
-    background: linear-gradient(50deg, #c9c2ff 0%, #feffd0 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-    margin: 0;
-    padding-top: 20px;
-}
-.main-body{
-    display: flex;
-    flex-direction: row;
-}
-.center-body{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    max-width: 1800px;
-    margin-left: 5px;
-}
-.ms-sm-auto{
-    margin:0 !important;
-    width: 100%;
-}
-
-.navbar.navbar-expand-lg.navbar-dark {
-    background: #F7F7F7 !important;
-    width: 100%;
-    border-radius: 20px;
-    padding:20px;
-    box-shadow:
-        5px 5px 10px 5px rgba(0, 0, 0, 0.1),
-        inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
-    animation: fadeFromBottom 1.5s ease forwards;
-    opacity: 1;
-    width: 100%;
-    margin-bottom: 10px;
-}
-.navbar.navbar-expand-lg.navbar-dark.bg-primary a,
-.navbar-nav.ms-auto span{
-    color:#000000;
-}
-.col-md-3.col-lg-2.d-md-block.bg-light.sidebar {
-    border-radius: 20px;
-    box-shadow:
-        5px 5px 10px 5px rgba(0, 0, 0, 0.1),
-        inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
-}
-.login-header{
-    text-align: center;
-    padding: 20px;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 10px;
-}
-.login-header img{
-    width: 70px;
-}
-.login-header h2{
-    font-size: 14px;
-    font-weight: bold;
-    margin: 10px 0 5px 0;
-    color: #333;
-}
-.login-header p{
-    font-size: 10px;
-    color: #666;
-    margin: 0;
-}
+        :root {
+            --primary-bg: #f5f5f5;
+            --secondary-color: #060037;
+            --accent-color: #dcdf00;
+            --card-radius: 16px;
+        }
+        
+        body {
+            background-color: var(--primary-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: 0;
+            padding-top: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-body {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            max-width: 1800px;
+        }
+        
+        .center-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            margin-left: 5px;
+        }
+        
+        .ms-sm-auto {
+            margin:0 !important;
+            width: 100%;
+        }
+        
+        /* Sidebar Styling */
+        .sidebar {
+            background: var(--primary-bg) !important;
+            width: 250px;
+            border-radius: var(--card-radius);
+            padding: 20px;
+            box-shadow:
+                5px 5px 10px 5px rgba(0, 0, 0, 0.05),
+                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.8);
+            animation: slideInLeft 0.8s ease forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+            margin-right: 15px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .login-header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        
+        .login-header img {
+            width: 70px;
+        }
+        
+        .login-header h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0 5px 0;
+            color: var(--secondary-color);
+        }
+        
+        .login-header p {
+            font-size: 10px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .nav-link {
+            color: var(--secondary-color) !important;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(6, 0, 55, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white !important;
+        }
+        
+        /* Top Navbar Styling */
+        .top-navbar {
+            background: var(--primary-bg) !important;
+            width: 100%;
+            border-radius: var(--card-radius);
+            padding: 15px 20px;
+            box-shadow:
+                5px 5px 10px 5px rgba(0, 0, 0, 0.05),
+                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.8);
+            animation: fadeFromBottom 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(10px);
+            margin-bottom: 20px;
+        }
+        
+        .navbar-brand {
+            color: var(--secondary-color) !important;
+            font-weight: 600;
+        }
+        
+        .navbar-text {
+            color: var(--secondary-color) !important;
+        }
+        
+        /* User Profile Dropdown */
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-dropdown-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+            z-index: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .dropdown-content.show {
+            display: block;
+        }
+        
+        .dropdown-header {
+            padding: 12px 16px;
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .dropdown-item {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            color: #333;
+            transition: background-color 0.2s;
+            border: none;
+            width: 100%;
+            text-align: left;
+            background: white;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .dropdown-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 0;
+        }
+        
+        /* Main Content Styling */
+        .main-content {
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .section-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        /* Card Styling */
         .stat-card {
-            transition: transform 0.2s;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
             border-left: 4px solid;
         }
+        
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
-        .card-primary { border-left-color: #0d6efd; }
+        
+        .card-primary { border-left-color: var(--secondary-color); }
         .card-success { border-left-color: #198754; }
         .card-warning { border-left-color: #ffc107; }
         .card-info { border-left-color: #0dcaf0; }
@@ -97,108 +246,231 @@ body {
         .card-teal { border-left-color: #20c997; }
         .card-orange { border-left-color: #fd7e14; }
         
+        .card {
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
         .quick-action-btn {
             transition: all 0.3s;
+            border-radius: 10px;
+            padding: 15px 10px;
         }
+        
         .quick-action-btn:hover {
             transform: scale(1.05);
+            background-color: rgba(6, 0, 55, 0.05);
         }
         
         .notification-item {
             border-left: 3px solid;
             transition: background-color 0.2s;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
+        
         .notification-item:hover {
             background-color: #f8f9fa;
         }
         
         .progress-thin {
             height: 6px;
+            border-radius: 3px;
+        }
+        
+        .table {
+            border-radius: var(--card-radius);
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+        }
+        
+        .table td {
+            border-color: #f0f0f0;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Stagger animations for cards */
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        .stat-card:nth-child(5) { animation-delay: 0.5s; }
+        .stat-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        .card:nth-child(1) { animation-delay: 0.2s; }
+        .card:nth-child(2) { animation-delay: 0.3s; }
+        .card:nth-child(3) { animation-delay: 0.4s; }
+        .card:nth-child(4) { animation-delay: 0.5s; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+                position: static;
+            }
+            
+            .center-body {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="main-body">
         <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <div class="login-header">
-                            <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2" >
-                            <h2>PHINMA EDUCATION</h2>
-                            <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <div class="login-header">
+                        <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2">
+                        <h2>PHINMA EDUCATION</h2>
+                        <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+                    </div>
+                    
+                    <% if (user && user.role === "Dean") { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/manage-accounts">
+                            <i class="fas fa-users-cog me-2"></i> Manage Accounts
+                        </a>
+                    </li>
+                    <% } %>
+
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dean/dashboard">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/sections">
+                            <i class="fas fa-layer-group me-2"></i> Sections
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/tests">
+                            <i class="fas fa-file-alt me-2"></i> Test Management
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/student-performance">
+                            <i class="fas fa-chart-line me-2"></i> Student Performance
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/reports">
+                            <i class="fas fa-chart-pie me-2"></i> Reports
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div class="center-body">
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-lg top-navbar">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+                    </a>
+                    <div class="navbar-nav ms-auto align-items-center">
+                        <span class="navbar-text me-3">
+                            Welcome, <%= user.fullName %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
+                        </span>
+                        
+                        <!-- User Profile Dropdown -->
+                        <div class="user-dropdown">
+                            <button class="user-dropdown-btn">
+                                <div class="user-avatar">
+                                    <%= user.fullName.charAt(0).toUpperCase() %>
+                                </div>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                <div class="dropdown-header">
+                                    <%= user.fullName %>
+                                </div>
+                                <a href="/dean/account" class="dropdown-item">
+                                    <i class="fas fa-user me-2"></i> My Account
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form action="/auth/logout" method="POST" class="d-inline">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                        <% if (user && user.role === "Dean") { %>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/manage-accounts">
-                                <i class="fas fa-users-cog me-2"></i> Manage Accounts
-                            </a>
-                        </li>
-                        <% } %>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/dashboard">
-                                <i class="fas fa-home me-2"></i> Dashboard
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/sections">
-                                <i class="fas fa-layer-group me-2"></i> Sections
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/tests">
-                                <i class="fas fa-file-alt me-2"></i> Test Management
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/student-performance">
-                                <i class="fas fa-chart-line me-2"></i> Student Performance
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/reports">
-                                <i class="fas fa-chart-pie me-2"></i> Reports
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/account">
-                                <i class="fas fa-user me-2"></i> My Account
-                            </a>
-                        </li>
-                    </ul>
+                    </div>
                 </div>
             </nav>
-    <div class="center-body">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    Welcome, <%= user.fullName %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
-                </span>
-                <form action="/auth/logout" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container-fluid">
-        <div class="row">
-            
-
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i><%= title %></h1>
+            <!-- Main Content -->
+            <div class="container-fluid main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 section-header">
+                    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <div class="btn-group me-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary">Today</button>
@@ -222,7 +494,7 @@ body {
                                         <h4 class="card-title">1,247</h4>
                                         <p class="card-text">Total Students</p>
                                     </div>
-                                    <i class="fas fa-user-graduate fa-2x text-primary"></i>
+                                    <i class="fas fa-user-graduate fa-2x" style="color: var(--secondary-color);"></i>
                                 </div>
                                 <div class="mt-2">
                                     <small class="text-success">
@@ -637,7 +909,7 @@ body {
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
@@ -762,6 +1034,20 @@ body {
                     }
                 }
             });
+            
+            // User dropdown functionality
+            const dropdownBtn = document.querySelector('.user-dropdown-btn');
+            const dropdownContent = document.querySelector('.dropdown-content');
+            
+            dropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownContent.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                dropdownContent.classList.remove('show');
+            });
         });
 
         // Auto-refresh dashboard every 5 minutes
@@ -770,7 +1056,5 @@ body {
             // Here you would typically fetch new data from the server
         }, 300000);
     </script>
-    </div>
-    </div>
 </body>
 </html>
