@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Test Bank System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar.navbar-expand-lg.navbar-dark {
+            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+        }
+        .question-card {
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/student/dashboard">
+                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <div class="timer" id="timer">Time: 60:00</div>
+                </span>
+                <span class="navbar-text me-3">
+                    Welcome, <%= user.fullName %> (Student)
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0"><%= test.title %></h3>
+                        <p class="mb-0"><strong>Subject:</strong> <%= test.subjectCode %></p>
+                        <% if (test.timeLimit) { %>
+                            <p class="mb-0"><strong>Time Limit:</strong> <%= test.timeLimit %> minutes</p>
+                        <% } %>
+                    </div>
+                    <div class="card-body">
+                        <% if (test.description) { %>
+                            <div class="alert alert-info">
+                                <strong>Description:</strong> <%= test.description %>
+                            </div>
+                        <% } %>
+
+                        <form id="testForm">
+                            <% test.questions.forEach((question, index) => { %>
+                                <div class="card question-card">
+                                    <div class="card-header">
+                                        <strong>Question <%= index + 1 %> (<%= question.type %>)</strong>
+                                        <span class="badge bg-primary float-end"><%= question.points %> point(s)</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text"><%= question.text %></p>
+                                        
+                                        <!-- Display based on question type -->
+                                        <% if (question.type === 'multiple') { %>
+                                            <% question.choices.forEach((choice, choiceIndex) => { %>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" 
+                                                           name="answers[<%= index %>]" 
+                                                           id="q<%= index %>c<%= choiceIndex %>"
+                                                           value="<%= choiceIndex %>">
+                                                    <label class="form-check-label" for="q<%= index %>c<%= choiceIndex %>">
+                                                        <%= choice %>
+                                                    </label>
+                                                </div>
+                                            <% }); %>
+                                        <% } else if (question.type === 'truefalse') { %>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="answers[<%= index %>]" 
+                                                       id="q<%= index %>true" value="true">
+                                                <label class="form-check-label" for="q<%= index %>true">
+                                                    True
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="answers[<%= index %>]" 
+                                                       id="q<%= index %>false" value="false">
+                                                <label class="form-check-label" for="q<%= index %>false">
+                                                    False
+                                                </label>
+                                            </div>
+                                        <% } else if (question.type === 'identification') { %>
+                                            <input type="text" class="form-control" 
+                                                   name="answers[<%= index %>]" 
+                                                   placeholder="Your answer...">
+                                        <% } else if (question.type === 'enumeration') { %>
+                                    <div class="alert alert-info mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Enumeration Question:</strong> Please provide <strong>all <%= question.answers.length %> answers</strong> below.
+                                    </div>
+                                    <div class="enumeration-container">
+                                        <% question.answers.forEach((_, ansIndex) => { %>
+                                            <div class="answer-item mb-2">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Answer <%= ansIndex + 1 %></span>
+                                                    <input type="text" class="form-control enumeration-answer" 
+                                                        name="answers[<%= index %>][]">
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                        <% } else if (question.type === 'essay') { %>
+                                            <textarea class="form-control" rows="4" 
+                                                      name="answers[<%= index %>]" 
+                                                      placeholder="Write your essay answer here..."></textarea>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }); %>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Test
+                                </button>
+                                <a href="/student/dashboard" class="btn btn-secondary btn-lg ms-2">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Timer functionality
+        <% if (test.timeLimit) { %>
+            let timeLeft = <%= test.timeLimit * 60 %>; // Convert to seconds
+            const timerElement = document.getElementById('timer');
+            
+            function updateTimer() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerElement.textContent = `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    alert('Time is up! Submitting test automatically.');
+                    submitTest();
+                } else {
+                    timeLeft--;
+                    setTimeout(updateTimer, 1000);
+                }
+            }
+            
+            // Start timer
+            updateTimer();
+        <% } %>
+
+        // Add this before form submission to debug inputs
+        console.log('=== FORM INPUTS DEBUG ===');
+        document.querySelectorAll('input, textarea').forEach((input, i) => {
+            console.log(`Input ${i}:`, {
+                name: input.name,
+                type: input.type,
+                value: input.value,
+                checked: input.checked
+            });
+        });
+
+        // Debug: Check enumeration inputs before submission
+        console.log('=== ENUMERATION DEBUG ===');
+        const enumInputs = document.querySelectorAll('input[name="answers[3][]"]');
+        console.log('Enumeration inputs found:', enumInputs.length);
+        enumInputs.forEach((input, i) => {
+            console.log(`Enum input ${i}: value="${input.value}"`);
+        });
+
+        // Check if values are actually in the inputs
+        const enumValues = Array.from(enumInputs).map(input => input.value.trim()).filter(val => val);
+        console.log('Enumeration values:', enumValues);
+        console.log('Enumeration values length:', enumValues.length);
+
+        // Form submission - FIXED VERSION
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (confirm('Are you sure you want to submit your test? You cannot change your answers after submission.')) {
+                const formData = new FormData(this);
+                const answers = [];
+                
+                console.log('📋 Processing Form Data...');
+                
+                // First, initialize all answers as empty strings
+                for (let i = 0; i <= 5; i++) {
+                    answers[i] = '';
+                }
+                
+                // Process form data - SPECIAL HANDLING FOR ENUMERATION
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, '=', value);
+                    
+                    if (key.startsWith('answers[')) {
+                        const match = key.match(/answers\[(\d+)\](?:\[(\d+)\])?/);
+                        if (match) {
+                            const index = parseInt(match[1]);
+                            const subIndex = match[2] ? parseInt(match[2]) : null;
+                            
+                            if (subIndex !== null) {
+                                // This is an enumeration answer (array)
+                                if (!Array.isArray(answers[index])) {
+                                    // Convert to array if it was a string
+                                    answers[index] = [];
+                                }
+                                answers[index][subIndex] = value;
+                            } else {
+                                // This is a single answer
+                                answers[index] = value;
+                            }
+                        }
+                    }
+                }
+                
+                // Convert single enumeration arrays to proper arrays
+                for (let i = 0; i < answers.length; i++) {
+                    if (Array.isArray(answers[i]) && answers[i].length === 0) {
+                        // If it's an empty array, convert back to empty string
+                        answers[i] = '';
+                    }
+                }
+                
+                console.log('📦 Final Answers:', answers);
+                
+                try {
+                    const response = await fetch(`/student/submit-test/<%= test._id %>`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            answers: answers,
+                            isRetake: <%= typeof isRetake !== 'undefined' ? isRetake : false %>
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(`Test submitted successfully! Your score: ${result.score}/${result.totalPoints}`);
+                        window.location.href = `/student/test-results/<%= test._id %>`;
+                    } else {
+                        alert('Error submitting test: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error submitting test. Please try again.');
+                }
+            }
+        });
+
+        // Helper function to submit test when time is up
+        function submitTest() {
+            document.getElementById('testForm').dispatchEvent(new Event('submit'));
+        }
+    </script>
+</body>
+</html>
