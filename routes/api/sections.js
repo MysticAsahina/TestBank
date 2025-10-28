@@ -37,27 +37,34 @@ router.get("/sections/:id", async (req, res) => {
  * POST /api/sections
  * Create a new section
  * Body:
- *  { name, schoolYear, course, campus, students: [{ id, name, studentId }, ...] }
+ *  { name, schoolYear, course, campus, subject, yearLevel, students: [...] }
  */
 router.post("/sections", async (req, res) => {
   try {
-    const { name, schoolYear, course, campus, students } = req.body;
-    if (!name || !schoolYear || !course) {
-      return res.status(400).json({ message: "name, schoolYear and course are required" });
+    const { name, schoolYear, course, campus, subject, yearLevel, students } = req.body;
+
+    // Validate required fields
+    if (!name || !schoolYear || !course || !subject || !yearLevel) {
+      return res.status(400).json({ 
+        message: "name, schoolYear, course, subject, and yearLevel are required" 
+      });
     }
 
     const section = new Section({
       name,
       schoolYear,
       course,
+      subject,
+      yearLevel,
       campus,
       students: Array.isArray(students) ? students : []
     });
 
     await section.save();
     res.status(201).json(section);
+
   } catch (err) {
-    console.error("Error creating section:", err);
+    console.error("❌ Error creating section:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -123,5 +130,6 @@ router.get("/students", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 export default router;
