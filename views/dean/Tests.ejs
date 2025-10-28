@@ -3,110 +3,620 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - Test Bank System</title>
+    <title>Test Management - Test Bank System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .navbar.navbar-expand-lg.navbar-dark {
-            background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
+        :root {
+            --primary-bg: #f5f5f5;
+            --secondary-color: #060037;
+            --accent-color: #dcdf00;
+            --card-radius: 16px;
         }
-        .test-card { transition: transform 0.2s; border-left: 4px solid #0d6efd; }
-        .test-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .expandable-row { background-color: #f8f9fa; }
-        .question-item { border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #f8f9fa; }
-        .student-list { height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; }
-        .student-item { padding: 0.5rem; border-bottom: 1px solid #dee2e6; cursor: pointer; }
-        .student-item:hover { background-color: #f8f9fa; }
-        .student-item.selected { background-color: #e7f1ff; border-left: 4px solid #0d6efd; }
-        .transfer-buttons { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-        .section-badge { cursor: pointer; margin: 2px; }
-        .dropdown-toggle::after { display: none; }
-        .choice-item, .answer-item { margin-bottom: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; background: white; }
-        .file-preview { max-width: 100px; max-height: 100px; margin: 5px; border-radius: 4px; }
-        .feedback-section { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px; }
-        .test-title-link { color: #0d6efd; cursor: pointer; text-decoration: none; }
-        .test-title-link:hover { text-decoration: underline; }
-        .assigned-sections { max-width: 200px; }
+        
+        body {
+            background-color: var(--primary-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: 0;
+            padding-top: 20px;
+            padding-left: 10px;
+            padding-right: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-body {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            max-width: 1800px;
+            min-height: calc(100vh - 40px);
+        }
+        
+        .center-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            width: 100%;
+            margin-left: 5px;
+        }
+        
+        .ms-sm-auto {
+            margin:0 !important;
+            width: 100%;
+        }
+        
+        /* Sidebar Styling */
+        .sidebar {
+            background: var(--primary-bg) !important;
+            width: 250px;
+            border-radius: var(--card-radius);
+            padding: 20px;
+            box-shadow:
+                5px 5px 10px 5px rgba(0, 0, 0, 0.05),
+                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.8);
+            animation: slideInLeft 0.8s ease forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+            margin-right: 15px;
+            height: calc(100vh - 40px);
+            position: sticky;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .login-header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        
+        .login-header img {
+            width: 70px;
+        }
+        
+        .login-header h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0 5px 0;
+            color: var(--secondary-color);
+        }
+        
+        .login-header p {
+            font-size: 10px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .nav-link {
+            color: var(--secondary-color) !important;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-link:hover::before {
+            left: 100%;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(6, 0, 55, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white !important;
+        }
+
+        /* Bottom menu items styling */
+        .bottom-menu {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .bottom-menu .nav-link {
+            margin-bottom: 8px;
+        }
+        
+        /* Top Navbar Styling */
+        .top-navbar {
+            background: var(--primary-bg) !important;
+            width: 100%;
+            border-radius: var(--card-radius);
+            padding: 15px 20px;
+            box-shadow:
+                5px 5px 10px 5px rgba(0, 0, 0, 0.05),
+                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.8);
+            animation: fadeFromBottom 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(10px);
+            margin-bottom: 20px;
+        }
+        
+        .navbar-brand {
+            color: var(--secondary-color) !important;
+            font-weight: 600;
+        }
+        
+        .navbar-text {
+            color: var(--secondary-color) !important;
+        }
+        
+        /* User Info in Top Bar */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Main Content Styling */
+        .main-content {
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .section-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        /* Card Styling */
+        .stat-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            border-left: 4px solid;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card-primary { border-left-color: var(--secondary-color); }
+        .card-success { border-left-color: #198754; }
+        .card-warning { border-left-color: #ffc107; }
+        .card-info { border-left-color: #0dcaf0; }
+        .card-danger { border-left-color: #dc3545; }
+        .card-purple { border-left-color: #6f42c1; }
+        .card-teal { border-left-color: #20c997; }
+        .card-orange { border-left-color: #fd7e14; }
+        
+        .card {
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        /* Table Styling */
+        .table {
+            border-radius: var(--card-radius);
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+        }
+        
+        .table td {
+            border-color: #f0f0f0;
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        /* Test Card Specific Styles */
+        .test-card { 
+            transition: transform 0.2s; 
+            border-left: 4px solid var(--secondary-color); 
+        }
+        
+        .test-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        }
+        
+        .expandable-row { 
+            background-color: #f8f9fa; 
+        }
+        
+        .question-item { 
+            border: 1px solid #dee2e6; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            background: #f8f9fa; 
+        }
+        
+        .student-list { 
+            height: 300px; 
+            overflow-y: auto; 
+            border: 1px solid #dee2e6; 
+            border-radius: 0.375rem; 
+        }
+        
+        .student-item { 
+            padding: 0.5rem; 
+            border-bottom: 1px solid #dee2e6; 
+            cursor: pointer; 
+        }
+        
+        .student-item:hover { 
+            background-color: #f8f9fa; 
+        }
+        
+        .student-item.selected { 
+            background-color: #e7f1ff; 
+            border-left: 4px solid var(--secondary-color); 
+        }
+        
+        .transfer-buttons { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            gap: 10px; 
+        }
+        
+        .section-badge { 
+            cursor: pointer; 
+            margin: 2px; 
+        }
+        
+        .dropdown-toggle::after { 
+            display: none; 
+        }
+        
+        .choice-item, .answer-item { 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            border: 1px solid #dee2e6; 
+            border-radius: 5px; 
+            background: white; 
+        }
+        
+        .file-preview { 
+            max-width: 100px; 
+            max-height: 100px; 
+            margin: 5px; 
+            border-radius: 4px; 
+        }
+        
+        .feedback-section { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-top: 10px; 
+        }
+        
+        .test-title-link { 
+            color: var(--secondary-color); 
+            cursor: pointer; 
+            text-decoration: none; 
+            font-weight: 500;
+        }
+        
+        .test-title-link:hover { 
+            text-decoration: underline; 
+            color: #040025;
+        }
+        
+        .assigned-sections { 
+            max-width: 200px; 
+        }
+
+        /* Button Styling */
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #040025;
+            border-color: #040025;
+        }
+        
+        .btn-outline-primary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Form Styling */
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(6, 0, 55, 0.25);
+        }
+        
+        .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(6, 0, 55, 0.25);
+        }
+
+        /* Modal Styling */
+        .modal-content {
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #eaeaea;
+            border-radius: var(--card-radius) var(--card-radius) 0 0;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #eaeaea;
+            border-radius: 0 0 var(--card-radius) var(--card-radius);
+        }
+
+        /* Alert Styling */
+        .alert {
+            border-radius: var(--card-radius);
+            border: none;
+        }
+
+        /* Logout Modal */
+        .logout-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .logout-modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .logout-modal-header {
+            border-bottom: 1px solid #eaeaea;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logout-modal-footer {
+            border-top: 1px solid #eaeaea;
+            padding-top: 15px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Stagger animations for cards */
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        .stat-card:nth-child(5) { animation-delay: 0.5s; }
+        .stat-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        .card:nth-child(1) { animation-delay: 0.2s; }
+        .card:nth-child(2) { animation-delay: 0.3s; }
+        .card:nth-child(3) { animation-delay: 0.4s; }
+        .card:nth-child(4) { animation-delay: 0.5s; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+                position: static;
+                height: auto;
+            }
+            
+            .center-body {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-graduation-cap me-2"></i>Test Bank System
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    Welcome, <%= user.fullName %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)
-                </span>
-                <form action="/auth/logout" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <div class="main-body">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <div class="login-header">
+                        <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2">
+                        <h2>PHINMA EDUCATION</h2>
+                        <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+                    </div>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/dashboard">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                    </li>
 
-    <div class="container-fluid">
-        <div class="row">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/sections">
+                            <i class="fas fa-layer-group me-2"></i> Sections
+                        </a>
+                    </li>
 
-            <!-- Sidebar -->
-            <aside class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3 sidebar-sticky">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dean/tests">
+                            <i class="fas fa-file-alt me-2"></i> Test Management
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/student-performance">
+                            <i class="fas fa-chart-line me-2"></i> Student Performance
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/reports">
+                            <i class="fas fa-chart-pie me-2"></i> Reports
+                        </a>
+                    </li>
+                    
+                    <% if (user && user.role === "Dean") { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/manage-accounts">
+                            <i class="fas fa-users-cog me-2"></i> Manage Accounts
+                        </a>
+                    </li>
+                    <% } %>
+                </ul>
+
+                <!-- Bottom Menu Items -->
+                <div class="bottom-menu">
                     <ul class="nav flex-column">
-
-                        <% if (user && user.role === "Dean") { %>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/manage-accounts">
-                                <i class="fas fa-users-cog me-2"></i> Manage Accounts
-                            </a>
-                        </li>
-                        <% } %>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/dashboard">
-                                <i class="fas fa-home me-2"></i> Dashboard
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/sections">
-                                <i class="fas fa-layer-group me-2"></i> Sections
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/tests">
-                                <i class="fas fa-file-alt me-2"></i> Test Management
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/student-performance">
-                                <i class="fas fa-chart-line me-2"></i> Student Performance
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/reports">
-                                <i class="fas fa-chart-pie me-2"></i> Reports
-                            </a>
-                        </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="/dean/account">
-                                <i class="fas fa-user me-2"></i> My Account
+                                <i class="fas fa-user me-2"></i> My Profile
                             </a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a>
+                        </li>
                     </ul>
                 </div>
-            </aside>
+            </div>
+        </nav>
+        
+        <div class="center-body">
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-lg top-navbar">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+                    </a>
+                    <div class="navbar-nav ms-auto align-items-center">
+                        <!-- User Info (without dropdown) -->
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <%= user.fullName.charAt(0).toUpperCase() %>
+                            </div>
+                            <span><%= user.fullName %></span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
 
             <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <!-- Header -->
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2"><i class="fas fa-file-alt me-2"></i><%= title %></h1>
+            <div class="container-fluid main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 section-header">
+                    <h1 class="h2"><i class="fas fa-file-alt me-2"></i>Test Management</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createTestModal"><i class="fas fa-plus me-2"></i>Create Test</button>
                         <button class="btn btn-outline-secondary" id="toggleAllSections"><i class="fas fa-expand me-2"></i>Show Assigned Sections</button>
@@ -146,15 +656,65 @@
 
                 <!-- Overview Cards -->
                 <div class="row mb-4">
-                    <div class="col-md-3"><div class="card text-white bg-primary"><div class="card-body"><div class="d-flex justify-content-between"><div><h4 id="totalTestsCount">0</h4><p>Total Tests</p></div><i class="fas fa-file-alt fa-2x"></i></div></div></div></div>
-                    <div class="col-md-3"><div class="card text-white bg-success"><div class="card-body"><div class="d-flex justify-content-between"><div><h4 id="publicTestsCount">0</h4><p>Public Tests</p></div><i class="fas fa-unlock fa-2x"></i></div></div></div></div>
-                    <div class="col-md-3"><div class="card text-white bg-warning"><div class="card-body"><div class="d-flex justify-content-between"><div><h4 id="privateTestsCount">0</h4><p>Private Tests</p></div><i class="fas fa-lock fa-2x"></i></div></div></div></div>
-                    <div class="col-md-3"><div class="card text-white bg-info"><div class="card-body"><div class="d-flex justify-content-between"><div><h4 id="activeTestsCount">0</h4><p>Active Tests</p></div><i class="fas fa-play-circle fa-2x"></i></div></div></div></div>
+                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                        <div class="card stat-card card-primary h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="totalTestsCount">0</h4>
+                                        <p class="card-text">Total Tests</p>
+                                    </div>
+                                    <i class="fas fa-file-alt fa-2x" style="color: var(--secondary-color);"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                        <div class="card stat-card card-success h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="publicTestsCount">0</h4>
+                                        <p class="card-text">Public Tests</p>
+                                    </div>
+                                    <i class="fas fa-unlock fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                        <div class="card stat-card card-warning h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="privateTestsCount">0</h4>
+                                        <p class="card-text">Private Tests</p>
+                                    </div>
+                                    <i class="fas fa-lock fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                        <div class="card stat-card card-info h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="activeTestsCount">0</h4>
+                                        <p class="card-text">Active Tests</p>
+                                    </div>
+                                    <i class="fas fa-play-circle fa-2x text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Tests Table -->
                 <div class="card">
-                    <div class="card-header"><h5 class="mb-0">All Tests</h5></div>
+                    <div class="card-header">
+                        <h5 class="mb-0">All Tests</h5>
+                    </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-striped align-middle">
@@ -165,7 +725,6 @@
                                         <th style="width:8%">Access</th>
                                         <th style="width:15%">Assigned Sections</th>
                                         <th style="width:10%">Created By</th>
-                                        <th style="width:12%">Created/Updated</th>
                                         <th style="width:10%">Questions</th>
                                         <th style="width:10%">Actions</th>
                                     </tr>
@@ -177,93 +736,232 @@
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
     <!-- Create Test Modal -->
     <div class="modal fade" id="createTestModal" tabindex="-1">
-        <div class="modal-dialog modal-xl"><div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Create New Test</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <form id="testForm">
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <h6>Test Information</h6>
-                            <div class="row">
-                                <div class="col-md-6 mb-3"><label class="form-label">Title *</label><input type="text" class="form-control" name="title" required></div>
-                                <div class="col-md-6 mb-3"><label class="form-label">Subject Code *</label><input type="text" class="form-control" name="subjectCode" required></div>
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Create New Test</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="testForm">
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <h6>Test Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Title *</label>
+                                        <input type="text" class="form-control" name="title" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Subject Code *</label>
+                                        <input type="text" class="form-control" name="subjectCode" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" name="description" rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Time Limit (minutes) <small class="text-muted">Optional</small></label>
+                                        <input type="number" class="form-control" name="timeLimit" min="1" value="1" placeholder="Leave empty for no time limit">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Deadline</label>
+                                        <input type="datetime-local" class="form-control" name="deadline" min="">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Access *</label>
+                                        <select class="form-select" name="access" required>
+                                            <option value="Public">Public</option>
+                                            <option value="Private" selected>Private</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">How Many Questions Per Student *</label>
+                                    <input type="number" class="form-control" name="howManyQuestions" min="1" value="1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Passing Points</label>
+                                    <input type="number" class="form-control" name="passingPoints" min="0" value="0">
+                                </div>
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#assignSectionsModal">
+                                        <i class="fas fa-users me-1"></i>Assign Sections
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#prerequisitesModal">
+                                        <i class="fas fa-list-check me-1"></i>Set Prerequisites
+                                    </button>
+                                </div>
                             </div>
-                            <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="3"></textarea></div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3"><label class="form-label">Time Limit (minutes)</label><input type="number" class="form-control" name="timeLimit" min="1" value="60"></div>
-                                <div class="col-md-4 mb-3"><label class="form-label">Deadline</label><input type="datetime-local" class="form-control" name="deadline"></div>
-                                <div class="col-md-4 mb-3"><label class="form-label">Access *</label><select class="form-select" name="access" required><option value="Public">Public</option><option value="Private" selected>Private</option></select></div>
-                            </div>
-                            <div class="mb-3"><label class="form-label">How Many Questions Per Student *</label><input type="number" class="form-control" name="howManyQuestions" min="1" value="10" required></div>
-                            <div class="mb-3"><label class="form-label">Passing Points</label><input type="number" class="form-control" name="passingPoints" min="0" value="0"></div>
-                            <div class="mb-3">
-                                <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#assignSectionsModal"><i class="fas fa-users me-1"></i>Assign Sections</button>
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#prerequisitesModal"><i class="fas fa-list-check me-1"></i>Set Prerequisites</button>
+
+                            <div class="col-md-4">
+                                <h6>Test Summary</h6>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="mb-2"><strong>Total Questions:</strong> <span id="totalQuestions">0</span></div>
+                                        <div class="mb-2"><strong>Total Points:</strong> <span id="totalPoints">0</span></div>
+                                        <div class="mb-2"><strong>Passing Points:</strong> <span id="passingPointsDisplay">0</span></div>
+                                        <div class="mb-2"><strong>Question Types:</strong> <div id="questionTypesSummary"></div></div>
+                                        <div class="mb-2"><strong>Assigned Sections:</strong> <div id="assignedSectionsSummary">None</div></div>
+                                        <div class="mb-2"><strong>Prerequisites:</strong> <div id="prerequisitesSummary">None</div></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <h6>Test Summary</h6>
-                            <div class="card"><div class="card-body">
-                                <div class="mb-2"><strong>Total Questions:</strong> <span id="totalQuestions">0</span></div>
-                                <div class="mb-2"><strong>Total Points:</strong> <span id="totalPoints">0</span></div>
-                                <div class="mb-2"><strong>Passing Points:</strong> <span id="passingPointsDisplay">0</span></div>
-                                <div class="mb-2"><strong>Question Types:</strong> <div id="questionTypesSummary"></div></div>
-                                <div class="mb-2"><strong>Assigned Sections:</strong> <div id="assignedSectionsSummary">None</div></div>
-                                <div class="mb-2"><strong>Prerequisites:</strong> <div id="prerequisitesSummary">None</div></div>
-                            </div></div>
+                        <!-- Questions Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Questions</h6>
+                                
+                            </div>
+                            <div id="questionsContainer"></div>
+                            <button type="button" class="btn btn-success btn-sm" id="addQuestionBtn">
+                                    <i class="fas fa-plus me-1"></i>Add Question
+                                </button>
                         </div>
-                    </div>
-
-                    <!-- Questions Section -->
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Questions</h6>
-                            <button type="button" class="btn btn-success btn-sm" id="addQuestionBtn"><i class="fas fa-plus me-1"></i>Add Question</button>
-                        </div>
-                        <div id="questionsContainer"></div>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTestBtn">Save Test</button>
+                </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="saveTestBtn">Save Test</button></div>
-        </div></div>
+        </div>
     </div>
 
     <!-- Test Details Modal -->
-    <div class="modal fade" id="testDetailsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Test Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body" id="testDetailsContent"></div>
-    </div></div></div>
-
-    <!-- Assign Sections Modal -->
-    <div class="modal fade" id="assignSectionsModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Assign Sections to Test</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">
-            <div class="row">
-                <div class="col-md-5"><div class="card"><div class="card-header"><h6 class="mb-0">Available Sections</h6></div><div class="card-body"><div class="mb-3"><input type="text" class="form-control" id="availableSectionSearch" placeholder="Search sections..."></div><div class="student-list" id="availableSections"></div></div></div></div>
-                <div class="col-md-2 transfer-buttons"><button class="btn btn-primary" id="addToTest"><i class="fas fa-arrow-right"></i><br>Add to Test</button><button class="btn btn-outline-primary" id="removeFromTest"><i class="fas fa-arrow-left"></i><br>Remove</button></div>
-                <div class="col-md-5"><div class="card"><div class="card-header"><h6 class="mb-0">Assigned Sections</h6></div><div class="card-body"><div class="mb-3"><input type="text" class="form-control" id="assignedSectionSearch" placeholder="Search sections..."></div><div class="student-list" id="assignedSections"></div></div></div></div>
+    <div class="modal fade" id="testDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Test Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="testDetailsContent"></div>
             </div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelAssignSections">Cancel</button><button type="button" class="btn btn-primary" id="saveSectionAssignment">Save Assignment</button></div>
-    </div></div></div>
+    </div>
+
+    <!-- Assign Sections Modal -->
+    <div class="modal fade" id="assignSectionsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-users me-2"></i>Assign Sections to Test</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Available Sections</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="availableSectionSearch" placeholder="Search sections...">
+                                    </div>
+                                    <div class="student-list" id="availableSections"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 transfer-buttons">
+                            <button class="btn btn-primary" id="addToTest">
+                                <i class="fas fa-arrow-right"></i><br>Add to Test
+                            </button>
+                            <button class="btn btn-outline-primary" id="removeFromTest">
+                                <i class="fas fa-arrow-left"></i><br>Remove
+                            </button>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Assigned Sections</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="assignedSectionSearch" placeholder="Search sections...">
+                                    </div>
+                                    <div class="student-list" id="assignedSections"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelAssignSections">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveSectionAssignment">Save Assignment</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Prerequisites Modal -->
-    <div class="modal fade" id="prerequisitesModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Set Test Prerequisites</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">
-            <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>Students must complete these tests before they can take the current test.</div>
-            <div class="card"><div class="card-header"><h6 class="mb-0">Available Tests</h6></div><div class="card-body"><div class="mb-3"><input type="text" class="form-control" id="prerequisiteSearch" placeholder="Search tests..."></div><div class="student-list" id="availablePrerequisites"></div></div></div>
-            <div class="card mt-3"><div class="card-header"><h6 class="mb-0">Selected Prerequisites</h6></div><div class="card-body"><div id="selectedPrerequisites"></div></div></div>
+    <div class="modal fade" id="prerequisitesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-list-check me-2"></i>Set Test Prerequisites</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Students must complete these tests before they can take the current test.
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Available Tests</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="prerequisiteSearch" placeholder="Search tests...">
+                            </div>
+                            <div class="student-list" id="availablePrerequisites"></div>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Selected Prerequisites</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="selectedPrerequisites"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelPrerequisites">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="savePrerequisites">Save Prerequisites</button>
+                </div>
+            </div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelPrerequisites">Cancel</button><button type="button" class="btn btn-primary" id="savePrerequisites">Save Prerequisites</button></div>
-    </div></div></div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="logout-modal">
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <h5 class="mb-0"><i class="fas fa-sign-out-alt me-2"></i>Confirm Logout</h5>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to logout?</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelLogout">Cancel</button>
+                <form action="/auth/logout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger" id="confirmLogout">Yes, Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -378,32 +1076,67 @@
             : '<span class="text-muted">None</span>';
 
             // UPDATED: Better creator name display
-            const createdByName = test.createdByName || 
-            (test.createdBy && test.createdBy.firstName ? 
-                `${test.createdBy.firstName} ${test.createdBy.lastName || ''}`.trim() : 
-                'System Admin');
+            const createdByName = test.createdBy?.fullName
+            ? `${test.createdBy.lastName}, ${test.createdBy.firstName} ${test.createdBy.middleName}`
+            : 'I DONT FUCKING KNOW';
+
 
             row.innerHTML = `
-            <td><a class="test-title-link" onclick="viewTestDetails('${test._id}')">${test.title || 'Untitled'}</a></td>
+            <td>
+                <a class="test-title-link" onclick="viewTestDetails('${test._id}')">
+                    ${test.title || 'Untitled'}
+                </a>
+            </td>
             <td>${test.subjectCode || ''}</td>
-            <td><span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">${test.access || 'Private'}</span></td>
+            <td>
+                <span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">
+                    ${test.access || 'Private'}
+                </span>
+            </td>
             <td class="assigned-sections">${assignedSections}</td>
-            <td>${createdByName}</td>
-            <td><small>Created: ${formatDate(test.createdAt)}</small><br><small>Updated: ${formatDate(test.updatedAt)}</small></td>
-            <td>${test.totalQuestions || 0} questions<br>${test.totalPoints || 0} points</td>
+            <td>
+                ${test.createdBy
+                    ? `${test.createdBy.lastName}, ${test.createdBy.firstName} ${test.createdBy.middleName}` 
+                    : 'Old Record, Creator Not Recorded'}
+            </td>
+            <td>
+                ${test.totalQuestions ?? 0} question${test.totalQuestions === 1 ? '' : 's'}
+                <br>
+                ${test.totalPoints ?? 0} point${test.totalPoints === 1 ? '' : 's'}
+            </td>
             <td>
                 <div class="dropdown">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="#" onclick="duplicateTest('${test._id}')"><i class="fas fa-copy me-2"></i>Duplicate</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="openAssignSections('${test._id}')"><i class="fas fa-users me-2"></i>Assign</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="openEditTest('${test._id}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteTest('${test._id}')"><i class="fas fa-trash me-2"></i>Delete</a></li>
-                </ul>
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="duplicateTest('${test._id}')">
+                                <i class="fas fa-copy me-2"></i>Duplicate
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="openAssignSections('${test._id}')">
+                                <i class="fas fa-users me-2"></i>Assign
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="openEditTest('${test._id}')">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="deleteTest('${test._id}')">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </td>
-            `;
+        `;
+
             tableBody.appendChild(row);
         });
     }
@@ -526,6 +1259,33 @@
             alert('Failed to load test details');
         }
     }
+
+
+    // Function to set minimum datetime to current time
+function setMinDateTime() {
+    const now = new Date();
+    // Format to YYYY-MM-DDTHH:mm (required by datetime-local input)
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    // Set min attribute for all deadline inputs
+    document.querySelectorAll('input[name="deadline"]').forEach(input => {
+        input.min = minDateTime;
+    });
+}
+
+// Call when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setMinDateTime();
+});
+
+// Also call when the modal opens (in case it's opened later)
+document.getElementById('createTestModal')?.addEventListener('show.bs.modal', setMinDateTime);
 
     // ---------- Assign Sections ----------
     function populateSectionAssignment() {
@@ -833,14 +1593,17 @@
     }
 
     // ---------- EDIT: populate full questions when editing ----------
-    function renderQuestionInForm(questionObj) {
-        addQuestion();
-        const container = document.getElementById('questionsContainer');
-        const qEl = container.lastElementChild;
-        if (!qEl) return;
+function renderQuestionInForm(questionObj) {
+    addQuestion();
+    const container = document.getElementById('questionsContainer');
+    const qEl = container.lastElementChild;
+    if (!qEl) return;
 
-        qEl.querySelector('.question-text').value = questionObj.text || '';
-        qEl.querySelector('.question-points').value = questionObj.points || 0;
+    // The question number will be automatically set by renumberQuestions()
+    // So we don't need to manually set it here
+    
+    qEl.querySelector('.question-text').value = questionObj.text || '';
+    qEl.querySelector('.question-points').value = questionObj.points || 0;
 
         if (questionObj.feedbackWhenCorrect && questionObj.feedbackWhenCorrect.text) {
             qEl.querySelector('.feedback-correct').value = questionObj.feedbackWhenCorrect.text;
@@ -983,7 +1746,7 @@
             subjectCode: formData.get('subjectCode'),
             description: formData.get('description'),
             access: formData.get('access'),
-            timeLimit: Number(formData.get('timeLimit')) || undefined,
+            timeLimit: formData.get('timeLimit') ? Number(formData.get('timeLimit')) : undefined,
             deadline: deadlineValue ? new Date(deadlineValue).toISOString() : undefined,
             howManyQuestions: Number(formData.get('howManyQuestions')),
             passingPoints: Number(formData.get('passingPoints')) || 0,
@@ -1135,46 +1898,61 @@
 
     // ---------- question UI ----------
     function getQuestionTemplate() {
-        questionCount++;
-        return `
-            <div class="question-item" id="question-${questionCount}">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="mb-0">Question ${questionCount}</h6>
-                    <button type="button" class="btn btn-danger btn-sm remove-question"><i class="fas fa-trash"></i></button>
-                </div>
-                <div class="mb-3"><label class="form-label">Question *</label><textarea class="form-control question-text" rows="2" required></textarea></div>
-                <div class="row mb-3">
-                    <div class="col-md-4"><label class="form-label">Type *</label><select class="form-select question-type" required><option value="">Select</option><option value="multiple">Multiple Choice</option><option value="truefalse">True or False</option><option value="enumeration">Enumeration</option><option value="identification">Identification</option><option value="essay">Essay</option></select></div>
-                    <div class="col-md-3"><label class="form-label">Points *</label><input type="number" class="form-control question-points" min="1" value="1" required></div>
-                    <div class="col-md-5"><label class="form-label">Attach File (Optional)</label><input type="file" class="form-control question-file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx"></div>
-                </div>
-                <div class="question-answer-section"></div>
-                <div class="feedback-section">
-                    <h6>Feedback (Optional)</h6>
-                    <div class="row">
-                        <div class="col-md-6"><label class="form-label">When Correct</label><textarea class="form-control feedback-correct" rows="2"></textarea><input type="file" class="form-control mt-2 feedback-correct-file"></div>
-                        <div class="col-md-6"><label class="form-label">When Incorrect</label><textarea class="form-control feedback-incorrect" rows="2"></textarea><input type="file" class="form-control mt-2 feedback-incorrect-file"></div>
-                    </div>
+    // Use a temporary number that will be updated by renumberQuestions()
+    return `
+        <div class="question-item">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 question-number">Question TEMP</h6>
+                <button type="button" class="btn btn-danger btn-sm remove-question"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="mb-3"><label class="form-label">Question *</label><textarea class="form-control question-text" rows="2" required></textarea></div>
+            <div class="row mb-3">
+                <div class="col-md-4"><label class="form-label">Type *</label><select class="form-select question-type" required><option value="">Select</option><option value="multiple">Multiple Choice</option><option value="truefalse">True or False</option><option value="enumeration">Enumeration</option><option value="identification">Identification</option><option value="essay">Essay</option></select></div>
+                <div class="col-md-3"><label class="form-label">Points *</label><input type="number" class="form-control question-points" min="1" value="1" required></div>
+                <div class="col-md-5"><label class="form-label">Attach File (Optional)</label><input type="file" class="form-control question-file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx"></div>
+            </div>
+            <div class="question-answer-section"></div>
+            <div class="feedback-section">
+                <h6>Feedback (Optional)</h6>
+                <div class="row">
+                    <div class="col-md-6"><label class="form-label">When Correct</label><textarea class="form-control feedback-correct" rows="2"></textarea><input type="file" class="form-control mt-2 feedback-correct-file"></div>
+                    <div class="col-md-6"><label class="form-label">When Incorrect</label><textarea class="form-control feedback-incorrect" rows="2"></textarea><input type="file" class="form-control mt-2 feedback-incorrect-file"></div>
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
 
     function addQuestion() {
         const container = document.getElementById('questionsContainer');
         const wrapper = document.createElement('div');
         wrapper.innerHTML = getQuestionTemplate();
         container.appendChild(wrapper.firstElementChild);
+        
+        // Renumber all questions to maintain continuous numbering
+        renumberQuestions();
         updateTestSummary();
     }
-
-    function attachQuestionHandlers() {
-        document.querySelectorAll('.remove-question').forEach(btn => {
-            btn.onclick = (e) => { e.target.closest('.question-item').remove(); updateTestSummary(); };
-        });
-        document.querySelectorAll('.question-type').forEach(select => select.onchange = (e) => renderAnswerSection(e.target.closest('.question-item'), e.target.value));
-        document.querySelectorAll('.question-points').forEach(inp => inp.oninput = updateTestSummary);
-    }
+function renumberQuestions() {
+    const questions = document.querySelectorAll('.question-item');
+    questions.forEach((question, index) => {
+        const numberElement = question.querySelector('.question-number');
+        if (numberElement) {
+            numberElement.textContent = `Question ${index + 1}`;
+        }
+    });
+}   
+  function attachQuestionHandlers() {
+    document.querySelectorAll('.remove-question').forEach(btn => {
+        btn.onclick = (e) => { 
+            e.target.closest('.question-item').remove(); 
+            renumberQuestions(); // Add this line
+            updateTestSummary(); 
+        };
+    });
+    document.querySelectorAll('.question-type').forEach(select => select.onchange = (e) => renderAnswerSection(e.target.closest('.question-item'), e.target.value));
+    document.querySelectorAll('.question-points').forEach(inp => inp.oninput = updateTestSummary);
+}
 
     function renderAnswerSection(questionEl, type) {
         const section = questionEl.querySelector('.question-answer-section');
@@ -1233,6 +2011,57 @@
 
     // ---------- initialization ----------
     document.addEventListener('DOMContentLoaded', async () => {
+        // Logout functionality
+        const logoutBtn = document.getElementById('logoutBtn');
+        const logoutModal = document.getElementById('logoutModal');
+        const cancelLogout = document.getElementById('cancelLogout');
+        const confirmLogout = document.getElementById('confirmLogout');
+
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutModal.style.display = 'block';
+        });
+
+        cancelLogout.addEventListener('click', function() {
+            logoutModal.style.display = 'none';
+        });
+
+        confirmLogout.addEventListener('click', function() {
+            // Clear session and prevent back button access
+            fetch('/auth/logout', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            }).then(() => {
+                // Clear any cached data
+                if (window.caches) {
+                    caches.keys().then(function(names) {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                    });
+                }
+                
+                // Redirect to login page
+                window.location.href = '/login';
+                
+                // Prevent back navigation
+                window.history.pushState(null, null, window.location.href);
+                window.onpopstate = function() {
+                    window.history.go(1);
+                };
+            });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target === logoutModal) {
+                logoutModal.style.display = 'none';
+            }
+        });
+
+        // Test management functionality
         document.getElementById('testFilter')?.addEventListener('change', renderTestsTable);
         document.getElementById('testSearch')?.addEventListener('input', renderTestsTable);
         document.getElementById('subjectFilter')?.addEventListener('change', renderTestsTable);
@@ -1250,5 +2079,6 @@
         setInterval(() => { attachQuestionHandlers(); updateTestSummary(); }, 1000);
     });
     </script>
+    <script src="/js/logout.js"></script>
 </body>
 </html>
