@@ -50,7 +50,7 @@ function normalizeQuestions(questions = []) {
   });
 }
 
-// Create a test - CHANGED FROM /tests to /
+// Create a test
 router.post("/", async (req, res) => {
   try {
     const payload = req.body;
@@ -89,8 +89,8 @@ router.post("/", async (req, res) => {
       assignedSections: Array.isArray(payload.assignedSections) ? payload.assignedSections : [],
       prerequisites: Array.isArray(payload.prerequisites) ? payload.prerequisites : [],
       questions,
-      createdBy: payload.createdBy
-    });
+      createdBy: req.session?.user?.id, // automatically assign the logged-in user's id
+    })
 
     await testDoc.save();
     res.status(201).json(testDoc);
@@ -100,21 +100,36 @@ router.post("/", async (req, res) => {
   }
 });
 
-// List tests - CHANGED FROM /tests to /
+// List tests
+// List tests (populate createdBy)
 router.get("/", async (req, res) => {
   try {
-    const tests = await Test.find().sort({ createdAt: -1 }).lean();
-    res.json(tests);
+    const tests = await Test.find()
+      .populate("createdBy", "firstName middleName lastName email role") // 👈 populate creator info
+      .sort({ createdAt: -1 })
+      .lean({ virtuals: true });
+
+    // Ensure totals (in case virtuals aren't included in lean)
+    const withTotals = tests.map(t => ({
+      ...t,
+      totalQuestions: (t.questions || []).length,
+      totalPoints: (t.questions || []).reduce((s, q) => s + (q.points || 0), 0),
+    }));
+
+    res.json(withTotals);
   } catch (err) {
     console.error("❌ Error listing tests:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Get single test - CHANGED FROM /tests/:id to /:id
+// Get single test
 router.get("/:id", async (req, res) => {
   try {
-    const t = await Test.findById(req.params.id).lean();
+    const t = await Test.findById(req.params.id)
+    .populate("createdBy", "fullName email role")
+    .lean({ virtuals: true });
+
     if (!t) return res.status(404).json({ message: "Test not found" });
     res.json(t);
   } catch (err) {
@@ -123,7 +138,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update test - CHANGED FROM /tests/:id to /:id
+// Update test
 router.put("/:id", async (req, res) => {
   try {
     const payload = req.body;
@@ -167,7 +182,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete test - CHANGED FROM /tests/:id to /:id
+// Delete test
 router.delete("/:id", async (req, res) => {
   try {
     const removed = await Test.findByIdAndDelete(req.params.id);
@@ -179,7 +194,20 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Check eligibility - CHANGED FROM /tests/:id/check-eligibility to /:id/check-eligibility
+/**
+ * Check eligibility for a student to take a test based on prerequisites.
+ *
+ * POST /api/:id/check-eligibility
+ * Body options:
+ *  - { studentId: "<studentObjectId>" }
+ *    Server will look up StudentTestAttempt documents for that student.
+ *  - { completedTests: [{ testId: "<id>", passed: true|false, score?: number }, ...] }
+ *    Use this to check client-side known completions without server attempts.
+ *
+ * Response:
+ *  - { eligible: true }
+ *  - { eligible: false, missing: ["<prereqTestId>", ...] }
+ */
 router.post("/:id/check-eligibility", async (req, res) => {
   try {
     const testId = req.params.id;
