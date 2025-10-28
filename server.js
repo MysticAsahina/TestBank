@@ -4,8 +4,6 @@ import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import sectionApiRoutes from "./routes/api/sections.js";
-import testsApiRoutes from "./routes/api/tests.js"; // Add this import
 
 // Load environment variables FIRST
 dotenv.config();
@@ -15,6 +13,8 @@ import routes from './routes/index.js';
 import setupPasswordRoutes from './routes/passwordReset.js';
 import adminRoutes from './routes/adminRoutes.js';
 import fileUploadRouter from './utils/fileUpload.js';
+import sectionApiRoutes from "./routes/api/sections.js";
+import testsRouter from "./routes/api/tests.js"; // Add this import
 
 console.log('🔧 Environment check:');
 console.log('EMAIL_USER exists:', !!process.env.EMAIL_USER);
@@ -67,7 +67,7 @@ app.use((req, res, next) => {
 app.use('/', routes);
 app.use('/', setupPasswordRoutes);
 app.use('/', adminRoutes);
-// Remove the duplicate deanRoutes import - it's already in routes/index.js
+app.use('/api/tests', testsRouter);
 
 // ✅ MongoDB connection
 mongoose
@@ -77,7 +77,6 @@ mongoose
 
 // ✅ API Routes
 app.use("/api", sectionApiRoutes);
-app.use("/api/tests", testsApiRoutes); // Add tests API routes
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
