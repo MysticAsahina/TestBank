@@ -6,193 +6,225 @@
     <title>Student Registration</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(50deg, #000a4f 0%, #b38f00 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow-y: auto;
-            overflow-x: hidden;
-            margin: 0;
-            padding: 40px 0;
-        }
+<style>
+    body {
+        background: linear-gradient(50deg, #000a4f 0%, #b38f00 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 40px 0;
+    }
 
-        label, p {
-            color: #fff;
-        }
+    label, p {
+        color: #fff;
+    }
 
-        .card-body.p-4 {
-            padding: 0 3rem 3rem 3rem !important;
-        }
+    .card-body.p-4 {
+        padding: 0 3rem 3rem 3rem !important;
+    }
 
-        .logo-bg {
-            position: absolute;
-            right: -300px;
-            width: 800px;
-            height: 800px;
-            opacity: 0.25;
-            z-index: -1000;
-            animation: fadeFromRight 3s ease forwards;
-        }
+    .logo-bg {
+        position: absolute;
+        right: -300px;
+        width: 800px;
+        height: 800px;
+        opacity: 0.25;
+        z-index: -1000;
+        animation: fadeFromRight 3s ease forwards;
+    }
 
-        @keyframes fadeFromRight {
-            0% {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-            100% {
-                opacity: 0.25;
-                transform: translateX(0);
-            }
-        }
-
-        .register-card {
-            background: rgba(255, 255, 255, 0);
-            border-radius: 20px;
-            box-shadow:
-                5px 5px 10px 5px rgba(0, 0, 0, 0.1),
-                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
-            overflow: hidden;
-            animation: fadeFromBottom 1.5s ease forwards;
+    @keyframes fadeFromRight {
+        0% {
             opacity: 0;
-            width: 100%;
-            
-            /* Glare effect variables */
-            --gh-width: 100%;
-            --gh-height: 100%;
-            --gh-bg: transparent;
-            --gh-br: 100px;
-            --gh-border: transparent;
-            --gh-angle: 135deg;
-            --gh-rgba: rgba(255, 255, 255, 0.4);
-            --gh-duration: 0.6s;
-            --gh-size: 200%;
-            
-            position: relative;
+            transform: translateX(100px);
         }
+        100% {
+            opacity: 0.25;
+            transform: translateX(0);
+        }
+    }
 
-        .register-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                var(--gh-angle),
-                transparent 40%,
-                var(--gh-rgba) 50%,
-                transparent 60%
-            );
-            transition: var(--gh-duration) ease;
-            background-size: 300% 300%;
-            background-repeat: no-repeat;
-            background-position: -100% -100%;
-            border-radius: inherit;
-            pointer-events: none;
-        }
+    .register-card {
+        background: rgba(255, 255, 255, 0);
+        border-radius: 20px;
+        box-shadow:
+            5px 5px 10px 5px rgba(0, 0, 0, 0.1),
+            inset 3px 3px 20px 0px rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+        animation: fadeFromBottom 1.5s ease forwards;
+        opacity: 0;
+        width: 100%;
+        position: relative;
 
-        .register-card:hover::before {
-            background-position: 100% 100%;
-        }
+        --gh-angle: 135deg;
+        --gh-rgba: rgba(255, 255, 255, 0.4);
+        --gh-duration: 0.6s;
+    }
 
-        .col-md-10{
-            width: 900px !important;
-        }
+    .register-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            var(--gh-angle),
+            transparent 40%,
+            var(--gh-rgba) 50%,
+            transparent 60%
+        );
+        transition: var(--gh-duration) ease;
+        background-size: 300% 300%;
+        background-repeat: no-repeat;
+        background-position: -100% -100%;
+        border-radius: inherit;
+        pointer-events: none;
+    }
 
-        @keyframes fadeFromBottom {
-            0% {
-                opacity: 0;
-                transform: translateY(80px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    .register-card:hover::before {
+        background-position: 100% 100%;
+    }
 
-        .register-header {
-            display: flex;
-            flex-direction: column;
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
+    /* ✅ GLASS-BLUR MODAL STYLE */
+    .modal-content {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-radius: 20px;
+        box-shadow:
+            5px 5px 10px 5px rgba(0, 0, 0, 0.15),
+            inset 3px 3px 20px 0px rgba(255, 255, 255, 0.4);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-        .register-header h2 {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0;
-        }
+    .modal-content::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            135deg,
+            transparent 40%,
+            rgba(255, 255, 255, 0.35) 50%,
+            transparent 60%
+        );
+        transition: 0.7s ease;
+        background-size: 300% 300%;
+        background-repeat: no-repeat;
+        background-position: -100% -100%;
+        border-radius: inherit;
+        pointer-events: none;
+    }
 
-        .register-header p {
-            font-size: .8rem;
-        }
+    .modal-content:hover::before {
+        background-position: 100% 100%;
+    }
 
-        .register-header img {
-            height: 7em;
-            width: 7em;
-            margin-bottom: 10px;
-            align-self: center;
-        }
+    .col-md-10 {
+        width: 900px !important;
+    }
 
-        .form-control:focus {
-            border-color: #ea6666;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    @keyframes fadeFromBottom {
+        0% {
+            opacity: 0;
+            transform: translateY(80px);
         }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-        .btn-register {
-            background: #23314C;
-            border: none;
-            padding: 12px;
-            font-weight: 600;
-        }
+    .register-header {
+        display: flex;
+        flex-direction: column;
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
 
-        .btn-register:hover {
-            color:#23314C !important;
-            background-color: #00c8ff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
+    .register-header h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0;
+    }
 
-        .text-decoration-none {
-            color: #ffffff;
-        }
+    .register-header p {
+        font-size: .8rem;
+    }
 
-        .text-center.mb-3 a {
-            display: block;
-            text-align: right;
-        }
+    .register-header img {
+        height: 7em;
+        width: 7em;
+        margin-bottom: 10px;
+        align-self: center;
+    }
 
-        .text-center.mb-3 a:hover,
-        .text-decoration-none.fw-bold:hover {
-            text-decoration: underline !important;
-        }
+    .form-control:focus {
+        border-color: #ea6666;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
 
-        .required-label::after {
-            content: " *";
-            color: red;
-        }
+    .btn-register {
+        background: #23314C;
+        border: none;
+        padding: 12px;
+        font-weight: 600;
+    }
 
-        .section-title {
-            color: white;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
+    .btn-register:hover {
+        color:#23314C !important;
+        background-color: #00c8ff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
 
-        .form-text {
-            color: rgba(255, 255, 255, 0.7) !important;
-        }
+    .text-decoration-none {
+        color: #ffffff;
+    }
 
-        .modal-content {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-        }
-    </style>
+    .text-center.mb-3 a {
+        display: block;
+        text-align: right;
+    }
+
+    .text-center.mb-3 a:hover,
+    .text-decoration-none.fw-bold:hover {
+        text-decoration: underline !important;
+    }
+
+    .required-label::after {
+        content: " *";
+        color: red;
+    }
+
+    .section-title {
+        color: white;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+
+    .form-text {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .modal-title{
+        color: #fff !important;
+    }
+
+    .modal-body * {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+</style>
+
 </head>
 <body>
     <img src="./images/logo_college.png" alt="Logo" class="logo-bg">
@@ -206,7 +238,7 @@
                         <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
                     </div>
                     
-                    <div class="card-body p-4">
+                    <div class="card-body p-4"> 
                         <!-- Error Message -->
                         <% if (typeof error !== 'undefined' && error) { %>
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -365,6 +397,15 @@
                                 </div>
                             </div>
 
+                            <!-- Terms & Conditions Checkbox -->
+                            <div class="form-check mt-3">
+                                <input class="form-check-input" type="checkbox" id="termsCheckbox">
+                                <label class="form-check-label text-white" for="termsCheckbox">
+                                    I have read and agree to the 
+                                    <a href="#" class="fw-bold text-decoration-underline" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
+                                </label>
+                            </div>
+
                             <!-- Submit Button -->
                             <div class="d-grid mt-4">
                                 <button type="submit" class="btn btn-register text-white">
@@ -384,6 +425,51 @@
             </div>
         </div>
     </div>
+
+    <!-- Terms & Conditions Modal -->
+    <div class="modal fade " id="termsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-style">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+
+                <h6>Terms and Conditions for Student Registration</h6>
+                <p>By creating an account and using the system, you agree to the following terms and conditions:</p>
+
+                <p><strong>1. Eligibility</strong><br>
+                Only students currently enrolled in the College of Engineering of PHINMA Araullo University are allowed to register and use the system.</p>
+
+                <p><strong>2. Account Information</strong><br>
+                You must provide accurate and truthful information during registration. Any false or misleading information may result in suspension or removal of your account.</p>
+
+                <p><strong>3. Account Security</strong><br>
+                You are responsible for keeping your login credentials confidential. Do not share your password or OTP verification code with other individuals.</p>
+
+                <p><strong>4. Academic Integrity</strong><br>
+                You agree to take tests honestly and without cheating. Any attempt to copy answers, share test content, or manipulate test results may be subject to academic sanctions.</p>
+
+                <p><strong>5. Proper Use of the System</strong><br>
+                The platform shall only be used for academic purposes approved by the College of Engineering. Any misuse, tampering, or unauthorized access is prohibited.</p>
+
+                <p><strong>6. Data Privacy</strong><br>
+                Your test scores and related academic records will be stored in the system for use by authorized faculty and administrators only. These records will not be shared outside the institution without proper authorization.</p>
+
+                <p><strong>7. System Availability</strong><br>
+                The system requires a stable internet connection. The institution is not responsible for technical issues resulting from poor connectivity, device malfunction, or user-side errors.</p>
+
+                <p><strong>8. Compliance with School Policies</strong><br>
+                Your use of this platform is subject to the existing rules and regulations of PHINMA Araullo University and the College of Engineering.</p>
+
+                <p>By continuing your registration, you acknowledge that you have read, understood, and agreed to these Terms and Conditions.</p>
+
+            </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- OTP Modal -->
     <div class="modal fade" id="otpModal" tabindex="-1" aria-hidden="true">
@@ -441,6 +527,14 @@
 
             if (password.length < 6) {
                 alert('Password must be at least 6 characters long!');
+                submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Confirm Registration';
+                submitBtn.disabled = false;
+                return;
+            }
+
+            // Terms & Conditions validation
+            if (!document.getElementById('termsCheckbox').checked) {
+                alert('You must agree to the Terms and Conditions before continuing.');
                 submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Confirm Registration';
                 submitBtn.disabled = false;
                 return;
