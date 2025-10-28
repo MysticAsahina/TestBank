@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { act } from "react";
 
 const adminSchema = new mongoose.Schema({
   lastName: { type: String, required: true },

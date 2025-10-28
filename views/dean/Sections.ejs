@@ -1,824 +1,1525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title><%= title %> - Test Bank System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
-  <style>
-    .navbar.navbar-expand-lg.navbar-dark {
-      background: linear-gradient(135deg, #001a8f 0%, #d4cc26 100%) !important;
-    }
-    .student-list { height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: .375rem; padding: 0.25rem; }
-    .student-item { padding: .5rem; border-bottom: 1px solid #dee2e6; cursor: pointer; }
-    .student-item:hover { background: #f8f9fa; }
-    .student-item.selected { background: #e7f1ff; border-left: 4px solid #0d6efd; }
-    .transfer-buttons { display:flex; flex-direction:column; justify-content:center; gap:10px; }
-    .student-info { font-size: 0.875rem; }
-    .student-id { font-weight: bold; color: #495057; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sections - Test Bank System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-bg: #f5f5f5;
+            --secondary-color: #060037;
+            --accent-color: #dcdf00;
+            --card-radius: 16px;
+        }
+        
+        body {
+            background-color: var(--primary-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: 0;
+            padding-top: 20px;
+            padding-left: 10px;
+            padding-right: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-body {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            max-width: 1800px;
+            min-height: calc(100vh - 40px);
+        }
+        
+        .center-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            width: 100%;
+            margin-left: 5px;
+        }
+        
+        .ms-sm-auto {
+            margin:0 !important;
+            width: 100%;
+        }
+        
+        /* Sidebar Styling */
+        .sidebar {
+            background: var(--primary-bg) !important;
+            width: 250px;
+            border-radius: var(--card-radius);
+            padding: 20px;
+            box-shadow:
+                5px 5px 10px 5px rgba(0, 0, 0, 0.05),
+                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.8);
+            animation: slideInLeft 0.8s ease forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+            margin-right: 15px;
+            height: calc(100vh - 40px);
+            position: sticky;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .login-header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        
+        .login-header img {
+            width: 70px;
+        }
+        
+        .login-header h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0 5px 0;
+            color: var(--secondary-color);
+        }
+        
+        .login-header p {
+            font-size: 10px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .nav-link {
+            color: var(--secondary-color) !important;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-link:hover::before {
+            left: 100%;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(6, 0, 55, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white !important;
+        }
+
+        /* Bottom menu items styling */
+        .bottom-menu {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .bottom-menu .nav-link {
+            margin-bottom: 8px;
+        }
+        
+        /* Top Navbar Styling */
+        .top-navbar {
+            background: var(--primary-bg) !important;
+            width: 100%;
+            border-radius: var(--card-radius);
+            padding: 15px 20px;
+            box-shadow:
+                5px 5px 10px 5px rgba(0, 0, 0, 0.05),
+                inset 3px 3px 20px 0px rgba(255, 255, 255, 0.8);
+            animation: fadeFromBottom 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(10px);
+            margin-bottom: 20px;
+        }
+        
+        .navbar-brand {
+            color: var(--secondary-color) !important;
+            font-weight: 600;
+        }
+        
+        .navbar-text {
+            color: var(--secondary-color) !important;
+        }
+        
+        /* User Info in Top Bar */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* Main Content Styling */
+        .main-content {
+            animation: fadeInUp 0.8s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .section-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        /* Card Styling */
+        .stat-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            border-left: 4px solid;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card-primary { border-left-color: var(--secondary-color); }
+        .card-success { border-left-color: #198754; }
+        .card-warning { border-left-color: #ffc107; }
+        .card-info { border-left-color: #0dcaf0; }
+        .card-danger { border-left-color: #dc3545; }
+        .card-purple { border-left-color: #6f42c1; }
+        .card-teal { border-left-color: #20c997; }
+        .card-orange { border-left-color: #fd7e14; }
+        
+        .card {
+            border-radius: var(--card-radius);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        .notification-item {
+            border-left: 3px solid;
+            transition: background-color 0.2s;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .progress-thin {
+            height: 6px;
+            border-radius: 3px;
+        }
+        
+        .table {
+            border-radius: var(--card-radius);
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+        }
+        
+        .table th:hover {
+            background-color: #05002e;
+        }
+        
+        .table th i {
+            margin-left: 5px;
+            opacity: 0.7;
+        }
+        
+        .table th i.fa-sort {
+            opacity: 0.3;
+        }
+        
+        .table th.sorted-asc i.fa-sort-up,
+        .table th.sorted-desc i.fa-sort-down {
+            opacity: 1;
+        }
+        
+        .table td {
+            border-color: #f0f0f0;
+        }
+
+        /* Filter Bar Styling */
+        .filter-bar {
+            background-color: white;
+            border-radius: var(--card-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .filter-group {
+            margin-bottom: 10px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--secondary-color);
+        }
+
+        /* Custom Date Range Styling */
+        .custom-date-range {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Export Buttons */
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Logout Modal */
+        .logout-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .logout-modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: var(--card-radius);
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .logout-modal-header {
+            border-bottom: 1px solid #eaeaea;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logout-modal-footer {
+            border-top: 1px solid #eaeaea;
+            padding-top: 15px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeFromBottom {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Stagger animations for cards */
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        .stat-card:nth-child(5) { animation-delay: 0.5s; }
+        .stat-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        .card:nth-child(1) { animation-delay: 0.2s; }
+        .card:nth-child(2) { animation-delay: 0.3s; }
+        .card:nth-child(3) { animation-delay: 0.4s; }
+        .card:nth-child(4) { animation-delay: 0.5s; }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .main-body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+                position: static;
+                height: auto;
+            }
+            
+            .center-body {
+                margin-left: 0;
+            }
+        }
+        
+        /* Sections Page Specific Styles */
+        .student-list { 
+            height: 400px; 
+            overflow-y: auto; 
+            border: 1px solid #dee2e6; 
+            border-radius: .375rem; 
+            padding: 0.25rem; 
+        }
+        
+        .student-item { 
+            padding: .5rem; 
+            border-bottom: 1px solid #dee2e6; 
+            cursor: pointer; 
+        }
+        
+        .student-item:hover { 
+            background: #f8f9fa; 
+        }
+        
+        .student-item.selected { 
+            background: #e7f1ff; 
+            border-left: 4px solid #0d6efd; 
+        }
+        
+        .transfer-buttons { 
+            display:flex; 
+            flex-direction:column; 
+            justify-content:center; 
+            gap:10px; 
+        }
+        
+        .student-info { 
+            font-size: 0.875rem; 
+        }
+        
+        .student-id { 
+            font-weight: bold; 
+            color: #495057; 
+        }
+        
+        .modal-xl {
+            max-width: 1200px;
+        }
+        
+        /* Button Styling */
+        .btn {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #05002e;
+            border-color: #05002e;
+            transform: translateY(-2px);
+        }
+        
+        /* Dropdown Menu Styling */
+        .dropdown-menu {
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        
+        .dropdown-item {
+            border-radius: 8px;
+            margin: 2px 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background-color: rgba(6, 0, 55, 0.1);
+        }
+        
+        .action-dropdown {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .action-dropdown:hover {
+            background-color: rgba(6, 0, 55, 0.1);
+        }
+    </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <div class="container">
-    <a class="navbar-brand" href="#"><i class="fas fa-graduation-cap me-2"></i>Test Bank System</a>
-    <div class="navbar-nav ms-auto">
-      <span class="navbar-text me-3">Welcome, <%= user.fullName %> (<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>)</span>
-      <form action="/auth/logout" method="POST" class="d-inline"><button class="btn btn-outline-light btn-sm">Logout</button></form>
-    </div>
-  </div>
-</nav>
+    <div class="main-body">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <div class="login-header">
+                        <img src="/images/phinma_logo.png" alt="PHINMA Logo" class="me-2">
+                        <h2>PHINMA EDUCATION</h2>
+                        <p class="mb-0">MAKING LIVES BETTER THROUGH EDUCATION</p>
+                    </div>
+                    
 
-    <div class="container-fluid">
-        <div class="row">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/dashboard">
+                            <i class="fas fa-home me-2"></i> Dashboard
+                        </a>
+                    </li>
 
-            <!-- Sidebar -->
-            <aside class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="position-sticky pt-3 sidebar-sticky">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dean/sections">
+                            <i class="fas fa-layer-group me-2"></i> Sections
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/tests">
+                            <i class="fas fa-file-alt me-2"></i> Test Management
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/student-performance">
+                            <i class="fas fa-chart-line me-2"></i> Student Performance
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/reports">
+                            <i class="fas fa-chart-pie me-2"></i> Reports
+                        </a>
+                    </li>
+                    <% if (user && user.role === "Dean") { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dean/manage-accounts">
+                            <i class="fas fa-users-cog me-2"></i> Manage Accounts
+                        </a>
+                    </li>
+                    <% } %>
+                </ul>
+
+                <!-- Bottom Menu Items -->
+                <div class="bottom-menu">
                     <ul class="nav flex-column">
-
-                        <% if (user && user.role === "Dean") { %>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/manage-accounts">
-                                <i class="fas fa-users-cog me-2"></i> Manage Accounts
-                            </a>
-                        </li>
-                        <% } %>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/dashboard">
-                                <i class="fas fa-home me-2"></i> Dashboard
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/dean/sections">
-                                <i class="fas fa-layer-group me-2"></i> Sections
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/tests">
-                                <i class="fas fa-file-alt me-2"></i> Test Management
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/student-performance">
-                                <i class="fas fa-chart-line me-2"></i> Student Performance
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/reports">
-                                <i class="fas fa-chart-pie me-2"></i> Reports
-                            </a>
-                        </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="/dean/account">
-                                <i class="fas fa-user me-2"></i> My Account
+                                <i class="fas fa-user me-2"></i> My Profile
                             </a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a>
+                        </li>
                     </ul>
                 </div>
-            </aside>
-
-
-    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3"><i class="fas fa-layer-group me-2"></i><%= title %></h1>
-        <div>
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSectionModal">Create Section</button>
-        </div>
-      </div>
-
-      <!-- Search and Filter Bar -->
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-4">
-              <input type="text" class="form-control" id="sectionSearch" placeholder="Search sections by name, course, or subject...">
             </div>
-            <div class="col-md-3">
-              <select class="form-select" id="courseFilter">
-                <option value="">All Courses</option>
-                <option value="BSIT">BSIT</option>
-                <option value="BSCS">BSCS</option>
-                <option value="BSIS">BSIS</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <select class="form-select" id="campusFilter">
-                <option value="">All Campuses</option>
-                <option value="Main">Main</option>
-                <option value="South">South</option>
-                <option value="SanJose">SanJose</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <select class="form-select" id="schoolYearFilter">
-                <option value="">All Years</option>
-                <option value="2024-2025">2024-2025</option>
-                <option value="2025-2026">2025-2026</option>
-                <option value="2026-2027">2026-2027</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mb-3">
-        <div class="card-header"><strong>Existing Sections</strong></div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-striped align-middle">
-              <thead>
-                <tr>
-                  <th>Course</th>
-                  <th>Section</th>
-                  <th>Campus</th>
-                  <th>Subject</th>
-                  <th>Year Level</th>
-                  <th>Students</th>
-                  <th>School Year</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="sectionsTable">
-                <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- Create/Edit Modal -->
-<div class="modal fade" id="createSectionModal" tabindex="-1">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="sectionModalTitle">Create New Section</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body">
-        <form id="sectionForm" class="mb-3">
-          <input type="hidden" id="sectionId" value="">
-          <div class="row mb-3">
-            <div class="col-md-3">
-              <label class="form-label">School Year *</label>
-              <select id="schoolYear" class="form-select" required>
-                <option value="">Select</option>
-                <option>2024-2025</option><option>2025-2026</option><option>2026-2027</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Course *</label>
-              <select id="course" class="form-select" required>
-                <option value="">Select</option>
-                <option>BSIT</option><option>BSCS</option><option>BSIS</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Year Level *</label>
-              <select id="yearLevel" class="form-select" required>
-                <option value="">Select</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Campus *</label>
-              <select id="campus" class="form-select" required>
-                <option value="">Select</option>
-                <option>Main</option><option>South</option><option>SanJose</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Section *</label>
-              <select class="form-select" id="sectionName" required>
-                <option value="">Section</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-                <option value="13">13</option>
-                <option value="14">14</option>
-                <option value="15">15</option>
-                <option value="16">16</option>
-                <option value="17">17</option>
-                <option value="18">18</option>
-                <option value="19">19</option>
-                <option value="20">20</option>
-              </select>
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Subject *</label>
-              <input type="text" id="subject" class="form-control" placeholder="Enter subject name" required>
-            </div>
-          </div>
-        </form>
-
-        <div class="row">
-          <div class="col-md-5">
-            <div class="card">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>Available Students</strong>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="selectAllAvailable">
-                  <label class="form-check-label small" for="selectAllAvailable">Select All</label>
+        </nav>
+        
+        <div class="center-body">
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-lg top-navbar">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">
+                        <i class="fas fa-graduation-cap me-2"></i>Test Bank System
+                    </a>
+                    <div class="navbar-nav ms-auto align-items-center">
+                        <!-- User Info (without dropdown) -->
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <%= user.fullName.charAt(0).toUpperCase() %>
+                            </div>
+                            <span><%= user.fullName %></span>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              <div class="card-body">
-                <div class="mb-2">
-                  <input id="availableSearch" class="form-control" placeholder="Search students (name, ID, course)"/>
-                </div>
-                <div id="availableStudents" class="student-list"></div>
-              </div>
-            </div>
-          </div>
+            </nav>
 
-          <div class="col-md-2 transfer-buttons">
-            <button class="btn btn-primary mb-2" id="addToSection"> <i class="fas fa-arrow-right"></i> Add </button>
-            <button class="btn btn-outline-primary" id="removeFromSection"> <i class="fas fa-arrow-left"></i> Remove </button>
-          </div>
-
-          <div class="col-md-5">
-            <div class="card">
-              <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>Students in Section</strong>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="selectAllSection">
-                  <label class="form-check-label small" for="selectAllSection">Select All</label>
+            <!-- Main Content -->
+            <div class="container-fluid main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 section-header">
+                    <h1 class="h2"><i class="fas fa-layer-group me-2"></i>Sections</h1>
+                    <div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSectionModal">
+                            <i class="fas fa-plus me-2"></i>Create Section
+                        </button>
+                    </div>
                 </div>
-              </div>
-              <div class="card-body">
-                <div class="mb-2"><input id="sectionSearch" class="form-control" placeholder="Search in section..." /></div>
-                <div id="sectionStudents" class="student-list"></div>
-              </div>
+
+                <!-- Search and Filter Bar -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="sectionSearch" placeholder="Search sections by name, course, or subject...">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="courseFilter">
+                                    <option value="">All Courses</option>
+                                    <option value="BSIT">BSIT</option>
+                                    <option value="BSCS">BSCS</option>
+                                    <option value="BSIS">BSIS</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="campusFilter">
+                                    <option value="">All Campuses</option>
+                                    <option value="Main">Main</option>
+                                    <option value="South">South</option>
+                                    <option value="SanJose">SanJose</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="schoolYearFilter">
+                                    <option value="">All Years</option>
+                                    <option value="2024-2025">2024-2025</option>
+                                    <option value="2025-2026">2025-2026</option>
+                                    <option value="2026-2027">2026-2027</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Existing Sections</strong>
+                        <div class="export-buttons">
+                            <button class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-file-csv me-1"></i>CSV
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="course">Course <i class="fas fa-sort"></i></th>
+                                        <th data-sort="name">Section <i class="fas fa-sort"></i></th>
+                                        <th data-sort="campus">Campus <i class="fas fa-sort"></i></th>
+                                        <th data-sort="subject">Subject <i class="fas fa-sort"></i></th>
+                                        <th data-sort="yearLevel">Year Level <i class="fas fa-sort"></i></th>
+                                        <th data-sort="students">Students <i class="fas fa-sort"></i></th>
+                                        <th data-sort="schoolYear">School Year <i class="fas fa-sort"></i></th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sectionsTable">
+                                    <tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="saveSectionBtn">Save Section</button>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- Details Modal (reusable) -->
-<div class="modal fade" id="sectionDetailsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-  <div class="modal-header"><h5 class="modal-title">Section Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-  <div class="modal-body" id="sectionDetailsBody"></div>
-</div></div></div>
+    <!-- Create/Edit Modal -->
+    <div class="modal fade" id="createSectionModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sectionModalTitle">Create New Section</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  // client-side dynamic behavior connecting to the API endpoints implemented server-side
+                <div class="modal-body">
+                    <form id="sectionForm" class="mb-3">
+                        <input type="hidden" id="sectionId" value="">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">School Year *</label>
+                                <select id="schoolYear" class="form-select" required>
+                                    <option value="">Select</option>
+                                    <option>2024-2025</option><option>2025-2026</option><option>2026-2027</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Course *</label>
+                                <select id="course" class="form-select" required>
+                                    <option value="">Select</option>
+                                    <option>BSIT</option><option>BSCS</option><option>BSIS</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Year Level *</label>
+                                <select id="yearLevel" class="form-select" required>
+                                    <option value="">Select</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Campus *</label>
+                                <select id="campus" class="form-select" required>
+                                    <option value="">Select</option>
+                                    <option>Main</option><option>South</option><option>SanJose</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Section *</label>
+                                <select class="form-select" id="sectionName" required>
+                                    <option value="">Section</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                    <option value="13">13</option>
+                                    <option value="14">14</option>
+                                    <option value="15">15</option>
+                                    <option value="16">16</option>
+                                    <option value="17">17</option>
+                                    <option value="18">18</option>
+                                    <option value="19">19</option>
+                                    <option value="20">20</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Subject *</label>
+                                <input type="text" id="subject" class="form-control" placeholder="Enter subject name" required>
+                            </div>
+                        </div>
+                    </form>
 
-  let availableStudents = [];      // loaded from GET /api/students
-  let sectionStudents = [];        // holds currently selected students in modal
-  let selectedAvailable = new Set();
-  let selectedSection = new Set();
-  let editingSectionId = null;
-  let allSectionsCache = [];
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <strong>Available Students</strong>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAllAvailable">
+                                        <label class="form-check-label small" for="selectAllAvailable">Select All</label>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <input id="availableSearch" class="form-control" placeholder="Search students (name, ID, course)"/>
+                                    </div>
+                                    <div id="availableStudents" class="student-list"></div>
+                                </div>
+                            </div>
+                        </div>
 
-  function el(html){ const d=document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; }
+                        <div class="col-md-2 transfer-buttons">
+                            <button class="btn btn-primary mb-2" id="addToSection"> <i class="fas fa-arrow-right"></i> Add </button>
+                            <button class="btn btn-outline-primary" id="removeFromSection"> <i class="fas fa-arrow-left"></i> Remove </button>
+                        </div>
 
-  // load sections and students
-  async function loadInitial() {
-    await loadStudents();
-    await loadSections();
-  }
+                        <div class="col-md-5">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <strong>Students in Section</strong>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAllSection">
+                                        <label class="form-check-label small" for="selectAllSection">Select All</label>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2"><input id="sectionSearch" class="form-control" placeholder="Search in section..." /></div>
+                                    <div id="sectionStudents" class="student-list"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-  async function loadStudents(q = '') {
-    try {
-      const res = await fetch('/api/students' + (q ? '?q=' + encodeURIComponent(q) : ''));
-      if (!res.ok) throw new Error('Failed to load students');
-      const students = await res.json();
-      // Transform students to include full name and proper fields
-      availableStudents = students.map(student => ({
-        _id: student._id,
-        studentId: student.studentID,
-        name: `${student.lastName}, ${student.firstName} ${student.middleName}`.trim(),
-        course: student.course,
-        yearLevel: student.yearLevel,
-        campus: student.campus
-      }));
-      renderAvailableStudents();
-    } catch (err) {
-      console.error(err);
-      availableStudents = [];
-      renderAvailableStudents();
-    }
-  }
-
-  async function loadSections() {
-    const tbody = document.getElementById('sectionsTable');
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
-    try {
-      const res = await fetch('/api/sections');
-      if (!res.ok) throw new Error('Failed to load sections');
-      const sections = await res.json();
-      allSectionsCache = sections; // Update cache
-      
-      if (!sections.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No sections yet</td></tr>';
-        return;
-      }
-      
-      // Apply filters
-      const filteredSections = applyFilters(sections);
-      
-      if (filteredSections.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No sections match your search criteria</td></tr>';
-        return;
-      }
-      
-      tbody.innerHTML = '';
-      filteredSections.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${s.course}</td>
-          <td>${s.name}</td>
-          <td>${s.campus || ''}</td>
-          <td>${s.subject || ''}</td>
-          <td>${s.yearLevel || ''}</td>
-          <td>${(s.students||[]).length}</td>
-          <td>${s.schoolYear}</td>
-          <td>
-            <div class="btn-group" role="group">
-              <button class="btn btn-sm btn-outline-primary" onclick="openDetails('${s._id}')">Details</button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="openEdit('${s._id}')">Edit</button>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteSection('${s._id}')">Delete</button>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" id="saveSectionBtn">Save Section</button>
+                </div>
             </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    } catch (err) {
-      console.error(err);
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load sections</td></tr>';
-    }
-  }
-
-  function applyFilters(sections) {
-    const searchTerm = (document.getElementById('sectionSearch')?.value || '').toLowerCase();
-    const courseFilter = document.getElementById('courseFilter')?.value || '';
-    const campusFilter = document.getElementById('campusFilter')?.value || '';
-    const schoolYearFilter = document.getElementById('schoolYearFilter')?.value || '';
-
-    return sections.filter(s => {
-      // Search filter
-      if (searchTerm && !(
-        (s.name || '').toLowerCase().includes(searchTerm) ||
-        (s.course || '').toLowerCase().includes(searchTerm) ||
-        (s.subject || '').toLowerCase().includes(searchTerm) ||
-        (s.campus || '').toLowerCase().includes(searchTerm)
-      )) {
-        return false;
-      }
-
-      // Course filter
-      if (courseFilter && s.course !== courseFilter) {
-        return false;
-      }
-
-      // Campus filter
-      if (campusFilter && s.campus !== campusFilter) {
-        return false;
-      }
-
-      // School Year filter
-      if (schoolYearFilter && s.schoolYear !== schoolYearFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }
-
-  function renderAvailableStudents(filter = '') {
-    const container = document.getElementById('availableStudents');
-    const q = (filter || document.getElementById('availableSearch').value || '').toLowerCase();
-    const list = availableStudents.filter(s => {
-      if (!q) return true;
-      return (s.name||'').toLowerCase().includes(q) || 
-             (s.studentId||'').toLowerCase().includes(q) ||
-             (s.course||'').toLowerCase().includes(q);
-    });
-    
-    if (!list.length) {
-      container.innerHTML = '<div class="text-center text-muted py-3">No students found</div>';
-      return;
-    }
-    
-    container.innerHTML = '';
-    list.forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'student-item' + (selectedAvailable.has(s._id) ? ' selected' : '');
-      div.innerHTML = `
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="student-id">${s.studentId}</div>
-            <div class="fw-bold">${s.name}</div>
-            <div class="student-info">
-              <span class="badge bg-secondary">${s.course}</span>
-              <span class="badge bg-light text-dark">${s.yearLevel}</span>
-              <span class="badge bg-info">${s.campus}</span>
-            </div>
-          </div>
-          <input type="checkbox" class="student-checkbox" data-id="${s._id}" ${selectedAvailable.has(s._id) ? 'checked' : ''}>
         </div>
-      `;
-      div.onclick = (e) => {
-        if (e.target.type === 'checkbox') return;
-        const key = s._id;
-        if (selectedAvailable.has(key)) selectedAvailable.delete(key); 
-        else selectedAvailable.add(key);
-        renderAvailableStudents();
-      };
-      
-      // Add checkbox event listener
-      const checkbox = div.querySelector('.student-checkbox');
-      checkbox.addEventListener('change', (e) => {
-        e.stopPropagation();
-        const key = s._id;
-        if (checkbox.checked) selectedAvailable.add(key);
-        else selectedAvailable.delete(key);
-        renderAvailableStudents();
-      });
-      
-      container.appendChild(div);
-    });
-  }
+    </div>
 
-  function renderSectionStudents(filter = '') {
-    const container = document.getElementById('sectionStudents');
-    const q = (filter || document.getElementById('sectionSearch').value || '').toLowerCase();
-    const list = sectionStudents.filter(s => {
-      if (!q) return true;
-      return (s.name||'').toLowerCase().includes(q) || 
-             (s.studentId||'').toLowerCase().includes(q) ||
-             (s.course||'').toLowerCase().includes(q);
-    });
-    
-    if (!list.length) { 
-      container.innerHTML = '<div class="text-center text-muted py-3">No students in section</div>'; 
-      return; 
-    }
-    
-    container.innerHTML = '';
-    list.forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'student-item' + (selectedSection.has(s._id) ? ' selected' : '');
-      div.innerHTML = `
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="student-id">${s.studentId}</div>
-            <div class="fw-bold">${s.name}</div>
-            <div class="student-info">
-              <span class="badge bg-secondary">${s.course}</span>
-              <span class="badge bg-light text-dark">${s.yearLevel}</span>
-              <span class="badge bg-info">${s.campus}</span>
+    <!-- Details Modal (reusable) -->
+    <div class="modal fade" id="sectionDetailsModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Section Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="sectionDetailsBody"></div>
+    </div></div></div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="logout-modal">
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <h5 class="mb-0"><i class="fas fa-sign-out-alt me-2"></i>Confirm Logout</h5>
             </div>
-          </div>
-          <input type="checkbox" class="student-checkbox" data-id="${s._id}" ${selectedSection.has(s._id) ? 'checked' : ''}>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to logout?</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelLogout">Cancel</button>
+                <form action="/auth/logout" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger" id="confirmLogout">Yes, Logout</button>
+                </form>
+            </div>
         </div>
-      `;
-      div.onclick = (e) => {
-        if (e.target.type === 'checkbox') return;
-        const key = s._id;
-        if (selectedSection.has(key)) selectedSection.delete(key); 
-        else selectedSection.add(key);
-        renderSectionStudents();
-      };
-      
-      // Add checkbox event listener
-      const checkbox = div.querySelector('.student-checkbox');
-      checkbox.addEventListener('change', (e) => {
-        e.stopPropagation();
-        const key = s._id;
-        if (checkbox.checked) selectedSection.add(key);
-        else selectedSection.delete(key);
-        renderSectionStudents();
-      });
-      
-      container.appendChild(div);
-    });
-  }
+    </div>
 
-  // Select all functionality
-  function setupSelectAll() {
-    const selectAllAvailable = document.getElementById('selectAllAvailable');
-    const selectAllSection = document.getElementById('selectAllSection');
-    
-    if (selectAllAvailable) {
-      selectAllAvailable.addEventListener('change', (e) => {
-        const container = document.getElementById('availableStudents');
-        const checkboxes = container.querySelectorAll('.student-checkbox');
-        const studentItems = container.querySelectorAll('.student-item');
-        
-        if (e.target.checked) {
-          // Select all visible students
-          studentItems.forEach(item => {
-            const studentId = item.querySelector('.student-checkbox').dataset.id;
-            selectedAvailable.add(studentId);
-          });
-        } else {
-          selectedAvailable.clear();
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // client-side dynamic behavior connecting to the API endpoints implemented server-side
+
+        let availableStudents = [];      // loaded from GET /api/students
+        let sectionStudents = [];        // holds currently selected students in modal
+        let selectedAvailable = new Set();
+        let selectedSection = new Set();
+        let editingSectionId = null;
+        let allSectionsCache = [];
+        let currentSort = { column: null, direction: 'asc' };
+
+        function el(html){ const d=document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; }
+
+        // load sections and students
+        async function loadInitial() {
+            await loadStudents();
+            await loadSections();
         }
-        renderAvailableStudents();
-      });
-    }
-    
-    if (selectAllSection) {
-      selectAllSection.addEventListener('change', (e) => {
-        const container = document.getElementById('sectionStudents');
-        const studentItems = container.querySelectorAll('.student-item');
-        
-        if (e.target.checked) {
-          // Select all visible students in section
-          studentItems.forEach(item => {
-            const studentId = item.querySelector('.student-checkbox').dataset.id;
-            selectedSection.add(studentId);
-          });
-        } else {
-          selectedSection.clear();
+
+        async function loadStudents(q = '') {
+            try {
+                const res = await fetch('/api/students' + (q ? '?q=' + encodeURIComponent(q) : ''));
+                if (!res.ok) throw new Error('Failed to load students');
+                const students = await res.json();
+                // Transform students to include full name and proper fields
+                availableStudents = students.map(student => ({
+                    _id: student._id,
+                    studentId: student.studentID,
+                    name: `${student.lastName}, ${student.firstName} ${student.middleName}`.trim(),
+                    course: student.course,
+                    yearLevel: student.yearLevel,
+                    campus: student.campus
+                }));
+                renderAvailableStudents();
+            } catch (err) {
+                console.error(err);
+                availableStudents = [];
+                renderAvailableStudents();
+            }
         }
-        renderSectionStudents();
-      });
-    }
-  }
 
-  // transfers
-  function addToSection() {
-    // move selected from availableStudents to sectionStudents
-    const keys = Array.from(selectedAvailable);
-    keys.forEach(k => {
-      const s = availableStudents.find(x => x._id === k);
-      if (s && !sectionStudents.some(x => x._id === s._id)) {
-        sectionStudents.push(s);
-      }
-    });
-    selectedAvailable.clear();
-    document.getElementById('selectAllAvailable').checked = false;
-    renderAvailableStudents();
-    renderSectionStudents();
-  }
+        async function loadSections() {
+            const tbody = document.getElementById('sectionsTable');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+            try {
+                const res = await fetch('/api/sections');
+                if (!res.ok) throw new Error('Failed to load sections');
+                const sections = await res.json();
+                allSectionsCache = sections; // Update cache
+                
+                if (!sections.length) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No sections yet</td></tr>';
+                    return;
+                }
+                
+                // Apply filters
+                const filteredSections = applyFilters(sections);
+                
+                // Apply sorting
+                const sortedSections = applySorting(filteredSections);
+                
+                if (sortedSections.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No sections match your search criteria</td></tr>';
+                    return;
+                }
+                
+                renderSectionsTable(sortedSections);
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load sections</td></tr>';
+            }
+        }
 
-  function removeFromSection() {
-    const keys = Array.from(selectedSection);
-    sectionStudents = sectionStudents.filter(s => !keys.includes(s._id));
-    selectedSection.clear();
-    document.getElementById('selectAllSection').checked = false;
-    renderSectionStudents();
-  }
+        function renderSectionsTable(sections) {
+            const tbody = document.getElementById('sectionsTable');
+            tbody.innerHTML = '';
+            
+            sections.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.course}</td>
+                    <td>${s.name}</td>
+                    <td>${s.campus || ''}</td>
+                    <td>${s.subject || ''}</td>
+                    <td>${s.yearLevel || ''}</td>
+                    <td>${(s.students||[]).length}</td>
+                    <td>${s.schoolYear}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="action-dropdown dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="openDetails('${s._id}')"><i class="fas fa-info-circle me-2"></i>Details</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="openEdit('${s._id}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteSection('${s._id}')"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-  // Check if section already exists
-  async function checkSectionExists(payload) {
-    try {
-      const res = await fetch('/api/sections');
-      if (!res.ok) return false;
-      
-      const existingSections = await res.json();
-      return existingSections.some(section => 
-        section.subject === payload.subject &&
-        section.schoolYear === payload.schoolYear &&
-        section.course === payload.course &&
-        section.name === payload.name &&
-        section.campus === payload.campus &&
-        section.yearLevel === payload.yearLevel &&
-        section._id !== payload._id // Exclude current section when editing
-      );
-    } catch (err) {
-      console.error('Error checking section existence:', err);
-      return false;
-    }
-  }
+        function applyFilters(sections) {
+            const searchTerm = (document.getElementById('sectionSearch')?.value || '').toLowerCase();
+            const courseFilter = document.getElementById('courseFilter')?.value || '';
+            const campusFilter = document.getElementById('campusFilter')?.value || '';
+            const schoolYearFilter = document.getElementById('schoolYearFilter')?.value || '';
 
-  // Save (create or update) section
-  async function saveSection() {
-    const id = document.getElementById('sectionId').value || null;
-    const payload = {
-      name: document.getElementById('sectionName').value.trim(),
-      schoolYear: document.getElementById('schoolYear').value,
-      course: document.getElementById('course').value,
-      yearLevel: document.getElementById('yearLevel').value,
-      campus: document.getElementById('campus').value,
-      subject: document.getElementById('subject').value.trim(),
-      students: sectionStudents.map(s => ({ 
-        id: s._id, 
-        name: s.name, 
-        studentId: s.studentId,
-        course: s.course,
-        yearLevel: s.yearLevel,
-        campus: s.campus
-      }))
-    };
+            return sections.filter(s => {
+                // Search filter
+                if (searchTerm && !(
+                    (s.name || '').toLowerCase().includes(searchTerm) ||
+                    (s.course || '').toLowerCase().includes(searchTerm) ||
+                    (s.subject || '').toLowerCase().includes(searchTerm) ||
+                    (s.campus || '').toLowerCase().includes(searchTerm)
+                )) {
+                    return false;
+                }
 
-    // Validation
-    if (!payload.name || !payload.schoolYear || !payload.course || !payload.campus || !payload.subject || !payload.yearLevel) {
-      alert('Please fill all required section fields.');
-      return;
-    }
+                // Course filter
+                if (courseFilter && s.course !== courseFilter) {
+                    return false;
+                }
 
-    // Check if section already exists
-    const sectionExists = await checkSectionExists(payload);
-    if (sectionExists) {
-      alert('A section with the same Subject, School Year, Course, Section, Campus, and Year Level already exists. Please use different values.');
-      return;
-    }
+                // Campus filter
+                if (campusFilter && s.campus !== campusFilter) {
+                    return false;
+                }
 
-    try {
-      const method = id ? 'PUT' : 'POST';
-      const url = id ? `/api/sections/${id}` : '/api/sections';
-      const res = await fetch(url, { 
-        method, 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(payload) 
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(()=>({message:'Failed'}));
-        throw new Error(err.message || 'Save failed');
-      }
-      await loadSections();
-      bootstrap.Modal.getInstance(document.getElementById('createSectionModal'))?.hide();
-      resetModal();
-      alert('Section saved successfully');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save section: ' + (err.message || 'Unknown error'));
-    }
-  }
+                // School Year filter
+                if (schoolYearFilter && s.schoolYear !== schoolYearFilter) {
+                    return false;
+                }
 
-  // reset modal state
-  function resetModal() {
-    document.getElementById('sectionId').value = '';
-    document.getElementById('sectionName').value = '';
-    document.getElementById('schoolYear').value = '';
-    document.getElementById('course').value = '';
-    document.getElementById('yearLevel').value = '';
-    document.getElementById('campus').value = '';
-    document.getElementById('subject').value = '';
-    sectionStudents = [];
-    selectedAvailable.clear();
-    selectedSection.clear();
-    document.getElementById('selectAllAvailable').checked = false;
-    document.getElementById('selectAllSection').checked = false;
-    renderAvailableStudents();
-    renderSectionStudents();
-    document.getElementById('sectionModalTitle').textContent = 'Create New Section';
-    editingSectionId = null;
-  }
+                return true;
+            });
+        }
 
-  // open edit modal and populate
-  async function openEdit(id) {
-    try {
-      const res = await fetch(`/api/sections/${id}`);
-      if (!res.ok) throw new Error('Failed to fetch section');
-      const sec = await res.json();
-      document.getElementById('sectionId').value = sec._id;
-      document.getElementById('sectionName').value = sec.name;
-      document.getElementById('schoolYear').value = sec.schoolYear;
-      document.getElementById('course').value = sec.course;
-      document.getElementById('yearLevel').value = sec.yearLevel || '';
-      document.getElementById('campus').value = sec.campus || '';
-      document.getElementById('subject').value = sec.subject || '';
-      sectionStudents = (sec.students || []).map(s => ({ 
-        _id: s.id, 
-        name: s.name, 
-        studentId: s.studentId,
-        course: s.course,
-        yearLevel: s.yearLevel,
-        campus: s.campus
-      }));
-      selectedAvailable.clear();
-      selectedSection.clear();
-      document.getElementById('selectAllAvailable').checked = false;
-      document.getElementById('selectAllSection').checked = false;
-      editingSectionId = sec._id;
-      document.getElementById('sectionModalTitle').textContent = 'Edit Section';
-      renderAvailableStudents();
-      renderSectionStudents();
-      new bootstrap.Modal(document.getElementById('createSectionModal')).show();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to open edit form');
-    }
-  }
+        function applySorting(sections) {
+            if (!currentSort.column) return sections;
+            
+            return [...sections].sort((a, b) => {
+                let aVal = a[currentSort.column];
+                let bVal = b[currentSort.column];
+                
+                // Handle numeric sorting for students count
+                if (currentSort.column === 'students') {
+                    aVal = (a.students || []).length;
+                    bVal = (b.students || []).length;
+                }
+                
+                // Handle string comparison
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
 
-  async function deleteSection(id) {
-    if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) return;
-    try {
-      const res = await fetch(`/api/sections/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
-      await loadSections();
-      alert('Section deleted successfully');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete section');
-    }
-  }
+        function setupSorting() {
+            const headers = document.querySelectorAll('th[data-sort]');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-sort');
+                    
+                    // Update sort direction
+                    if (currentSort.column === column) {
+                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort.column = column;
+                        currentSort.direction = 'asc';
+                    }
+                    
+                    // Update UI indicators
+                    headers.forEach(h => {
+                        h.classList.remove('sorted-asc', 'sorted-desc');
+                        const icon = h.querySelector('i');
+                        icon.className = 'fas fa-sort';
+                    });
+                    
+                    header.classList.add(`sorted-${currentSort.direction}`);
+                    const icon = header.querySelector('i');
+                    icon.className = currentSort.direction === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+                    
+                    // Re-render table with sorting
+                    const filteredSections = applyFilters(allSectionsCache);
+                    const sortedSections = applySorting(filteredSections);
+                    renderSectionsTable(sortedSections);
+                });
+            });
+        }
 
-  function openDetails(id) {
-    const sec = allSectionsCache?.find(s => s._id === id);
-    if (!sec) {
-      // fallback fetch
-      fetch(`/api/sections/${id}`).then(r => r.json()).then(sec=>{
-        showDetails(sec);
-      }).catch(err=>{console.error(err); alert('Failed to load details');});
-    } else showDetails(sec);
-  }
+        function renderAvailableStudents(filter = '') {
+            const container = document.getElementById('availableStudents');
+            const q = (filter || document.getElementById('availableSearch').value || '').toLowerCase();
+            const list = availableStudents.filter(s => {
+                if (!q) return true;
+                return (s.name||'').toLowerCase().includes(q) || 
+                       (s.studentId||'').toLowerCase().includes(q) ||
+                       (s.course||'').toLowerCase().includes(q);
+            });
+            
+            if (!list.length) {
+                container.innerHTML = '<div class="text-center text-muted py-3">No students found</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            list.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'student-item' + (selectedAvailable.has(s._id) ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="student-id">${s.studentId}</div>
+                            <div class="fw-bold">${s.name}</div>
+                            <div class="student-info">
+                                <span class="badge bg-secondary">${s.course}</span>
+                                <span class="badge bg-light text-dark">${s.yearLevel}</span>
+                                <span class="badge bg-info">${s.campus}</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="student-checkbox" data-id="${s._id}" ${selectedAvailable.has(s._id) ? 'checked' : ''}>
+                    </div>
+                `;
+                div.onclick = (e) => {
+                    if (e.target.type === 'checkbox') return;
+                    const key = s._id;
+                    if (selectedAvailable.has(key)) selectedAvailable.delete(key); 
+                    else selectedAvailable.add(key);
+                    renderAvailableStudents();
+                };
+                
+                // Add checkbox event listener
+                const checkbox = div.querySelector('.student-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    const key = s._id;
+                    if (checkbox.checked) selectedAvailable.add(key);
+                    else selectedAvailable.delete(key);
+                    renderAvailableStudents();
+                });
+                
+                container.appendChild(div);
+            });
+        }
 
-  function showDetails(sec) {
-    const body = document.getElementById('sectionDetailsBody');
-    body.innerHTML = `
-      <h5>${sec.name}</h5>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <p><strong>Course:</strong> ${sec.course}</p>
-          <p><strong>School Year:</strong> ${sec.schoolYear}</p>
-          <p><strong>Year Level:</strong> ${sec.yearLevel ? sec.yearLevel + ' Year' : 'Not specified'}</p>
-        </div>
-        <div class="col-md-6">
-          <p><strong>Campus:</strong> ${sec.campus||''}</p>
-          <p><strong>Subject:</strong> ${sec.subject||''}</p>
-        </div>
-      </div>
-      <h6>Students (${(sec.students||[]).length})</h6>
-      <div class="table-responsive">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Student ID</th>
-              <th>Name</th>
-              <th>Course</th>
-              <th>Year Level</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(sec.students||[]).map(s=>`
-              <tr>
-                <td>${s.studentId||''}</td>
-                <td>${s.name}</td>
-                <td>${s.course||''}</td>
-                <td>${s.yearLevel||''}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>`;
-    new bootstrap.Modal(document.getElementById('sectionDetailsModal')).show();
-  }
+        function renderSectionStudents(filter = '') {
+            const container = document.getElementById('sectionStudents');
+            const q = (filter || document.getElementById('sectionSearch').value || '').toLowerCase();
+            const list = sectionStudents.filter(s => {
+                if (!q) return true;
+                return (s.name||'').toLowerCase().includes(q) || 
+                       (s.studentId||'').toLowerCase().includes(q) ||
+                       (s.course||'').toLowerCase().includes(q);
+            });
+            
+            if (!list.length) { 
+                container.innerHTML = '<div class="text-center text-muted py-3">No students in section</div>'; 
+                return; 
+            }
+            
+            container.innerHTML = '';
+            list.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'student-item' + (selectedSection.has(s._id) ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="student-id">${s.studentId}</div>
+                            <div class="fw-bold">${s.name}</div>
+                            <div class="student-info">
+                                <span class="badge bg-secondary">${s.course}</span>
+                                <span class="badge bg-light text-dark">${s.yearLevel}</span>
+                                <span class="badge bg-info">${s.campus}</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="student-checkbox" data-id="${s._id}" ${selectedSection.has(s._id) ? 'checked' : ''}>
+                    </div>
+                `;
+                div.onclick = (e) => {
+                    if (e.target.type === 'checkbox') return;
+                    const key = s._id;
+                    if (selectedSection.has(key)) selectedSection.delete(key); 
+                    else selectedSection.add(key);
+                    renderSectionStudents();
+                };
+                
+                // Add checkbox event listener
+                const checkbox = div.querySelector('.student-checkbox');
+                checkbox.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    const key = s._id;
+                    if (checkbox.checked) selectedSection.add(key);
+                    else selectedSection.delete(key);
+                    renderSectionStudents();
+                });
+                
+                container.appendChild(div);
+            });
+        }
 
-  // wire up UI
-  document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('availableSearch')?.addEventListener('input', (e)=> renderAvailableStudents(e.target.value));
-    document.getElementById('sectionSearch')?.addEventListener('input', (e)=> renderSectionStudents(e.target.value));
-    document.getElementById('addToSection')?.addEventListener('click', addToSection);
-    document.getElementById('removeFromSection')?.addEventListener('click', removeFromSection);
-    document.getElementById('saveSectionBtn')?.addEventListener('click', saveSection);
-    
-    // Setup select all functionality
-    setupSelectAll();
-    
-    // Setup filter event listeners
-    document.getElementById('sectionSearch')?.addEventListener('input', () => loadSections());
-    document.getElementById('courseFilter')?.addEventListener('change', () => loadSections());
-    document.getElementById('campusFilter')?.addEventListener('change', () => loadSections());
-    document.getElementById('schoolYearFilter')?.addEventListener('change', () => loadSections());
-    
-    // when modal opens, prepare available students and reset if creating
-    document.getElementById('createSectionModal')?.addEventListener('show.bs.modal', async () => {
-      await loadStudents();
-      if (!editingSectionId) resetModal();
-    });
+        // Select all functionality
+        function setupSelectAll() {
+            const selectAllAvailable = document.getElementById('selectAllAvailable');
+            const selectAllSection = document.getElementById('selectAllSection');
+            
+            if (selectAllAvailable) {
+                selectAllAvailable.addEventListener('change', (e) => {
+                    const container = document.getElementById('availableStudents');
+                    const checkboxes = container.querySelectorAll('.student-checkbox');
+                    const studentItems = container.querySelectorAll('.student-item');
+                    
+                    if (e.target.checked) {
+                        // Select all visible students
+                        studentItems.forEach(item => {
+                            const studentId = item.querySelector('.student-checkbox').dataset.id;
+                            selectedAvailable.add(studentId);
+                        });
+                    } else {
+                        selectedAvailable.clear();
+                    }
+                    renderAvailableStudents();
+                });
+            }
+            
+            if (selectAllSection) {
+                selectAllSection.addEventListener('change', (e) => {
+                    const container = document.getElementById('sectionStudents');
+                    const studentItems = container.querySelectorAll('.student-item');
+                    
+                    if (e.target.checked) {
+                        // Select all visible students in section
+                        studentItems.forEach(item => {
+                            const studentId = item.querySelector('.student-checkbox').dataset.id;
+                            selectedSection.add(studentId);
+                        });
+                    } else {
+                        selectedSection.clear();
+                    }
+                    renderSectionStudents();
+                });
+            }
+        }
 
-    // load data
-    await loadInitial();
-  });
-</script>
+        // transfers
+        function addToSection() {
+            // move selected from availableStudents to sectionStudents
+            const keys = Array.from(selectedAvailable);
+            keys.forEach(k => {
+                const s = availableStudents.find(x => x._id === k);
+                if (s && !sectionStudents.some(x => x._id === s._id)) {
+                    sectionStudents.push(s);
+                }
+            });
+            selectedAvailable.clear();
+            document.getElementById('selectAllAvailable').checked = false;
+            renderAvailableStudents();
+            renderSectionStudents();
+        }
+
+        function removeFromSection() {
+            const keys = Array.from(selectedSection);
+            sectionStudents = sectionStudents.filter(s => !keys.includes(s._id));
+            selectedSection.clear();
+            document.getElementById('selectAllSection').checked = false;
+            renderSectionStudents();
+        }
+
+        // Check if section already exists
+        async function checkSectionExists(payload) {
+            try {
+                const res = await fetch('/api/sections');
+                if (!res.ok) return false;
+                
+                const existingSections = await res.json();
+                return existingSections.some(section => 
+                    section.subject === payload.subject &&
+                    section.schoolYear === payload.schoolYear &&
+                    section.course === payload.course &&
+                    section.name === payload.name &&
+                    section.campus === payload.campus &&
+                    section.yearLevel === payload.yearLevel &&
+                    section._id !== payload._id // Exclude current section when editing
+                );
+            } catch (err) {
+                console.error('Error checking section existence:', err);
+                return false;
+            }
+        }
+
+        // Save (create or update) section
+        async function saveSection() {
+            const id = document.getElementById('sectionId').value || null;
+            const payload = {
+                name: document.getElementById('sectionName').value.trim(),
+                schoolYear: document.getElementById('schoolYear').value,
+                course: document.getElementById('course').value,
+                yearLevel: document.getElementById('yearLevel').value,
+                campus: document.getElementById('campus').value,
+                subject: document.getElementById('subject').value.trim(),
+                students: sectionStudents.map(s => ({ 
+                    id: s._id, 
+                    name: s.name, 
+                    studentId: s.studentId,
+                    course: s.course,
+                    yearLevel: s.yearLevel,
+                    campus: s.campus
+                }))
+            };
+
+            // Validation
+            if (!payload.name || !payload.schoolYear || !payload.course || !payload.campus || !payload.subject || !payload.yearLevel) {
+                alert('Please fill all required section fields.');
+                return;
+            }
+
+            // Check if section already exists
+            const sectionExists = await checkSectionExists(payload);
+            if (sectionExists) {
+                alert('A section with the same Subject, School Year, Course, Section, Campus, and Year Level already exists. Please use different values.');
+                return;
+            }
+
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `/api/sections/${id}` : '/api/sections';
+                const res = await fetch(url, { 
+                    method, 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(()=>({message:'Failed'}));
+                    throw new Error(err.message || 'Save failed');
+                }
+                await loadSections();
+                bootstrap.Modal.getInstance(document.getElementById('createSectionModal'))?.hide();
+                resetModal();
+                alert('Section saved successfully');
+            } catch (err) {
+                console.error(err);
+                alert('Failed to save section: ' + (err.message || 'Unknown error'));
+            }
+        }
+
+        // reset modal state
+        function resetModal() {
+            document.getElementById('sectionId').value = '';
+            document.getElementById('sectionName').value = '';
+            document.getElementById('schoolYear').value = '';
+            document.getElementById('course').value = '';
+            document.getElementById('yearLevel').value = '';
+            document.getElementById('campus').value = '';
+            document.getElementById('subject').value = '';
+            sectionStudents = [];
+            selectedAvailable.clear();
+            selectedSection.clear();
+            document.getElementById('selectAllAvailable').checked = false;
+            document.getElementById('selectAllSection').checked = false;
+            renderAvailableStudents();
+            renderSectionStudents();
+            document.getElementById('sectionModalTitle').textContent = 'Create New Section';
+            editingSectionId = null;
+        }
+
+        // open edit modal and populate
+        async function openEdit(id) {
+            try {
+                const res = await fetch(`/api/sections/${id}`);
+                if (!res.ok) throw new Error('Failed to fetch section');
+                const sec = await res.json();
+                document.getElementById('sectionId').value = sec._id;
+                document.getElementById('sectionName').value = sec.name;
+                document.getElementById('schoolYear').value = sec.schoolYear;
+                document.getElementById('course').value = sec.course;
+                document.getElementById('yearLevel').value = sec.yearLevel || '';
+                document.getElementById('campus').value = sec.campus || '';
+                document.getElementById('subject').value = sec.subject || '';
+                sectionStudents = (sec.students || []).map(s => ({ 
+                    _id: s.id, 
+                    name: s.name, 
+                    studentId: s.studentId,
+                    course: s.course,
+                    yearLevel: s.yearLevel,
+                    campus: s.campus
+                }));
+                selectedAvailable.clear();
+                selectedSection.clear();
+                document.getElementById('selectAllAvailable').checked = false;
+                document.getElementById('selectAllSection').checked = false;
+                editingSectionId = sec._id;
+                document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+                renderAvailableStudents();
+                renderSectionStudents();
+                new bootstrap.Modal(document.getElementById('createSectionModal')).show();
+            } catch (err) {
+                console.error(err);
+                alert('Failed to open edit form');
+            }
+        }
+
+        async function deleteSection(id) {
+            if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) return;
+            try {
+                const res = await fetch(`/api/sections/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Delete failed');
+                await loadSections();
+                alert('Section deleted successfully');
+            } catch (err) {
+                console.error(err);
+                alert('Failed to delete section');
+            }
+        }
+
+        function openDetails(id) {
+            const sec = allSectionsCache?.find(s => s._id === id);
+            if (!sec) {
+                // fallback fetch
+                fetch(`/api/sections/${id}`).then(r => r.json()).then(sec=>{
+                    showDetails(sec);
+                }).catch(err=>{console.error(err); alert('Failed to load details');});
+            } else showDetails(sec);
+        }
+
+        function showDetails(sec) {
+            const body = document.getElementById('sectionDetailsBody');
+            body.innerHTML = `
+                <h5>${sec.name}</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>Course:</strong> ${sec.course}</p>
+                        <p><strong>School Year:</strong> ${sec.schoolYear}</p>
+                        <p><strong>Year Level:</strong> ${sec.yearLevel ? sec.yearLevel + ' Year' : 'Not specified'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Campus:</strong> ${sec.campus||''}</p>
+                        <p><strong>Subject:</strong> ${sec.subject||''}</p>
+                    </div>
+                </div>
+                <h6>Students (${(sec.students||[]).length})</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Course</th>
+                                <th>Year Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(sec.students||[]).map(s=>`
+                                <tr>
+                                    <td>${s.studentId||''}</td>
+                                    <td>${s.name}</td>
+                                    <td>${s.course||''}</td>
+                                    <td>${s.yearLevel||''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+            new bootstrap.Modal(document.getElementById('sectionDetailsModal')).show();
+        }
+
+        // wire up UI
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('availableSearch')?.addEventListener('input', (e)=> renderAvailableStudents(e.target.value));
+            document.getElementById('sectionSearch')?.addEventListener('input', (e)=> renderSectionStudents(e.target.value));
+            document.getElementById('addToSection')?.addEventListener('click', addToSection);
+            document.getElementById('removeFromSection')?.addEventListener('click', removeFromSection);
+            document.getElementById('saveSectionBtn')?.addEventListener('click', saveSection);
+            
+            // Setup select all functionality
+            setupSelectAll();
+            
+            // Setup filter event listeners
+            document.getElementById('sectionSearch')?.addEventListener('input', () => loadSections());
+            document.getElementById('courseFilter')?.addEventListener('change', () => loadSections());
+            document.getElementById('campusFilter')?.addEventListener('change', () => loadSections());
+            document.getElementById('schoolYearFilter')?.addEventListener('change', () => loadSections());
+            
+            // Setup sorting
+            setupSorting();
+            
+            // when modal opens, prepare available students and reset if creating
+            document.getElementById('createSectionModal')?.addEventListener('show.bs.modal', async () => {
+                await loadStudents();
+                if (!editingSectionId) resetModal();
+            });
+
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            const logoutModal = document.getElementById('logoutModal');
+            const cancelLogout = document.getElementById('cancelLogout');
+            const confirmLogout = document.getElementById('confirmLogout');
+
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                logoutModal.style.display = 'block';
+            });
+
+            cancelLogout.addEventListener('click', function() {
+                logoutModal.style.display = 'none';
+            });
+
+            confirmLogout.addEventListener('click', function() {
+                // Clear session and prevent back button access
+                fetch('/auth/logout', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                }).then(() => {
+                    // Clear any cached data
+                    if (window.caches) {
+                        caches.keys().then(function(names) {
+                            for (let name of names) {
+                                caches.delete(name);
+                            }
+                        });
+                    }
+                    
+                    // Redirect to login page
+                    window.location.href = '/login';
+                    
+                    // Prevent back navigation
+                    window.history.pushState(null, null, window.location.href);
+                    window.onpopstate = function() {
+                        window.history.go(1);
+                    };
+                });
+            });
+
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target === logoutModal) {
+                    logoutModal.style.display = 'none';
+                }
+            });
+
+            // load data
+            await loadInitial();
+        });
+    </script>
 </body>
 </html>
