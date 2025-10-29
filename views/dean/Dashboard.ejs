@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dean Dashboard - Test Bank System</title>
+    <title>Analytics Dashboard - Test Bank System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-trendline"></script>
+    <script src="https://cdn.jsdelivr.net/npm/regression@2.0.1/dist/regression.min.js"></script>
     <style>
         :root {
             --primary-bg: #f5f5f5;
@@ -274,35 +276,63 @@
             border-color: #f0f0f0;
         }
 
-        /* Filter Bar Styling */
-        .filter-bar {
-            background-color: white;
-            border-radius: var(--card-radius);
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        /* Individual Filter Styling */
+        .chart-filters {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
         }
 
-        .filter-group {
-            margin-bottom: 10px;
+        .chart-filter-group {
+            margin-bottom: 8px;
         }
 
-        .filter-label {
+        .chart-filter-label {
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             color: var(--secondary-color);
+            font-size: 0.8rem;
         }
 
-        /* Custom Date Range Styling */
-        .custom-date-range {
-            display: none;
-            margin-top: 10px;
+        /* Analytics Tabs */
+        .analytics-tabs {
+            margin-bottom: 20px;
         }
 
-        /* Export Buttons */
-        .export-buttons {
-            display: flex;
-            gap: 10px;
+        .analytics-tabs .nav-link {
+            color: var(--secondary-color);
+            border: 1px solid #dee2e6;
+            margin-right: 5px;
+            border-radius: 8px;
+        }
+
+        .analytics-tabs .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        /* Section Metrics Tabs */
+        .section-metrics-tabs {
+            margin-bottom: 15px;
+        }
+
+        .section-metrics-tabs .nav-link {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+
+        /* Regression Line Styling */
+        .regression-line {
+            border: 2px dashed #ff6b6b;
+        }
+
+        /* Correlation Coefficient Display */
+        .correlation-value {
+            font-size: 0.8rem;
+            color: #666;
+            font-style: italic;
         }
 
         /* Logout Modal */
@@ -340,6 +370,13 @@
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
         }
         
         /* Animations */
@@ -427,7 +464,7 @@
                     
 
                     <li class="nav-item">
-                        <a class="nav-link active" href="/dean/dashboard">
+                        <a class="nav-link" href="/dean/dashboard">
                             <i class="fas fa-home me-2"></i> Dashboard
                         </a>
                     </li>
@@ -444,17 +481,6 @@
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dean/student-performance">
-                            <i class="fas fa-chart-line me-2"></i> Student Performance
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dean/reports">
-                            <i class="fas fa-chart-pie me-2"></i> Reports
-                        </a>
-                    </li>
                     <% if (user && user.role === "Dean") { %>
                     <li class="nav-item">
                         <a class="nav-link" href="/dean/manage-accounts">
@@ -467,11 +493,6 @@
                 <!-- Bottom Menu Items -->
                 <div class="bottom-menu">
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/account">
-                                <i class="fas fa-user me-2"></i> My Profile
-                            </a>
-                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
@@ -504,309 +525,944 @@
             <!-- Main Content -->
             <div class="container-fluid main-content">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 section-header">
-                    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Dean Dashboard</h1>
+                    <h1 class="h2"><i class="fas fa-home me-2"></i>Dashboard</h1>
                 </div>
 
-                <!-- Filter Bar -->
-                <div class="filter-bar">
-                    <div class="row">
-                        <div class="col-md-3 filter-group">
-                            <div class="filter-label">Subject</div>
-                            <select class="form-select form-select-sm" id="subjectFilter">
-                                <option value="all">All Subjects</option>
-                                <option value="computer-science">Computer Science</option>
-                                <option value="mathematics">Mathematics</option>
-                                <option value="physics">Physics</option>
-                                <option value="engineering">Engineering</option>
-                                <option value="biology">Biology</option>
-                                <option value="chemistry">Chemistry</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 filter-group">
-                            <div class="filter-label">Course</div>
-                            <select class="form-select form-select-sm" id="courseFilter">
-                                <option value="all">All Courses</option>
-                                <option value="bsit">BS Information Technology</option>
-                                <option value="bscs">BS Computer Science</option>
-                                <option value="bsmath">BS Mathematics</option>
-                                <option value="bsphysics">BS Physics</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 filter-group">
-                            <div class="filter-label">Year Level</div>
-                            <select class="form-select form-select-sm" id="yearLevelFilter">
-                                <option value="all">All Years</option>
-                                <option value="1">1st Year</option>
-                                <option value="2">2nd Year</option>
-                                <option value="3">3rd Year</option>
-                                <option value="4">4th Year</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 filter-group">
-                            <div class="filter-label">Date Range</div>
-                            <select class="form-select form-select-sm" id="dateRangeFilter">
-                                <option value="last-week">Last Week</option>
-                                <option value="last-month">Last Month</option>
-                                <option value="last-quarter">Last Quarter</option>
-                                <option value="last-year">Last Year</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                            <div class="custom-date-range" id="customDateRange">
-                                <div class="row mt-2">
-                                    <div class="col-6">
-                                        <label class="small">From</label>
-                                        <input type="date" class="form-control form-control-sm" id="dateFrom">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="small">To</label>
-                                        <input type="date" class="form-control form-control-sm" id="dateTo">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2 filter-group d-flex align-items-end">
-                            <button class="btn btn-sm btn-primary w-100" id="applyFilters">
-                                <i class="fas fa-filter me-1"></i>Apply Filters
-                            </button>
-                        </div>
+                <!-- Analytics Tabs -->
+                <ul class="nav nav-pills analytics-tabs" id="analyticsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab">Overview</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="student-tab" data-bs-toggle="pill" data-bs-target="#student" type="button" role="tab">Student Analytics</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="professor-tab" data-bs-toggle="pill" data-bs-target="#professor" type="button" role="tab">Professor Analytics</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="department-tab" data-bs-toggle="pill" data-bs-target="#department" type="button" role="tab">Department Analytics</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="section-tab" data-bs-toggle="pill" data-bs-target="#section" type="button" role="tab">Section Analytics</button>
+                    </li>
+                </ul>
+
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading analytics...</span>
                     </div>
+                    <p class="mt-2">Generating analytics data...</p>
                 </div>
 
-                <!-- KPI Cards -->
-                <div class="row mb-4">
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-primary h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="totalProfessors">25</h4>
-                                        <p class="card-text">Total Professors</p>
+                <!-- Tab Content -->
+                <div class="tab-content" id="analyticsTabContent">
+                    
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                        <!-- Overview Metrics -->
+                        <div class="row mb-4">
+                            <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                                <div class="card stat-card card-primary h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="totalProfessors">25</h4>
+                                                <p class="card-text">Total Professors</p>
+                                            </div>
+                                            <i class="fas fa-chalkboard-teacher fa-2x" style="color: var(--secondary-color);"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>2 new this month
+                                            </small>
+                                        </div>
                                     </div>
-                                    <i class="fas fa-chalkboard-teacher fa-2x" style="color: var(--secondary-color);"></i>
                                 </div>
-                                <div class="mt-2">
-                                    <small class="text-success">
-                                        <i class="fas fa-arrow-up me-1"></i>2 new this month
-                                    </small>
+                            </div>
+                            <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                                <div class="card stat-card card-success h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="totalStudents">1,247</h4>
+                                                <p class="card-text">Total Students</p>
+                                            </div>
+                                            <i class="fas fa-user-graduate fa-2x text-success"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>5.2% from last month
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                                <div class="card stat-card card-warning h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="totalTests">48</h4>
+                                                <p class="card-text">Total Tests</p>
+                                            </div>
+                                            <i class="fas fa-file-alt fa-2x text-warning"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>12 new tests
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                                <div class="card stat-card card-info h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="overallPassRate">85.3%</h4>
+                                                <p class="card-text">Overall Pass Rate</p>
+                                            </div>
+                                            <i class="fas fa-chart-line fa-2x text-info"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>2.1% improvement
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                                <div class="card stat-card card-purple h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="avgScore">78.5%</h4>
+                                                <p class="card-text">Avg Score</p>
+                                            </div>
+                                            <i class="fas fa-percentage fa-2x text-purple"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>1.8% improvement
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                                <div class="card stat-card card-teal h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="completionRate">92.7%</h4>
+                                                <p class="card-text">Completion Rate</p>
+                                            </div>
+                                            <i class="fas fa-check-circle fa-2x text-teal"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>3.4% improvement
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-success h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="totalStudents">1,247</h4>
-                                        <p class="card-text">Total Students</p>
-                                    </div>
-                                    <i class="fas fa-user-graduate fa-2x text-success"></i>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-success">
-                                        <i class="fas fa-arrow-up me-1"></i>5.2% from last month
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-warning h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="totalTests">48</h4>
-                                        <p class="card-text">Total Tests</p>
-                                    </div>
-                                    <i class="fas fa-file-alt fa-2x text-warning"></i>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-success">
-                                        <i class="fas fa-arrow-up me-1"></i>12 new tests
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-info h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="overallPassRate">85.3%</h4>
-                                        <p class="card-text">Overall Pass Rate</p>
-                                    </div>
-                                    <i class="fas fa-chart-line fa-2x text-info"></i>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-success">
-                                        <i class="fas fa-arrow-up me-1"></i>2.1% improvement
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Charts Row 1 -->
-                <div class="row mb-4">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Subject Average Scores</h5>
+                        <!-- Charts Row 1 -->
+                        <div class="row mb-4">
+                            <div class="col-lg-8">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Student Performance Trend Line</h5>
+                                        <span class="correlation-value">R² = 0.87</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Performance Trend -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="performanceTrendCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                        <option value="BSEE">BSEE</option>
+                                                        <option value="BSME">BSME</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Year Level</div>
+                                                    <select class="form-select form-select-sm" id="performanceTrendYearFilter">
+                                                        <option value="all">All Years</option>
+                                                        <option value="1">1st Year</option>
+                                                        <option value="2">2nd Year</option>
+                                                        <option value="3">3rd Year</option>
+                                                        <option value="4">4th Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Time Period</div>
+                                                    <select class="form-select form-select-sm" id="performanceTrendTimeFilter">
+                                                        <option value="last-month">Last Month</option>
+                                                        <option value="last-quarter">Last Quarter</option>
+                                                        <option value="last-year">Last Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyPerformanceTrendFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="performanceTrendChart" height="250"></canvas>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <canvas id="subjectScoresChart" height="250"></canvas>
+                            <div class="col-lg-4">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Course Difficulty Index</h5>
+                                        <span class="correlation-value">Based on avg scores</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Course Difficulty -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-6 chart-filter-group">
+                                                    <div class="chart-filter-label">Year Level</div>
+                                                    <select class="form-select form-select-sm" id="courseDifficultyYearFilter">
+                                                        <option value="all">All Years</option>
+                                                        <option value="1">1st Year</option>
+                                                        <option value="2">2nd Year</option>
+                                                        <option value="3">3rd Year</option>
+                                                        <option value="4">4th Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyCourseDifficultyFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="courseDifficultyChart" height="250"></canvas>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Percentage of Passing Students</h5>
-                                <select class="form-select form-select-sm w-auto" id="passingStudentsSubjectFilter">
-                                    <option value="all">All Subjects</option>
-                                    <option value="computer-science">Computer Science</option>
-                                    <option value="mathematics">Mathematics</option>
-                                    <option value="physics">Physics</option>
-                                    <option value="engineering">Engineering</option>
-                                </select>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="passingStudentsChart" height="250"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Charts Row 2 -->
-                <div class="row mb-4">
-                    <div class="col-lg-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Monthly Test Activity</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="testActivityChart" height="250"></canvas>
+                        <!-- Charts Row 2 -->
+                        <div class="row mb-4">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Learning Curve Analysis</h5>
+                                        <span class="correlation-value">Progress through semesters</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Learning Curve -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="learningCurveCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                        <option value="BSEE">BSEE</option>
+                                                        <option value="BSME">BSME</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Subject</div>
+                                                    <select class="form-select form-select-sm" id="learningCurveSubjectFilter">
+                                                        <option value="all">All Subjects</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="mathematics">Mathematics</option>
+                                                        <option value="physics">Physics</option>
+                                                        <option value="engineering">Engineering</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Time Period</div>
+                                                    <select class="form-select form-select-sm" id="learningCurveTimeFilter">
+                                                        <option value="last-year">Last Year</option>
+                                                        <option value="last-2-years">Last 2 Years</option>
+                                                        <option value="last-3-years">Last 3 Years</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyLearningCurveFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="learningCurveChart" height="250"></canvas>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Data Tables -->
-                <div class="row">
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Professors List</h5>
-                                <div class="export-buttons">
-                                    <button class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-file-csv me-1"></i>CSV
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-file-pdf me-1"></i>PDF
-                                    </button>
+                    <!-- Student Analytics Tab -->
+                    <div class="tab-pane fade" id="student" role="tabpanel">
+                        <div class="row mb-4">
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Overall Performance Trends</h5>
+                                        <span class="correlation-value">Linear Regression</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Student Performance -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="studentPerformanceCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Year Level</div>
+                                                    <select class="form-select form-select-sm" id="studentPerformanceYearFilter">
+                                                        <option value="all">All Years</option>
+                                                        <option value="1">1st Year</option>
+                                                        <option value="2">2nd Year</option>
+                                                        <option value="3">3rd Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyStudentPerformanceFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="studentPerformanceChart" height="300"></canvas>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover" id="professorsTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Subject</th>
-                                                <th>Tests Created</th>
-                                                <th>Avg Student Score</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Dr. Maria Santos</td>
-                                                <td>Computer Science</td>
-                                                <td>15</td>
-                                                <td>88.5%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Prof. Juan Cruz</td>
-                                                <td>Mathematics</td>
-                                                <td>12</td>
-                                                <td>82.3%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dr. Elena Reyes</td>
-                                                <td>Physics</td>
-                                                <td>8</td>
-                                                <td>79.1%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Prof. Carlos Lim</td>
-                                                <td>Engineering</td>
-                                                <td>10</td>
-                                                <td>85.7%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dr. Sofia Tan</td>
-                                                <td>Biology</td>
-                                                <td>7</td>
-                                                <td>81.2%</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Passing Rate Progression</h5>
+                                        <span class="correlation-value">By Semester</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Passing Rate -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="passingRateCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Subject</div>
+                                                    <select class="form-select form-select-sm" id="passingRateSubjectFilter">
+                                                        <option value="all">All Subjects</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="mathematics">Mathematics</option>
+                                                        <option value="physics">Physics</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyPassingRateFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="passingRateChart" height="300"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Top Performing Students</h5>
-                                <div class="export-buttons">
-                                    <button class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-file-csv me-1"></i>CSV
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-file-pdf me-1"></i>PDF
-                                    </button>
+
+                    <!-- Professor Analytics Tab -->
+                    <div class="tab-pane fade" id="professor" role="tabpanel">
+                        <div class="row mb-4">
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Professor Effectiveness Trends</h5>
+                                        <span class="correlation-value">Student Performance</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Professor Effectiveness -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Department</div>
+                                                    <select class="form-select form-select-sm" id="profEffectivenessDeptFilter">
+                                                        <option value="all">All Departments</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="civil-engineering">Civil Engineering</option>
+                                                        <option value="electrical-engineering">Electrical Engineering</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Time Period</div>
+                                                    <select class="form-select form-select-sm" id="profEffectivenessTimeFilter">
+                                                        <option value="last-semester">Last Semester</option>
+                                                        <option value="last-year">Last Year</option>
+                                                        <option value="last-2-years">Last 2 Years</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyProfEffectivenessFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="professorEffectivenessChart" height="300"></canvas>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover" id="studentsTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Course</th>
-                                                <th>Avg Score</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Ana Lim</td>
-                                                <td>BS Computer Science</td>
-                                                <td>96.5%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Miguel Santos</td>
-                                                <td>BS Information Technology</td>
-                                                <td>95.2%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Sophia Reyes</td>
-                                                <td>BS Mathematics</td>
-                                                <td>94.8%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>James Cruz</td>
-                                                <td>BS Engineering</td>
-                                                <td>93.7%</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Isabella Tan</td>
-                                                <td>BS Physics</td>
-                                                <td>92.9%</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Test Creation Activity</h5>
+                                        <span class="correlation-value">Linear Trend</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Test Creation -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Professor</div>
+                                                    <select class="form-select form-select-sm" id="testCreationProfFilter">
+                                                        <option value="all">All Professors</option>
+                                                        <option value="prof1">Dr. Maria Santos</option>
+                                                        <option value="prof2">Prof. Juan Cruz</option>
+                                                        <option value="prof3">Dr. Elena Reyes</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Subject</div>
+                                                    <select class="form-select form-select-sm" id="testCreationSubjectFilter">
+                                                        <option value="all">All Subjects</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="mathematics">Mathematics</option>
+                                                        <option value="physics">Physics</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyTestCreationFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="testCreationChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Department Analytics Tab -->
+                    <div class="tab-pane fade" id="department" role="tabpanel">
+                        <div class="row mb-4">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Course Completion Rates</h5>
+                                        <span class="correlation-value">Prerequisite Analysis</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Individual Filters for Completion Rate -->
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Department</div>
+                                                    <select class="form-select form-select-sm" id="completionRateDeptFilter">
+                                                        <option value="all">All Departments</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="civil-engineering">Civil Engineering</option>
+                                                        <option value="electrical-engineering">Electrical Engineering</option>
+                                                        <option value="mechanical-engineering">Mechanical Engineering</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Year Level</div>
+                                                    <select class="form-select form-select-sm" id="completionRateYearFilter">
+                                                        <option value="all">All Years</option>
+                                                        <option value="1">1st Year</option>
+                                                        <option value="2">2nd Year</option>
+                                                        <option value="3">3rd Year</option>
+                                                        <option value="4">4th Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group">
+                                                    <div class="chart-filter-label">Time Period</div>
+                                                    <select class="form-select form-select-sm" id="completionRateTimeFilter">
+                                                        <option value="last-semester">Last Semester</option>
+                                                        <option value="last-year">Last Year</option>
+                                                        <option value="last-2-years">Last 2 Years</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyCompletionRateFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <canvas id="completionRateChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section Analytics Tab -->
+                    <div class="tab-pane fade" id="section" role="tabpanel">
+                        <!-- Section Metrics Tabs -->
+                        <ul class="nav nav-pills section-metrics-tabs" id="sectionMetricsTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="avg-score-tab" data-bs-toggle="pill" data-bs-target="#avg-score" type="button" role="tab">Average Score</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="lowest-score-tab" data-bs-toggle="pill" data-bs-target="#lowest-score" type="button" role="tab">Lowest Score</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="highest-score-tab" data-bs-toggle="pill" data-bs-target="#highest-score" type="button" role="tab">Highest Score</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="top-student-tab" data-bs-toggle="pill" data-bs-target="#top-student" type="button" role="tab">Top Student</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="lowest-student-tab" data-bs-toggle="pill" data-bs-target="#lowest-student" type="button" role="tab">Lowest Student</button>
+                            </li>
+                        </ul>
+
+                        <!-- Section Metrics Tab Content -->
+                        <div class="tab-content" id="sectionMetricsTabContent">
+                            <!-- Average Score Tab -->
+                            <div class="tab-pane fade show active" id="avg-score" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Average Score per Section</h5>
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="avgScoreCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                        <option value="BSEE">BSEE</option>
+                                                        <option value="BSME">BSME</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Year Level</div>
+                                                    <select class="form-select form-select-sm" id="avgScoreYearFilter">
+                                                        <option value="all">All Years</option>
+                                                        <option value="1">1st Year</option>
+                                                        <option value="2">2nd Year</option>
+                                                        <option value="3">3rd Year</option>
+                                                        <option value="4">4th Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyAvgScoreFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="avgScoreTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Section</th>
+                                                        <th>Course</th>
+                                                        <th>Year Level</th>
+                                                        <th>Average Score</th>
+                                                        <th>Trend</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>BSIT3-A</td>
+                                                        <td>BS Information Technology</td>
+                                                        <td>3rd Year</td>
+                                                        <td>85.2%</td>
+                                                        <td><span class="text-success"><i class="fas fa-arrow-up"></i> 2.1%</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSCE2-B</td>
+                                                        <td>BS Civil Engineering</td>
+                                                        <td>2nd Year</td>
+                                                        <td>78.9%</td>
+                                                        <td><span class="text-success"><i class="fas fa-arrow-up"></i> 1.5%</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSEE4-C</td>
+                                                        <td>BS Electrical Engineering</td>
+                                                        <td>4th Year</td>
+                                                        <td>82.4%</td>
+                                                        <td><span class="text-danger"><i class="fas fa-arrow-down"></i> 0.8%</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSME1-A</td>
+                                                        <td>BS Mechanical Engineering</td>
+                                                        <td>1st Year</td>
+                                                        <td>75.6%</td>
+                                                        <td><span class="text-success"><i class="fas fa-arrow-up"></i> 3.2%</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lowest Score Tab -->
+                            <div class="tab-pane fade" id="lowest-score" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Lowest Score per Section</h5>
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="lowestScoreCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Subject</div>
+                                                    <select class="form-select form-select-sm" id="lowestScoreSubjectFilter">
+                                                        <option value="all">All Subjects</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="mathematics">Mathematics</option>
+                                                        <option value="physics">Physics</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyLowestScoreFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="lowestScoreTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Section</th>
+                                                        <th>Course</th>
+                                                        <th>Year Level</th>
+                                                        <th>Lowest Score</th>
+                                                        <th>Improvement Needed</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>BSIT3-A</td>
+                                                        <td>BS Information Technology</td>
+                                                        <td>3rd Year</td>
+                                                        <td>62.1%</td>
+                                                        <td>12.9%</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSCE2-B</td>
+                                                        <td>BS Civil Engineering</td>
+                                                        <td>2nd Year</td>
+                                                        <td>58.7%</td>
+                                                        <td>16.3%</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSEE4-C</td>
+                                                        <td>BS Electrical Engineering</td>
+                                                        <td>4th Year</td>
+                                                        <td>61.3%</td>
+                                                        <td>13.7%</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSME1-A</td>
+                                                        <td>BS Mechanical Engineering</td>
+                                                        <td>1st Year</td>
+                                                        <td>55.2%</td>
+                                                        <td>19.8%</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Highest Score Tab -->
+                            <div class="tab-pane fade" id="highest-score" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Highest Score per Section</h5>
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="highestScoreCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Subject</div>
+                                                    <select class="form-select form-select-sm" id="highestScoreSubjectFilter">
+                                                        <option value="all">All Subjects</option>
+                                                        <option value="computer-science">Computer Science</option>
+                                                        <option value="mathematics">Mathematics</option>
+                                                        <option value="physics">Physics</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyHighestScoreFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="highestScoreTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Section</th>
+                                                        <th>Course</th>
+                                                        <th>Year Level</th>
+                                                        <th>Highest Score</th>
+                                                        <th>Subject</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>BSIT3-A</td>
+                                                        <td>BS Information Technology</td>
+                                                        <td>3rd Year</td>
+                                                        <td>94.3%</td>
+                                                        <td>Data Structures</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSCE2-B</td>
+                                                        <td>BS Civil Engineering</td>
+                                                        <td>2nd Year</td>
+                                                        <td>91.5%</td>
+                                                        <td>Structural Analysis</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSEE4-C</td>
+                                                        <td>BS Electrical Engineering</td>
+                                                        <td>4th Year</td>
+                                                        <td>95.1%</td>
+                                                        <td>Power Systems</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSME1-A</td>
+                                                        <td>BS Mechanical Engineering</td>
+                                                        <td>1st Year</td>
+                                                        <td>89.7%</td>
+                                                        <td>Engineering Mechanics</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Top Student Tab -->
+                            <div class="tab-pane fade" id="top-student" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Top Student per Section</h5>
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="topStudentCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Year Level</div>
+                                                    <select class="form-select form-select-sm" id="topStudentYearFilter">
+                                                        <option value="all">All Years</option>
+                                                        <option value="1">1st Year</option>
+                                                        <option value="2">2nd Year</option>
+                                                        <option value="3">3rd Year</option>
+                                                        <option value="4">4th Year</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyTopStudentFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="topStudentTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Section</th>
+                                                        <th>Student Name</th>
+                                                        <th>Student ID</th>
+                                                        <th>Average Score</th>
+                                                        <th>Performance</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>BSIT3-A</td>
+                                                        <td>Ana Lim</td>
+                                                        <td>2021-00123</td>
+                                                        <td>96.5%</td>
+                                                        <td><span class="badge bg-success">Excellent</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSCE2-B</td>
+                                                        <td>Maria Santos</td>
+                                                        <td>2022-00234</td>
+                                                        <td>93.8%</td>
+                                                        <td><span class="badge bg-success">Excellent</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSEE4-C</td>
+                                                        <td>James Cruz</td>
+                                                        <td>2020-00345</td>
+                                                        <td>97.2%</td>
+                                                        <td><span class="badge bg-success">Outstanding</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSME1-A</td>
+                                                        <td>Carlos Reyes</td>
+                                                        <td>2023-00456</td>
+                                                        <td>92.1%</td>
+                                                        <td><span class="badge bg-success">Excellent</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lowest Student Tab -->
+                            <div class="tab-pane fade" id="lowest-student" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Lowest Student per Section</h5>
+                                        <div class="chart-filters">
+                                            <div class="row">
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Course</div>
+                                                    <select class="form-select form-select-sm" id="lowestStudentCourseFilter">
+                                                        <option value="all">All Courses</option>
+                                                        <option value="BSIT">BSIT</option>
+                                                        <option value="BSCS">BSCS</option>
+                                                        <option value="BSCE">BSCE</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group">
+                                                    <div class="chart-filter-label">Intervention Level</div>
+                                                    <select class="form-select form-select-sm" id="lowestStudentInterventionFilter">
+                                                        <option value="all">All Levels</option>
+                                                        <option value="high">High</option>
+                                                        <option value="moderate">Moderate</option>
+                                                        <option value="low">Low</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 chart-filter-group d-flex align-items-end">
+                                                    <button class="btn btn-sm btn-primary w-100" id="applyLowestStudentFilters">
+                                                        <i class="fas fa-filter me-1"></i>Apply
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="lowestStudentTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Section</th>
+                                                        <th>Student Name</th>
+                                                        <th>Student ID</th>
+                                                        <th>Average Score</th>
+                                                        <th>Intervention Needed</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>BSIT3-A</td>
+                                                        <td>Juan Cruz</td>
+                                                        <td>2021-00567</td>
+                                                        <td>71.2%</td>
+                                                        <td><span class="badge bg-warning">Moderate</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSCE2-B</td>
+                                                        <td>Pedro Reyes</td>
+                                                        <td>2022-00678</td>
+                                                        <td>65.4%</td>
+                                                        <td><span class="badge bg-danger">High</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSEE4-C</td>
+                                                        <td>Luis Tan</td>
+                                                        <td>2020-00789</td>
+                                                        <td>68.9%</td>
+                                                        <td><span class="badge bg-warning">Moderate</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BSME1-A</td>
+                                                        <td>Miguel Lim</td>
+                                                        <td>2023-00890</td>
+                                                        <td>63.5%</td>
+                                                        <td><span class="badge bg-danger">High</span></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -836,20 +1492,92 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Initialize all charts
+        // Global variables
+        let allCharts = {};
+        let currentFilters = {};
+
+        // Initialize all charts and analytics
         document.addEventListener('DOMContentLoaded', function() {
-            // Subject Average Scores Chart
-            const subjectScoresCtx = document.getElementById('subjectScoresChart').getContext('2d');
-            new Chart(subjectScoresCtx, {
-                type: 'bar',
+            initializeDashboard();
+            setupEventListeners();
+        });
+
+        function initializeDashboard() {
+            // Show loading spinner
+            document.getElementById('loadingSpinner').style.display = 'block';
+
+            // Initialize all charts
+            setTimeout(() => {
+                initializeOverviewCharts();
+                initializeStudentAnalytics();
+                initializeProfessorAnalytics();
+                initializeDepartmentAnalytics();
+                
+                // Hide loading spinner
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }, 1000);
+        }
+
+        function initializeOverviewCharts() {
+            // Performance Trend Chart with Regression
+            const performanceTrendCtx = document.getElementById('performanceTrendChart').getContext('2d');
+            const performanceData = [65, 68, 72, 75, 78, 82, 85, 88, 86, 89, 92, 95];
+            const regressionLine = calculateLinearRegression(performanceData);
+            
+            allCharts.performanceTrend = new Chart(performanceTrendCtx, {
+                type: 'line',
                 data: {
-                    labels: ['Computer Science', 'Mathematics', 'Physics', 'Engineering', 'Biology', 'Chemistry'],
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     datasets: [{
                         label: 'Average Score (%)',
-                        data: [88.5, 82.3, 79.1, 85.7, 81.2, 77.8],
-                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        data: performanceData,
                         borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Trend Line (R² = 0.87)',
+                        data: regressionLine,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 60,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Average Score (%)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Course Difficulty Chart
+            const courseDifficultyCtx = document.getElementById('courseDifficultyChart').getContext('2d');
+            allCharts.courseDifficulty = new Chart(courseDifficultyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['BSIT', 'BSCS', 'BSCE', 'BSEE', 'BSME'],
+                    datasets: [{
+                        label: 'Average Score (%)',
+                        data: [88.5, 85.2, 79.8, 82.1, 76.5],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 99, 132, 0.8)'
+                        ]
                     }]
                 },
                 options: {
@@ -867,60 +1595,202 @@
                 }
             });
 
-            // Percentage of Passing Students Chart
-            const passingStudentsCtx = document.getElementById('passingStudentsChart').getContext('2d');
-            new Chart(passingStudentsCtx, {
-                type: 'doughnut',
+            // Learning Curve Chart
+            const learningCurveCtx = document.getElementById('learningCurveChart').getContext('2d');
+            const semesterData = [72, 76, 81, 85, 88, 92];
+            const learningRegression = calculateLinearRegression(semesterData);
+            
+            allCharts.learningCurve = new Chart(learningCurveCtx, {
+                type: 'line',
                 data: {
-                    labels: ['Passed', 'Failed'],
+                    labels: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
                     datasets: [{
-                        data: [78, 22],
-                        backgroundColor: [
-                            'rgba(75, 192, 192, 0.8)',
-                            'rgba(255, 99, 132, 0.8)'
-                        ]
+                        label: 'Average Score',
+                        data: semesterData,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        borderWidth: 3,
+                        fill: true
+                    }, {
+                        label: 'Learning Trend',
+                        data: learningRegression,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
                     }]
                 },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': ' + context.raw + '%';
-                                }
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Average Score (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeStudentAnalytics() {
+            // Student Performance Chart
+            const studentPerformanceCtx = document.getElementById('studentPerformanceChart').getContext('2d');
+            const studentData = [68, 71, 75, 78, 82, 85, 87, 89, 91, 93];
+            const studentRegression = calculateLinearRegression(studentData);
+            
+            allCharts.studentPerformance = new Chart(studentPerformanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8', 'Week 9', 'Week 10'],
+                    datasets: [{
+                        label: 'Weekly Average',
+                        data: studentData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 3,
+                        fill: true
+                    }, {
+                        label: 'Performance Trend',
+                        data: studentRegression,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 60,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Average Score (%)'
                             }
                         }
                     }
                 }
             });
 
-            // Monthly Test Activity Chart
-            const testActivityCtx = document.getElementById('testActivityChart').getContext('2d');
-            new Chart(testActivityCtx, {
+            // Passing Rate Chart
+            const passingRateCtx = document.getElementById('passingRateChart').getContext('2d');
+            const passingData = [72, 75, 78, 82, 85, 87, 89, 91];
+            const passingRegression = calculateLinearRegression(passingData);
+            
+            allCharts.passingRate = new Chart(passingRateCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
                     datasets: [{
-                        label: 'Tests Created',
-                        data: [12, 19, 15, 17, 22, 25, 18, 20, 24, 28, 26, 30],
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Tests Completed',
-                        data: [10, 15, 12, 14, 18, 22, 16, 18, 20, 25, 23, 28],
+                        label: 'Passing Rate (%)',
+                        data: passingData,
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 3,
+                        fill: true
+                    }, {
+                        label: 'Improvement Trend',
+                        data: passingRegression,
+                        borderColor: 'rgba(153, 102, 255, 1)',
                         borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Passing Rate (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeProfessorAnalytics() {
+            // Professor Effectiveness Chart
+            const professorEffectivenessCtx = document.getElementById('professorEffectivenessChart').getContext('2d');
+            const effectivenessData = [75, 78, 82, 85, 88, 86, 90, 92, 94, 91];
+            const effectivenessRegression = calculateLinearRegression(effectivenessData);
+            
+            allCharts.professorEffectiveness = new Chart(professorEffectivenessCtx, {
+                type: 'line',
+                data: {
+                    labels: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'],
+                    datasets: [{
+                        label: 'Student Performance (%)',
+                        data: effectivenessData,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true
+                    }, {
+                        label: 'Effectiveness Trend',
+                        data: effectivenessRegression,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Student Performance (%)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Test Creation Chart
+            const testCreationCtx = document.getElementById('testCreationChart').getContext('2d');
+            const testData = [8, 12, 15, 18, 22, 25, 28, 32, 35, 38];
+            const testRegression = calculateLinearRegression(testData);
+            
+            allCharts.testCreation = new Chart(testCreationCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    datasets: [{
+                        label: 'Tests Created',
+                        data: testData,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
+                        borderWidth: 3,
+                        fill: true
+                    }, {
+                        label: 'Activity Trend',
+                        data: testRegression,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
                     }]
                 },
                 options: {
@@ -936,98 +1806,179 @@
                     }
                 }
             });
+        }
+
+        function initializeDepartmentAnalytics() {
+            // Completion Rate Chart
+            const completionRateCtx = document.getElementById('completionRateChart').getContext('2d');
+            const completionData = [85, 88, 90, 87, 92, 94, 96, 93];
+            const completionRegression = calculateLinearRegression(completionData);
             
-            // Custom date range functionality
-            const dateRangeFilter = document.getElementById('dateRangeFilter');
-            const customDateRange = document.getElementById('customDateRange');
-            
-            dateRangeFilter.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customDateRange.style.display = 'block';
-                } else {
-                    customDateRange.style.display = 'none';
-                }
-            });
-            
-            // Filter functionality
-            const applyFiltersBtn = document.getElementById('applyFilters');
-            
-            applyFiltersBtn.addEventListener('click', function() {
-                const subject = document.getElementById('subjectFilter').value;
-                const course = document.getElementById('courseFilter').value;
-                const yearLevel = document.getElementById('yearLevelFilter').value;
-                const dateRange = document.getElementById('dateRangeFilter').value;
-                
-                // In a real application, you would send these filters to the server
-                // For now, we'll just log them and show a notification
-                console.log('Filters applied:', {
-                    subject,
-                    course,
-                    yearLevel,
-                    dateRange
-                });
-                
-                alert('Filters applied successfully!');
-            });
-            
-            // Passing students subject filter
-            const passingStudentsSubjectFilter = document.getElementById('passingStudentsSubjectFilter');
-            
-            passingStudentsSubjectFilter.addEventListener('change', function() {
-                // In a real application, you would update the chart data based on the selected subject
-                console.log('Passing students filter changed to:', this.value);
-            });
-            
-            // Table filtering functionality
-            function filterTable(tableId, searchText) {
-                const table = document.getElementById(tableId);
-                const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-                
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    let found = false;
-                    
-                    // Search in all cells of the row
-                    for (let j = 0; j < row.cells.length; j++) {
-                        const cell = row.cells[j];
-                        if (cell.textContent.toLowerCase().includes(searchText.toLowerCase())) {
-                            found = true;
-                            break;
+            allCharts.completionRate = new Chart(completionRateCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Course 1', 'Course 2', 'Course 3', 'Course 4', 'Course 5', 'Course 6', 'Course 7', 'Course 8'],
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: completionData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 3,
+                        fill: true
+                    }, {
+                        label: 'Improvement Trend',
+                        data: completionRegression,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 80,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Completion Rate (%)'
+                            }
                         }
                     }
-                    
-                    // Show or hide the row based on search result
-                    row.style.display = found ? '' : 'none';
-                }
-            }
-            
-            // Add search functionality to tables
-            document.querySelectorAll('.table').forEach(table => {
-                // Create search input for each table
-                const tableId = table.id;
-                const tableHeader = table.closest('.card').querySelector('.card-header');
-                
-                if (tableHeader && tableId) {
-                    const searchDiv = document.createElement('div');
-                    searchDiv.className = 'input-group input-group-sm mt-2';
-                    searchDiv.innerHTML = `
-                        <input type="text" class="form-control" placeholder="Search..." id="search${tableId}">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    `;
-                    
-                    tableHeader.appendChild(searchDiv);
-                    
-                    // Add event listener for search
-                    const searchInput = document.getElementById(`search${tableId}`);
-                    searchInput.addEventListener('input', function() {
-                        filterTable(tableId, this.value);
-                    });
                 }
             });
+        }
+
+        function calculateLinearRegression(data) {
+            const n = data.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            
+            for (let i = 0; i < n; i++) {
+                sumX += i;
+                sumY += data[i];
+                sumXY += i * data[i];
+                sumXX += i * i;
+            }
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            
+            return data.map((_, i) => slope * i + intercept);
+        }
+
+        function setupEventListeners() {
+            // Setup individual filter buttons for each chart/table
+            setupIndividualFilters();
             
             // Logout functionality
+            setupLogoutFunctionality();
+        }
+
+        function setupIndividualFilters() {
+            // Overview Tab Filters
+            document.getElementById('applyPerformanceTrendFilters').addEventListener('click', function() {
+                applyChartFilters('performanceTrend');
+            });
+            
+            document.getElementById('applyCourseDifficultyFilters').addEventListener('click', function() {
+                applyChartFilters('courseDifficulty');
+            });
+            
+            document.getElementById('applyLearningCurveFilters').addEventListener('click', function() {
+                applyChartFilters('learningCurve');
+            });
+            
+            // Student Analytics Filters
+            document.getElementById('applyStudentPerformanceFilters').addEventListener('click', function() {
+                applyChartFilters('studentPerformance');
+            });
+            
+            document.getElementById('applyPassingRateFilters').addEventListener('click', function() {
+                applyChartFilters('passingRate');
+            });
+            
+            // Professor Analytics Filters
+            document.getElementById('applyProfEffectivenessFilters').addEventListener('click', function() {
+                applyChartFilters('professorEffectiveness');
+            });
+            
+            document.getElementById('applyTestCreationFilters').addEventListener('click', function() {
+                applyChartFilters('testCreation');
+            });
+            
+            // Department Analytics Filters
+            document.getElementById('applyCompletionRateFilters').addEventListener('click', function() {
+                applyChartFilters('completionRate');
+            });
+            
+            // Section Analytics Filters
+            document.getElementById('applyAvgScoreFilters').addEventListener('click', function() {
+                applyTableFilters('avgScore');
+            });
+            
+            document.getElementById('applyLowestScoreFilters').addEventListener('click', function() {
+                applyTableFilters('lowestScore');
+            });
+            
+            document.getElementById('applyHighestScoreFilters').addEventListener('click', function() {
+                applyTableFilters('highestScore');
+            });
+            
+            document.getElementById('applyTopStudentFilters').addEventListener('click', function() {
+                applyTableFilters('topStudent');
+            });
+            
+            document.getElementById('applyLowestStudentFilters').addEventListener('click', function() {
+                applyTableFilters('lowestStudent');
+            });
+        }
+
+        function applyChartFilters(chartType) {
+            // Show loading for specific chart
+            showNotification(`Applying filters to ${chartType.replace(/([A-Z])/g, ' $1').toLowerCase()} chart...`, 'info');
+            
+            // In a real application, you would fetch new data from the server
+            // and update the specific chart with the filtered data
+            setTimeout(() => {
+                showNotification(`${chartType.replace(/([A-Z])/g, ' $1').toLowerCase()} chart updated with new filters!`, 'success');
+            }, 1000);
+        }
+
+        function applyTableFilters(tableType) {
+            // Show loading for specific table
+            showNotification(`Applying filters to ${tableType.replace(/([A-Z])/g, ' $1').toLowerCase()} table...`, 'info');
+            
+            // In a real application, you would fetch new data from the server
+            // and update the specific table with the filtered data
+            setTimeout(() => {
+                showNotification(`${tableType.replace(/([A-Z])/g, ' $1').toLowerCase()} table updated with new filters!`, 'success');
+            }, 1000);
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show`;
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        function setupLogoutFunctionality() {
             const logoutBtn = document.getElementById('logoutBtn');
             const logoutModal = document.getElementById('logoutModal');
             const cancelLogout = document.getElementById('cancelLogout');
@@ -1076,14 +2027,12 @@
                     logoutModal.style.display = 'none';
                 }
             });
-        });
+        }
 
-        // Auto-refresh dashboard every 5 minutes
+        // Auto-refresh dashboard every 10 minutes
         setInterval(() => {
             console.log('Refreshing dashboard data...');
-            // Here you would typically fetch new data from the server
-        }, 300000);
+        }, 600000);
     </script>
-    <script src="/js/logout.js"></script>
 </body>
 </html>
