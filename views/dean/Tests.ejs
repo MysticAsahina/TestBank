@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* All existing CSS remains the same */
         :root {
             --primary-bg: #f5f5f5;
             --secondary-color: #060037;
@@ -523,6 +524,46 @@
                 margin-left: 0;
             }
         }
+
+        /* NEW: Tab Navigation Styling */
+        .nav-tabs {
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--secondary-color);
+            border-radius: 8px 8px 0 0;
+            margin-bottom: -1px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: white;
+            border-bottom: 3px solid var(--secondary-color);
+            font-weight: 600;
+            color:#060037 !important;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            background-color: rgba(6, 0, 55, 0.05);
+        }
+        
+        /* NEW: Archive-specific styling */
+        .archived-test-row {
+            opacity: 0.8;
+            background-color: #f8f9fa;
+        }
+        
+        .archived-test-row:hover {
+            opacity: 1;
+            background-color: #e9ecef;
+        }
+        
+        .archive-badge {
+            background-color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -554,18 +595,6 @@
                             <i class="fas fa-file-alt me-2"></i> Test Management
                         </a>
                     </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dean/student-performance">
-                            <i class="fas fa-chart-line me-2"></i> Student Performance
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dean/reports">
-                            <i class="fas fa-chart-pie me-2"></i> Reports
-                        </a>
-                    </li>
                     
                     <% if (user && user.role === "Dean") { %>
                     <li class="nav-item">
@@ -579,11 +608,6 @@
                 <!-- Bottom Menu Items -->
                 <div class="bottom-menu">
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/account">
-                                <i class="fas fa-user me-2"></i> My Profile
-                            </a>
-                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
@@ -619,120 +643,256 @@
                     <h1 class="h2"><i class="fas fa-file-alt me-2"></i>Test Management</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
                         <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createTestModal"><i class="fas fa-plus me-2"></i>Create Test</button>
-                        <button class="btn btn-outline-secondary" id="toggleAllSections"><i class="fas fa-expand me-2"></i>Show Assigned Sections</button>
                     </div>
                 </div>
 
-                <!-- Search and Filter Bar -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" id="testSearch" placeholder="Search tests by title, subject code, or description...">
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select" id="testFilter">
-                                    <option value="">All Tests</option>
-                                    <option value="Public">Public Tests</option>
-                                    <option value="Private">Private Tests</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select" id="subjectFilter">
-                                    <option value="">All Subjects</option>
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Science">Science</option>
-                                    <option value="English">English</option>
-                                    <option value="Filipino">Filipino</option>
-                                    <option value="Computer Programming">Computer Programming</option>
-                                    <option value="Data Structures">Data Structures</option>
-                                    <option value="Web Development">Web Development</option>
-                                    <option value="Database Management">Database Management</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- NEW: Tab Navigation -->
+                <ul class="nav nav-tabs" id="testTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tests-tab" data-bs-toggle="tab" data-bs-target="#all-tests" type="button" role="tab" aria-controls="all-tests" aria-selected="true">
+                            <i class="fas fa-list me-1"></i> All Tests
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="archive-tab" data-bs-toggle="tab" data-bs-target="#archive" type="button" role="tab" aria-controls="archive" aria-selected="false">
+                            <i class="fas fa-archive me-1"></i> Archive
+                        </button>
+                    </li>
+                </ul>
 
-                <!-- Overview Cards -->
-                <div class="row mb-4">
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-primary h-100">
+                <div class="tab-content" id="testTabsContent">
+                    <!-- All Tests Tab -->
+                    <div class="tab-pane fade show active" id="all-tests" role="tabpanel" aria-labelledby="all-tests-tab">
+                        <!-- Search and Filter Bar -->
+                        <div class="card mb-4">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="totalTestsCount">0</h4>
-                                        <p class="card-text">Total Tests</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="testSearch" placeholder="Search tests by title, subject code, or description...">
                                     </div>
-                                    <i class="fas fa-file-alt fa-2x" style="color: var(--secondary-color);"></i>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="testFilter">
+                                            <option value="">All Tests</option>
+                                            <option value="Public">Public Tests</option>
+                                            <option value="Private">Private Tests</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="subjectFilter">
+                                            <option value="">All Subjects</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Science">Science</option>
+                                            <option value="English">English</option>
+                                            <option value="Filipino">Filipino</option>
+                                            <option value="Computer Programming">Computer Programming</option>
+                                            <option value="Data Structures">Data Structures</option>
+                                            <option value="Web Development">Web Development</option>
+                                            <option value="Database Management">Database Management</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-success h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="publicTestsCount">0</h4>
-                                        <p class="card-text">Public Tests</p>
-                                    </div>
-                                    <i class="fas fa-unlock fa-2x text-success"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-warning h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="privateTestsCount">0</h4>
-                                        <p class="card-text">Private Tests</p>
-                                    </div>
-                                    <i class="fas fa-lock fa-2x text-warning"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
-                        <div class="card stat-card card-info h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h4 class="card-title" id="activeTestsCount">0</h4>
-                                        <p class="card-text">Active Tests</p>
-                                    </div>
-                                    <i class="fas fa-play-circle fa-2x text-info"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Tests Table -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">All Tests</h5>
+                        <!-- Overview Cards -->
+                        <div class="row mb-4">
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-primary h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="totalTestsCount">0</h4>
+                                                <p class="card-text">Total Tests</p>
+                                            </div>
+                                            <i class="fas fa-file-alt fa-2x" style="color: var(--secondary-color);"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-success h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="publicTestsCount">0</h4>
+                                                <p class="card-text">Public Tests</p>
+                                            </div>
+                                            <i class="fas fa-unlock fa-2x text-success"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-warning h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="privateTestsCount">0</h4>
+                                                <p class="card-text">Private Tests</p>
+                                            </div>
+                                            <i class="fas fa-lock fa-2x text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-info h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="activeTestsCount">0</h4>
+                                                <p class="card-text">Active Tests</p>
+                                            </div>
+                                            <i class="fas fa-play-circle fa-2x text-info"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tests Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">All Tests</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:25%">Title</th>
+                                                <th style="width:10%">Subject Code</th>
+                                                <th style="width:8%">Access</th>
+                                                <th style="width:15%">Assigned Sections</th>
+                                                <th style="width:10%">Created By</th>
+                                                <th style="width:10%">Questions</th>
+                                                <th style="width:10%">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="testsTableBody">
+                                            <tr><td colspan="8" class="text-center text-muted">Loading tests...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped align-middle">
-                                <thead>
-                                    <tr>
-                                        <th style="width:25%">Title</th>
-                                        <th style="width:10%">Subject Code</th>
-                                        <th style="width:8%">Access</th>
-                                        <th style="width:15%">Assigned Sections</th>
-                                        <th style="width:10%">Created By</th>
-                                        <th style="width:10%">Questions</th>
-                                        <th style="width:10%">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="testsTableBody">
-                                    <tr><td colspan="8" class="text-center text-muted">Loading tests...</td></tr>
-                                </tbody>
-                            </table>
+
+                    <!-- NEW: Archive Tab -->
+                    <div class="tab-pane fade" id="archive" role="tabpanel" aria-labelledby="archive-tab">
+                        <!-- Archive-specific Search and Filter Bar -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="archiveSearch" placeholder="Search archived tests by title, subject code, or description...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="archiveFilter">
+                                            <option value="">All Archived Tests</option>
+                                            <option value="Public">Public Tests</option>
+                                            <option value="Private">Private Tests</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="archiveSubjectFilter">
+                                            <option value="">All Subjects</option>
+                                            <option value="Mathematics">Mathematics</option>
+                                            <option value="Science">Science</option>
+                                            <option value="English">English</option>
+                                            <option value="Filipino">Filipino</option>
+                                            <option value="Computer Programming">Computer Programming</option>
+                                            <option value="Data Structures">Data Structures</option>
+                                            <option value="Web Development">Web Development</option>
+                                            <option value="Database Management">Database Management</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Archive Overview Cards -->
+                        <div class="row mb-4">
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-primary h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="archivedTestsCount">0</h4>
+                                                <p class="card-text">Archived Tests</p>
+                                            </div>
+                                            <i class="fas fa-archive fa-2x" style="color: var(--secondary-color);"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-success h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="archivedPublicTestsCount">0</h4>
+                                                <p class="card-text">Public Archived</p>
+                                            </div>
+                                            <i class="fas fa-unlock fa-2x text-success"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-warning h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="archivedPrivateTestsCount">0</h4>
+                                                <p class="card-text">Private Archived</p>
+                                            </div>
+                                            <i class="fas fa-lock fa-2x text-warning"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 col-sm-6 mb-3">
+                                <div class="card stat-card card-info h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title" id="archivedActiveTestsCount">0</h4>
+                                                <p class="card-text">Active Archived</p>
+                                            </div>
+                                            <i class="fas fa-play-circle fa-2x text-info"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Archived Tests Table -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Archived Tests</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:25%">Title</th>
+                                                <th style="width:10%">Subject Code</th>
+                                                <th style="width:8%">Access</th>
+                                                <th style="width:15%">Assigned Sections</th>
+                                                <th style="width:10%">Created By</th>
+                                                <th style="width:10%">Questions</th>
+                                                <th style="width:10%">Archived Date</th>
+                                                <th style="width:12%">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="archiveTableBody">
+                                            <tr><td colspan="8" class="text-center text-muted">No archived tests found</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -740,6 +900,7 @@
         </div>
     </div>
 
+    <!-- All existing modals remain the same -->
     <!-- Create Test Modal -->
     <div class="modal fade" id="createTestModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
@@ -967,6 +1128,7 @@
     <script>
     // ---------- state ----------
     let allTests = [];
+    let archivedTests = []; // NEW: Store archived tests separately
     let sections = [];
     let showAllSections = false;
     let currentTestForAssignment = null;
@@ -1010,6 +1172,41 @@
             allTests = [];
         }
 
+        // NEW: Load archived tests (static data for now)
+        try {
+            // In a real implementation, you would fetch archived tests from an API
+            // For now, we'll create some static archived test data
+            archivedTests = [
+                {
+                    _id: 'archived1',
+                    title: 'Archived Math Test',
+                    subjectCode: 'MATH101',
+                    description: 'This is an archived math test',
+                    access: 'Public',
+                    assignedSections: ['BSIT3-South2'],
+                    createdBy: { fullName: 'John Doe' },
+                    totalQuestions: 10,
+                    totalPoints: 100,
+                    archivedDate: '2023-10-15T10:30:00Z'
+                },
+                {
+                    _id: 'archived2',
+                    title: 'Old Science Quiz',
+                    subjectCode: 'SCI201',
+                    description: 'An old science quiz that has been archived',
+                    access: 'Private',
+                    assignedSections: ['BSIT3-North1'],
+                    createdBy: { fullName: 'Jane Smith' },
+                    totalQuestions: 5,
+                    totalPoints: 50,
+                    archivedDate: '2023-09-20T14:45:00Z'
+                }
+            ];
+        } catch (err) {
+            console.error('Error loading archived tests:', err);
+            archivedTests = [];
+        }
+
         try {
             const sres = await fetch('/api/sections');
             if (sres.ok) sections = await sres.json();
@@ -1020,7 +1217,9 @@
         }
 
         renderTestsTable();
+        renderArchiveTable(); // NEW: Render archive table
         updateOverviewCards();
+        updateArchiveOverviewCards(); // NEW: Update archive overview cards
     }
 
     // ---------- rendering ----------
@@ -1132,6 +1331,122 @@
                                 <i class="fas fa-trash me-2"></i>Delete
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item text-warning" href="#" onclick="archiveTest('${test._id}')">
+                                <i class="fas fa-archive me-2"></i>Archive
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </td>
+        `;
+
+            tableBody.appendChild(row);
+        });
+    }
+
+    // NEW: Render archive table
+    function renderArchiveTable() {
+        const tableBody = document.getElementById('archiveTableBody');
+        tableBody.innerHTML = '';
+
+        const filter = document.getElementById('archiveFilter')?.value || '';
+        const search = (document.getElementById('archiveSearch')?.value || '').toLowerCase();
+        const subjectFilter = document.getElementById('archiveSubjectFilter')?.value || '';
+
+        const testsToShow = archivedTests.filter(test => {
+            // Filter by access type
+            if (filter && test.access !== filter) return false;
+            
+            // Filter by subject
+            if (subjectFilter && test.subjectCode !== subjectFilter) return false;
+            
+            // Search filter
+            if (!search) return true;
+            return (test.title || '').toLowerCase().includes(search) ||
+                (test.subjectCode || '').toLowerCase().includes(search) ||
+                (test.description || '').toLowerCase().includes(search);
+        });
+
+        if (testsToShow.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No archived tests match your search criteria</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = '';
+        testsToShow.forEach(test => {
+            const row = document.createElement('tr');
+            row.className = 'archived-test-row';
+
+            // Assigned sections display
+            const assignedSections = test.assignedSections && test.assignedSections.length > 0
+            ? test.assignedSections.map(sectionName => {
+                // Find the section data to get proper formatting
+                const section = sections.find(s => s.name === sectionName);
+                if (section) {
+                    const displayName = formatSectionDisplayName(section);
+                    return `<span class="badge bg-secondary me-1 mb-1" title="${sectionName}">${displayName}</span>`;
+                }
+                // Fallback: try to parse from the section name
+                const match = sectionName.match(/^([A-Z]+)(\d+)-([^-]+)(\d+)$/);
+                if (match) {
+                    const [, course, yearLevel, campus, sectionNum] = match;
+                    const displayName = `${course} ${yearLevel} - ${campus} ${sectionNum}`;
+                    return `<span class="badge bg-secondary me-1 mb-1" title="${sectionName}">${displayName}</span>`;
+                }
+                return `<span class="badge bg-secondary me-1 mb-1">${sectionName}</span>`;
+                }).join('')
+            : '<span class="text-muted">None</span>';
+
+            // Creator name display
+            const createdByName = test.createdBy?.fullName
+            ? `${test.createdBy.lastName}, ${test.createdBy.firstName} ${test.createdBy.middleName}`
+            : 'Old Record, Creator Not Recorded';
+
+            row.innerHTML = `
+            <td>
+                <a class="test-title-link" onclick="viewArchivedTestDetails('${test._id}')">
+                    ${test.title || 'Untitled'}
+                </a>
+                <span class="badge archive-badge ms-1">Archived</span>
+            </td>
+            <td>${test.subjectCode || ''}</td>
+            <td>
+                <span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">
+                    ${test.access || 'Private'}
+                </span>
+            </td>
+            <td class="assigned-sections">${assignedSections}</td>
+            <td>${createdByName}</td>
+            <td>
+                ${test.totalQuestions ?? 0} question${test.totalQuestions === 1 ? '' : 's'}
+                <br>
+                ${test.totalPoints ?? 0} point${test.totalPoints === 1 ? '' : 's'}
+            </td>
+            <td>${test.archivedDate ? formatDate(test.archivedDate) : 'N/A'}</td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="viewArchivedTestDetails('${test._id}')">
+                                <i class="fas fa-eye me-2"></i>View Details
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="restoreTest('${test._id}')">
+                                <i class="fas fa-undo me-2"></i>Restore
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="permanentlyDeleteTest('${test._id}')">
+                                <i class="fas fa-trash-alt me-2"></i>Delete Permanently
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </td>
@@ -1151,6 +1466,19 @@
         document.getElementById('publicTestsCount').textContent = publicTests;
         document.getElementById('privateTestsCount').textContent = privateTests;
         document.getElementById('activeTestsCount').textContent = activeTests;
+    }
+
+    // NEW: Update archive overview cards
+    function updateArchiveOverviewCards() {
+        const archivedTestsCount = archivedTests.length;
+        const archivedPublicTests = archivedTests.filter(t => t.access === 'Public').length;
+        const archivedPrivateTests = archivedTests.filter(t => t.access === 'Private').length;
+        const archivedActiveTests = archivedTests.filter(t => !t.deadline || new Date(t.deadline) > new Date()).length;
+
+        document.getElementById('archivedTestsCount').textContent = archivedTestsCount;
+        document.getElementById('archivedPublicTestsCount').textContent = archivedPublicTests;
+        document.getElementById('archivedPrivateTestsCount').textContent = archivedPrivateTests;
+        document.getElementById('archivedActiveTestsCount').textContent = archivedActiveTests;
     }
 
     // ---------- CRUD actions ----------
@@ -1260,84 +1588,243 @@
         }
     }
 
+    // NEW: View archived test details
+    function viewArchivedTestDetails(testId) {
+        try {
+            const test = archivedTests.find(t => t._id === testId);
+            if (!test) {
+                alert('Archived test not found');
+                return;
+            }
+
+            // For archived tests, we might not have the full question details
+            // This would be a simplified view
+            document.getElementById('testDetailsContent').innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>${test.title} <span class="badge archive-badge ms-2">Archived</span></h4>
+                        <p class="text-muted">${test.description || ''}</p>
+                        <div class="row mb-3">
+                            <div class="col-md-4"><strong>Subject Code:</strong> ${test.subjectCode || ''}</div>
+                            <div class="col-md-4"><strong>Access:</strong> <span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">${test.access || ''}</span></div>
+                        </div>
+                        <div class="mb-3"><strong>Archived Date:</strong> ${test.archivedDate ? formatDate(test.archivedDate) : 'N/A'}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card"><div class="card-body">
+                            <h6>Test Summary</h6>
+                            <p><strong>Total Questions:</strong> ${test.totalQuestions || 0}</p>
+                            <p><strong>Total Points:</strong> ${test.totalPoints || 0}</p>
+                            <p><strong>Created By:</strong> ${test.createdBy?.fullName || 'Unknown'}</p>
+                        </div></div>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This test has been archived and is no longer active. You can restore it or delete it permanently.
+                </div>
+            `;
+
+            const modal = new bootstrap.Modal(document.getElementById('testDetailsModal'));
+            modal.show();
+        } catch (err) {
+            console.error('Error viewing archived test details:', err);
+            alert('Failed to load archived test details');
+        }
+    }
 
     // Function to set minimum datetime to current time
-function setMinDateTime() {
-    const now = new Date();
-    // Format to YYYY-MM-DDTHH:mm (required by datetime-local input)
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    
-    // Set min attribute for all deadline inputs
-    document.querySelectorAll('input[name="deadline"]').forEach(input => {
-        input.min = minDateTime;
+    function setMinDateTime() {
+        const now = new Date();
+        // Format to YYYY-MM-DDTHH:mm (required by datetime-local input)
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        // Set min attribute for all deadline inputs
+        document.querySelectorAll('input[name="deadline"]').forEach(input => {
+            input.min = minDateTime;
+        });
+    }
+
+    // NEW: Archive test function
+    function archiveTest(testId) {
+        if (!confirm('Are you sure you want to archive this test? It will be moved to the Archive tab.')) return;
+        
+        try {
+            // In a real implementation, you would call an API to archive the test
+            // For now, we'll simulate this by moving the test from allTests to archivedTests
+            
+            const testIndex = allTests.findIndex(t => t._id === testId);
+            if (testIndex === -1) {
+                alert('Test not found');
+                return;
+            }
+            
+            const testToArchive = allTests[testIndex];
+            
+            // Add archive date
+            testToArchive.archivedDate = new Date().toISOString();
+            
+            // Move to archived tests
+            archivedTests.push(testToArchive);
+            
+            // Remove from active tests
+            allTests.splice(testIndex, 1);
+            
+            // Update UI
+            renderTestsTable();
+            renderArchiveTable();
+            updateOverviewCards();
+            updateArchiveOverviewCards();
+            
+            alert('Test archived successfully!');
+        } catch (err) {
+            console.error('Error archiving test:', err);
+            alert('Failed to archive test');
+        }
+    }
+
+    // NEW: Restore test function
+    function restoreTest(testId) {
+        if (!confirm('Are you sure you want to restore this test? It will be moved back to the All Tests tab.')) return;
+        
+        try {
+            // Find the test in archived tests
+            const testIndex = archivedTests.findIndex(t => t._id === testId);
+            if (testIndex === -1) {
+                alert('Test not found in archive');
+                return;
+            }
+            
+            const testToRestore = archivedTests[testIndex];
+            
+            // Remove archive date
+            delete testToRestore.archivedDate;
+            
+            // Move back to active tests
+            allTests.push(testToRestore);
+            
+            // Remove from archived tests
+            archivedTests.splice(testIndex, 1);
+            
+            // Update UI
+            renderTestsTable();
+            renderArchiveTable();
+            updateOverviewCards();
+            updateArchiveOverviewCards();
+            
+            alert('Test restored successfully!');
+        } catch (err) {
+            console.error('Error restoring test:', err);
+            alert('Failed to restore test');
+        }
+    }
+
+    // NEW: Permanently delete test function
+    function permanentlyDeleteTest(testId) {
+        if (!confirm('Are you sure you want to permanently delete this test? This action cannot be undone.')) return;
+        
+        try {
+            // In a real implementation, you would call an API to permanently delete the test
+            // For now, we'll just remove it from the archivedTests array
+            
+            const testIndex = archivedTests.findIndex(t => t._id === testId);
+            if (testIndex === -1) {
+                alert('Test not found in archive');
+                return;
+            }
+            
+            // Remove from archived tests
+            archivedTests.splice(testIndex, 1);
+            
+            // Update UI
+            renderArchiveTable();
+            updateArchiveOverviewCards();
+            
+            alert('Test permanently deleted!');
+        } catch (err) {
+            console.error('Error permanently deleting test:', err);
+            alert('Failed to delete test');
+        }
+    }
+
+    // Call when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        setMinDateTime();
     });
-}
 
-// Call when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    setMinDateTime();
-});
-
-// Also call when the modal opens (in case it's opened later)
-document.getElementById('createTestModal')?.addEventListener('show.bs.modal', setMinDateTime);
+    // Also call when the modal opens (in case it's opened later)
+    document.getElementById('createTestModal')?.addEventListener('show.bs.modal', setMinDateTime);
 
     // ---------- Assign Sections ----------
     function populateSectionAssignment() {
-        const availableEl = document.getElementById('availableSections');
-        const assignedEl = document.getElementById('assignedSections');
-        
-        availableEl.innerHTML = '';
-        assignedEl.innerHTML = '';
+    const availableEl = document.getElementById('availableSections');
+    const assignedEl = document.getElementById('assignedSections');
+    
+    availableEl.innerHTML = '';
+    assignedEl.innerHTML = '';
 
-        // Get current assigned sections
-        let currentAssigned = [];
-        if (currentTestForAssignment) {
-            const test = allTests.find(t => t._id === currentTestForAssignment);
-            currentAssigned = test ? (test.assignedSections || []) : [];
-        } else {
-            currentAssigned = assignedSectionsForNewTest || [];
+    // Get current assigned sections
+    let currentAssigned = [];
+    if (currentTestForAssignment) {
+        const test = allTests.find(t => t._id === currentTestForAssignment);
+        currentAssigned = test ? (test.assignedSections || []) : [];
+    } else {
+        currentAssigned = assignedSectionsForNewTest || [];
+    }
+
+    // DEBUG: Log all available sections
+    console.log('📋 Available Sections from API:', sections);
+
+    // Populate available sections (all sections not currently assigned)
+    sections.forEach(section => {
+        if (!currentAssigned.includes(section.name)) {
+            const div = document.createElement('div');
+            div.className = 'student-item';
+            // Use the proper section name from Section model
+            const displayName = `${section.course}${section.yearLevel}-${section.name} (${section.subject})`;
+            div.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input section-checkbox" type="checkbox" value="${section.name}">
+                    <label class="form-check-label">${displayName}</label>
+                </div>
+            `;
+            availableEl.appendChild(div);
         }
+    });
 
-        // Populate available sections (all sections not currently assigned)
-        sections.forEach(section => {
-            if (!currentAssigned.includes(section.name)) {
-                const div = document.createElement('div');
-                div.className = 'student-item';
-                // UPDATED: Format section display as "Course Year Level - Campus Section"
-                const displayName = formatSectionDisplayName(section);
-                div.innerHTML = `
-                    <div class="form-check">
-                        <input class="form-check-input section-checkbox" type="checkbox" value="${section.name}">
-                        <label class="form-check-label">${displayName}</label>
-                    </div>
-                `;
-                availableEl.appendChild(div);
-            }
-        });
-
-        // Populate assigned sections
-        currentAssigned.forEach(sectionName => {
-            const section = sections.find(s => s.name === sectionName);
-            if (section) {
-                const div = document.createElement('div');
-                div.className = 'student-item';
-                // UPDATED: Format section display as "Course Year Level - Campus Section"
-                const displayName = formatSectionDisplayName(section);
-                div.innerHTML = `
-                    <div class="form-check">
-                        <input class="form-check-input section-checkbox" type="checkbox" value="${section.name}">
-                        <label class="form-check-label">${displayName}</label>
-                    </div>
-                `;
-                assignedEl.appendChild(div);
-            }
-        });
+    // Populate assigned sections
+    currentAssigned.forEach(sectionName => {
+        const section = sections.find(s => s.name === sectionName);
+        if (section) {
+            const div = document.createElement('div');
+            div.className = 'student-item';
+            const displayName = `${section.course}${section.yearLevel}-${section.name} (${section.subject})`;
+            div.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input section-checkbox" type="checkbox" value="${section.name}">
+                    <label class="form-check-label">${displayName}</label>
+                </div>
+            `;
+            assignedEl.appendChild(div);
+        } else {
+            // If section not found in sections API, show the raw name
+            const div = document.createElement('div');
+            div.className = 'student-item';
+            div.innerHTML = `
+                <div class="form-check">
+                    <input class="form-check-input section-checkbox" type="checkbox" value="${sectionName}">
+                    <label class="form-check-label">${sectionName} (Not Found in Sections)</label>
+                </div>
+            `;
+            assignedEl.appendChild(div);
+        }
+    });
 
         // Add click handlers for row selection
         document.querySelectorAll('#availableSections .student-item, #assignedSections .student-item').forEach(item => {
@@ -1593,7 +2080,7 @@ document.getElementById('createTestModal')?.addEventListener('show.bs.modal', se
     }
 
     // ---------- EDIT: populate full questions when editing ----------
-function renderQuestionInForm(questionObj) {
+    function renderQuestionInForm(questionObj) {
     addQuestion();
     const container = document.getElementById('questionsContainer');
     const qEl = container.lastElementChild;
@@ -1963,8 +2450,10 @@ function renumberQuestions() {
                 html = `<h6>Multiple Choice Answers</h6><div class="choices-container"><div class="choice-item"><div class="input-group"><span class="input-group-text">A</span><input type="text" class="form-control choice-text" placeholder="Choice A" required><div class="input-group-text"><input class="form-check-input correct-choice" type="checkbox" value="A"></div></div></div></div><button type="button" class="btn btn-outline-secondary btn-sm mt-2 add-choice">Add Choice</button>`;
                 break;
             case 'truefalse':
-                html = `<h6>True or False</h6><div class="choices-container"><div class="choice-item"><div class="form-check"><input class="form-check-input correct-choice" type="radio" name="tf-${Date.now()}" value="True" required><label class="form-check-label">True</label></div></div><div class="choice-item"><div class="form-check"><input class="form-check-input correct-choice" type="radio" name="tf-${Date.now()}" value="False"><label class="form-check-label">False</label></div></div></div>`;
-                break;
+    // Use a unique but consistent name based on the question's position
+    const questionIndex = Array.from(document.querySelectorAll('.question-item')).indexOf(questionEl);
+    html = `<h6>True or False</h6><div class="choices-container"><div class="choice-item"><div class="form-check"><input class="form-check-input correct-choice" type="radio" name="tf-${questionIndex}" value="True" required><label class="form-check-label">True</label></div></div><div class="choice-item"><div class="form-check"><input class="form-check-input correct-choice" type="radio" name="tf-${questionIndex}" value="False"><label class="form-check-label">False</label></div></div></div>`;
+    break;
             case 'enumeration':
                 html = `<h6>Enumeration Answers</h6><div class="mb-3"><label class="form-label">Number of Answers Required</label><input type="number" class="form-control enumeration-required" min="1" value="1"></div><div class="enumeration-container"><div class="answer-item"><div class="input-group"><input type="text" class="form-control enumeration-answer" placeholder="Answer 1" required></div></div></div><button type="button" class="btn btn-outline-secondary btn-sm mt-2 add-enum">Add Answer</button>`;
                 break;
@@ -2065,6 +2554,11 @@ function renumberQuestions() {
         document.getElementById('testFilter')?.addEventListener('change', renderTestsTable);
         document.getElementById('testSearch')?.addEventListener('input', renderTestsTable);
         document.getElementById('subjectFilter')?.addEventListener('change', renderTestsTable);
+
+        // NEW: Archive tab event listeners
+        document.getElementById('archiveFilter')?.addEventListener('change', renderArchiveTable);
+        document.getElementById('archiveSearch')?.addEventListener('input', renderArchiveTable);
+        document.getElementById('archiveSubjectFilter')?.addEventListener('change', renderArchiveTable);
 
         document.getElementById('addQuestionBtn')?.addEventListener('click', () => { addQuestion(); attachQuestionHandlers(); });
 
