@@ -259,9 +259,38 @@
             border-radius: 3px;
         }
         
+        /* Table Container */
+        .table-container {
+            max-height: calc(100vh - 300px);
+            overflow: auto;
+            margin-bottom: 10px;
+            border-radius: var(--card-radius);
+        }
+        
+        /* Custom scrollbar styling */
+        .table-container::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 6px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 6px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #05002e;
+        }
+        
         .table {
             border-radius: var(--card-radius);
             overflow: hidden;
+            min-width: 800px; /* Ensure minimum width for 5 columns */
         }
         
         .table th {
@@ -269,7 +298,9 @@
             color: white;
             border: none;
             cursor: pointer;
-            position: relative;
+            position: sticky;
+            top: 0;
+            z-index: 10;
             user-select: none;
         }
         
@@ -320,11 +351,6 @@
             margin-top: 10px;
         }
 
-        /* Export Buttons */
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-        }
 
         /* Logout Modal */
         .logout-modal {
@@ -430,6 +456,10 @@
             
             .center-body {
                 margin-left: 0;
+            }
+            
+            .table-container {
+                max-height: calc(100vh - 350px);
             }
         }
         
@@ -573,17 +603,6 @@
                         </a>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dean/student-performance">
-                            <i class="fas fa-chart-line me-2"></i> Student Performance
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dean/reports">
-                            <i class="fas fa-chart-pie me-2"></i> Reports
-                        </a>
-                    </li>
                     <% if (user && user.role === "Dean") { %>
                     <li class="nav-item">
                         <a class="nav-link" href="/dean/manage-accounts">
@@ -596,11 +615,6 @@
                 <!-- Bottom Menu Items -->
                 <div class="bottom-menu">
                     <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/dean/account">
-                                <i class="fas fa-user me-2"></i> My Profile
-                            </a>
-                        </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
                                 <i class="fas fa-sign-out-alt me-2"></i> Logout
@@ -679,17 +693,10 @@
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <strong>Existing Sections</strong>
-                        <div class="export-buttons">
-                            <button class="btn btn-sm btn-outline-success">
-                                <i class="fas fa-file-csv me-1"></i>CSV
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-file-pdf me-1"></i>PDF
-                            </button>
-                        </div>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <!-- Table Container with scroll -->
+                        <div class="table-container">
                             <table class="table table-striped align-middle">
                                 <thead>
                                     <tr>
@@ -961,7 +968,9 @@
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="openDetails('${s._id}')"><i class="fas fa-info-circle me-2"></i>Details</a></li>
+                                <!-- ADD THIS NEW LINK -->
+                                <li><a class="dropdown-item" href="/dean/sections/details/${s._id}"><i class="fas fa-chart-bar me-2"></i>View Test Scores</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="openDetails('${s._id}')"><i class="fas fa-info-circle me-2"></i>Basic Details</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="openEdit('${s._id}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="#" onclick="deleteSection('${s._id}')"><i class="fas fa-trash me-2"></i>Delete</a></li>
