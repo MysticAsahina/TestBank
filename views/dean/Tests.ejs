@@ -938,16 +938,31 @@
                                         <input type="datetime-local" class="form-control" name="deadline" min="">
                                     </div>
                                     <div class="col-md-4 mb-3">
+                                        <label class="form-label">Period *</label>
+                                        <select class="form-select" name="period" required>
+                                            <option value="">Select Period</option>
+                                            <option value="1st Sem : P1">1st Sem : P1</option>
+                                            <option value="1st Sem : P2">1st Sem : P2</option>
+                                            <option value="1st Sem : P3">1st Sem : P3</option>
+                                            <option value="2nd Sem : P1">2nd Sem : P1</option>
+                                            <option value="2nd Sem : P2">2nd Sem : P2</option>
+                                            <option value="2nd Sem : P3">2nd Sem : P3</option>
+                                            <option value="Summer">Summer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">Access *</label>
                                         <select class="form-select" name="access" required>
                                             <option value="Public">Public</option>
                                             <option value="Private" selected>Private</option>
                                         </select>
                                     </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">How Many Questions Per Student *</label>
-                                    <input type="number" class="form-control" name="howManyQuestions" min="1" value="1" required>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">How Many Questions Per Student *</label>
+                                        <input type="number" class="form-control" name="howManyQuestions" min="1" value="1" required>
+                                    </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Passing Points</label>
@@ -970,6 +985,7 @@
                                         <div class="mb-2"><strong>Total Questions:</strong> <span id="totalQuestions">0</span></div>
                                         <div class="mb-2"><strong>Total Points:</strong> <span id="totalPoints">0</span></div>
                                         <div class="mb-2"><strong>Passing Points:</strong> <span id="passingPointsDisplay">0</span></div>
+                                        <div class="mb-2"><strong>Period:</strong> <span id="periodDisplay">Not Selected</span></div>
                                         <div class="mb-2"><strong>Question Types:</strong> <div id="questionTypesSummary"></div></div>
                                         <div class="mb-2"><strong>Assigned Sections:</strong> <div id="assignedSectionsSummary">None</div></div>
                                         <div class="mb-2"><strong>Prerequisites:</strong> <div id="prerequisitesSummary">None</div></div>
@@ -1559,6 +1575,9 @@
                         <div class="row mb-3">
                             <div class="col-md-4"><strong>Questions Per Student:</strong> ${test.howManyQuestions || ''}</div>
                             <div class="col-md-4"><strong>Passing Points:</strong> ${test.passingPoints || ''}</div>
+                            <div class="col-md-4"><strong>Period:</strong> ${test.period || 'Not Set'}</div>
+                        </div>
+                        <div class="row mb-3">
                             <div class="col-md-4"><strong>Deadline:</strong> ${test.deadline ? formatDate(test.deadline) : 'None'}</div>
                         </div>
                         <div class="mb-3"><strong>Assigned Sections:</strong><br>${assignedSections}</div>
@@ -1607,6 +1626,7 @@
                         <div class="row mb-3">
                             <div class="col-md-4"><strong>Subject Code:</strong> ${test.subjectCode || ''}</div>
                             <div class="col-md-4"><strong>Access:</strong> <span class="badge ${test.access === 'Public' ? 'bg-success' : 'bg-warning'}">${test.access || ''}</span></div>
+                            <div class="col-md-4"><strong>Period:</strong> ${test.period || 'Not Set'}</div>
                         </div>
                         <div class="mb-3"><strong>Archived Date:</strong> ${test.archivedDate ? formatDate(test.archivedDate) : 'N/A'}</div>
                     </div>
@@ -1941,11 +1961,6 @@
         bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
     });
 
-    document.getElementById('cancelPrerequisites')?.addEventListener('click', function() {
-        bootstrap.Modal.getInstance(document.getElementById('prerequisitesModal'))?.hide();
-        bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
-    });
-
     document.getElementById('saveSectionAssignment')?.addEventListener('click', function() {
         const assignedSections = Array.from(document.querySelectorAll('#assignedSections input[type="checkbox"]')).map(cb => cb.value);
         
@@ -1959,6 +1974,11 @@
         }
         
         bootstrap.Modal.getInstance(document.getElementById('assignSectionsModal'))?.hide();
+        bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
+    });
+
+    document.getElementById('cancelPrerequisites')?.addEventListener('click', function() {
+        bootstrap.Modal.getInstance(document.getElementById('prerequisitesModal'))?.hide();
         bootstrap.Modal.getInstance(document.getElementById('createTestModal'))?.show();
     });
 
@@ -2199,10 +2219,14 @@
             form.querySelector('[name="subjectCode"]').value = test.subjectCode || '';
             form.querySelector('[name="description"]').value = test.description || '';
             form.querySelector('[name="timeLimit"]').value = test.timeLimit || '';
+            form.querySelector('[name="period"]').value = test.period || '';
             if (test.deadline) form.querySelector('[name="deadline"]').value = new Date(test.deadline).toISOString().slice(0,16);
             form.querySelector('[name="access"]').value = test.access || 'Private';
             form.querySelector('[name="howManyQuestions"]').value = test.howManyQuestions || 1;
             form.querySelector('[name="passingPoints"]').value = test.passingPoints || 0;
+
+            // Update period display in summary
+            document.getElementById('periodDisplay').textContent = test.period || 'Not Selected';
 
             updateAssignedSectionsSummary();
             updatePrerequisitesSummary();
@@ -2233,6 +2257,7 @@
             subjectCode: formData.get('subjectCode'),
             description: formData.get('description'),
             access: formData.get('access'),
+            period: formData.get('period'),
             timeLimit: formData.get('timeLimit') ? Number(formData.get('timeLimit')) : undefined,
             deadline: deadlineValue ? new Date(deadlineValue).toISOString() : undefined,
             howManyQuestions: Number(formData.get('howManyQuestions')),
@@ -2338,6 +2363,7 @@
         currentTestForAssignment = null;
         document.getElementById('assignedSectionsSummary').innerHTML = 'None';
         document.getElementById('prerequisitesSummary').innerHTML = 'None';
+        document.getElementById('periodDisplay').textContent = 'Not Selected';
         
         alert(`Test ${currentTestForAssignment ? 'updated' : 'created'} successfully!`);
     } catch (err) {
@@ -2496,6 +2522,12 @@ function renumberQuestions() {
         document.getElementById('totalPoints').textContent = totalPoints;
         document.getElementById('questionTypesSummary').innerHTML = Object.entries(typeCounts).map(([t,c]) => `${t}: ${c}`).join('<br>') || 'No questions added';
         document.getElementById('passingPointsDisplay').textContent = document.getElementById('testForm')?.querySelector('[name="passingPoints"]')?.value || '0';
+        
+        // Update period display in summary
+        const periodSelect = document.getElementById('testForm')?.querySelector('[name="period"]');
+        if (periodSelect) {
+            document.getElementById('periodDisplay').textContent = periodSelect.value || 'Not Selected';
+        }
     }
 
     // ---------- initialization ----------
@@ -2567,6 +2599,9 @@ function renumberQuestions() {
         // Initialize modals
         document.getElementById('assignSectionsModal')?.addEventListener('show.bs.modal', populateSectionAssignment);
         document.getElementById('prerequisitesModal')?.addEventListener('show.bs.modal', populatePrerequisites);
+
+        // Add event listener for period selection to update summary
+        document.querySelector('select[name="period"]')?.addEventListener('change', updateTestSummary);
 
         await loadInitialData();
 
